@@ -32,7 +32,6 @@ export const signup: RequestHandler = async (req, res) => {
         res.status(StatusCodes.CREATED).json({
             message: '회원가입이 완료되었습니다.',
             user: {
-                id: user.id,
                 userId: user.userId,
                 nickName: user.nickName
             }
@@ -73,7 +72,6 @@ export const login: RequestHandler = async (req, res) => {
             message: '로그인 성공',
             token,
             user: {
-                id: user.id,
                 userId: user.userId,
                 nickName: user.nickName
             }
@@ -81,4 +79,9 @@ export const login: RequestHandler = async (req, res) => {
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: '서버 오류가 발생했습니다.' });
     }
+};
+
+export const logout: RequestHandler = async (req, res) => {
+    res.clearCookie('token');
+    res.status(StatusCodes.OK).json({ message: '로그아웃 성공' });
 };
