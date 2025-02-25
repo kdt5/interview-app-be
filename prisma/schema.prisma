@@ -70,7 +70,6 @@ model Category {
 }
 
 model QuestionCategory {
-  id         Int      @id @default(autoincrement())
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionId Int      @map("question_id")
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
