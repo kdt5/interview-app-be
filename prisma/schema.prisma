@@ -33,11 +33,14 @@ model Answer {
   id         Int       @id @default(autoincrement())
   content    String    @db.Text
   createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int       @map("user_id")
   question   Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionId Int       @map("question_id")
   comments   Comment[]
+
+  @@index([questionId])
 }
 
 model Comment {
@@ -72,6 +75,9 @@ model QuestionCategory {
   questionId Int      @map("question_id")
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId Int      @map("category_id")
+
+  @@unique([questionId, categoryId])
+  @@index([questionId, categoryId])
 }
 
 enum Position {
