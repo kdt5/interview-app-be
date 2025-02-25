@@ -1,0 +1,23 @@
+{
+  "name": "interview-app-be",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/kdt5/interview-app-be#readme",
+  "bugs": {
+    "url": "https://github.com/kdt5/interview-app-be/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kdt5/interview-app-be.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
