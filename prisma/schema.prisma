@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  nickName  String     @unique @map("nick_name")
+  userId    String     @unique @map("user_id")
+  password  String
+  createdAt DateTime   @default(now()) @map("created_at")
+  answers   Answer[]
+  comments  Comment[]
+  favorites Favorite[]
+}
+
+model Question {
+  id           Int                 @id @default(autoincrement())
+  title        String
+  content      String              @db.Text
+  isWeekly     Boolean            @default(false) @map("is_weekly")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  answers      Answer[]
+  favorites    Favorite[]
+  categories   QuestionCategory[]
+}
+
+model Answer {
+  id         Int       @id @default(autoincrement())
+  content    String    @db.Text
+  createdAt  DateTime  @default(now()) @map("created_at")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int       @map("user_id")
+  question   Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId Int       @map("question_id")
+  comments   Comment[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int      @map("user_id")
+  answer    Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  answerId  Int      @map("answer_id")
+}
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int      @map("user_id")
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId Int      @map("question_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+}
+
+model Category {
+  id        Int                @id @default(autoincrement())
+  name      String
+  position  Position
+  questions QuestionCategory[]
+}
+
+model QuestionCategory {
+  id         Int      @id @default(autoincrement())
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId Int      @map("question_id")
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId Int      @map("category_id")
+}
+
+enum Position {
+  backend
+  frontend
+} 
