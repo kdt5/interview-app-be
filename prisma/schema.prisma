@@ -7,79 +7,135 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// 사용자 정보를 저장하는 모델
 model User {
+  /// 고유 식별자
   id        Int        @id @default(autoincrement())
+  /// 사용자 닉네임
   nickName  String     @unique @map("nick_name")
+  /// 사용자 로그인 아이디
   userId    String     @unique @map("user_id")
+  /// 사용자 비밀번호
   password  String
+  /// 계정 생성일
   createdAt DateTime   @default(now()) @map("created_at")
+  /// 사용자가 작성한 답변들
   answers   Answer[]
+  /// 사용자가 작성한 댓글들
   comments  Comment[]
+  /// 사용자가 즐겨찾기한 질문들
   favorites Favorite[]
 }
 
+/// 질문 정보를 저장하는 모델
 model Question {
+  /// 고유 식별자
   id           Int                 @id @default(autoincrement())
+  /// 질문 제목
   title        String
+  /// 질문 내용
   content      String              @db.Text
+  /// 주간 질문 여부
   isWeekly     Boolean            @default(false) @map("is_weekly")
+  /// 질문 작성일
   createdAt    DateTime           @default(now()) @map("created_at")
+  /// 질문에 달린 답변들
   answers      Answer[]
+  /// 질문을 즐겨찾기한 정보
   favorites    Favorite[]
+  /// 질문과 연관된 카테고리들
   categories   QuestionCategory[]
 }
 
+/// 답변 정보를 저장하는 모델
 model Answer {
+  /// 고유 식별자
   id         Int       @id @default(autoincrement())
+  /// 답변 내용
   content    String    @db.Text
+  /// 답변 작성일
   createdAt  DateTime  @default(now()) @map("created_at")
+  /// 답변 수정일
   updatedAt  DateTime  @updatedAt @map("updated_at")
+  /// 답변 작성자 정보
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// 답변 작성자 ID
   userId     Int       @map("user_id")
+  /// 답변이 달린 질문 정보
   question   Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  /// 질문 ID
   questionId Int       @map("question_id")
+  /// 답변에 달린 댓글들
   comments   Comment[]
 
   @@index([questionId])
 }
 
+/// 댓글 정보를 저장하는 모델
 model Comment {
+  /// 고유 식별자
   id        Int      @id @default(autoincrement())
+  /// 댓글 내용
   content   String   @db.Text
+  /// 댓글 작성일
   createdAt DateTime @default(now()) @map("created_at")
+  /// 댓글 작성자 정보
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// 댓글 작성자 ID
   userId    Int      @map("user_id")
+  /// 댓글이 달린 답변 정보
   answer    Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  /// 답변 ID
   answerId  Int      @map("answer_id")
 }
 
+/// 즐겨찾기 정보를 저장하는 모델
 model Favorite {
+  /// 고유 식별자
   id         Int      @id @default(autoincrement())
+  /// 즐겨찾기한 사용자 정보
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// 사용자 ID
   userId     Int      @map("user_id")
+  /// 즐겨찾기된 질문 정보
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  /// 질문 ID
   questionId Int      @map("question_id")
+  /// 즐겨찾기 생성일
   createdAt  DateTime @default(now()) @map("created_at")
 }
 
+/// 카테고리 정보를 저장하는 모델
 model Category {
+  /// 고유 식별자
   id        Int                @id @default(autoincrement())
+  /// 카테고리 이름
   name      String
+  /// 카테고리 포지션 (백엔드/프론트엔드)
   position  Position
+  /// 카테고리와 연관된 질문들
   questions QuestionCategory[]
 }
 
+/// 질문과 카테고리의 다대다 관계를 저장하는 모델
 model QuestionCategory {
+  /// 질문 정보
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  /// 질문 ID
   questionId Int      @map("question_id")
+  /// 카테고리 정보
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  /// 카테고리 ID
   categoryId Int      @map("category_id")
 
   @@unique([questionId, categoryId])
   @@index([questionId, categoryId])
 }
 
+/// 개발자 포지션을 나타내는 열거형
 enum Position {
+  /// 백엔드 개발자
   backend
+  /// 프론트엔드 개발자
   frontend
 } 
