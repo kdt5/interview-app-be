@@ -27,7 +27,7 @@ const authMiddleware = {
         req: RequestWithUser,
         res: Response,
         next: NextFunction
-    ): Promise<Response | void> => {
+    ): Promise<void> => {
         try {
             const token = authMiddleware.extractTokenFromHeader(req);
             const secret = authMiddleware.getJwtSecret();
@@ -36,7 +36,7 @@ const authMiddleware = {
             req.user = { email: user.email, nickName: user.nickName };
             next();
         } catch (error) {
-            return handleAuthError(error, res);
+            handleAuthError(error, res);
         }
     },
 
