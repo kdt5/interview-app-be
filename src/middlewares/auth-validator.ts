@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes'
 
 export const validateSignup = (req: Request, res: Response, next: NextFunction): void => {
-    const { userId, password, nickName } = req.body;
+    const { userId, password, nickName, email } = req.body;
 
     if (!userId || !password || !nickName) {
         res.status(StatusCodes.BAD_REQUEST).json({ message: '모든 필드를 입력해주세요.' });
@@ -20,7 +20,15 @@ export const validateSignup = (req: Request, res: Response, next: NextFunction):
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,30}$/;
     if (!passwordRegex.test(password)) {
         res.status(StatusCodes.BAD_REQUEST).json({
-            message: '비밀번호는 8-30자의 대소문자, 숫자, 특수문자를 포함해야 합니다.'
+            message: '비밀번호는 8-30자의 소문자, 대문자, 숫자, 특수문자를 모두 포함해야 합니다.'
+        });
+        return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+        res.status(StatusCodes.BAD_REQUEST).json({
+            message: '이메일 형식이 올바르지 않습니다.'
         });
         return;
     }
