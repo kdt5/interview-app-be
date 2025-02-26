@@ -34,3 +34,9 @@ npm run dev
 npm run build
 npm start
 ```
+
+## 데이터베이스 마이그레이션:
+
+```bash
+npx prisma migrate dev
+```
