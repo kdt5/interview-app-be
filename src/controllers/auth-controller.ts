@@ -98,7 +98,7 @@ export const signup: RequestHandler<{}, {}, SignupRequest> = async (req, res): P
         });
     } catch (error) {
         if (error instanceof DuplicateError) {
-            res.status(StatusCodes.CONFLICT).json({ message: error.message });
+            res.status(error.statusCode).json({ message: error.message });
         } else {
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: ERROR_MESSAGES.UNKNOWN_ERROR });
         }
@@ -121,9 +121,9 @@ export const login: RequestHandler<{}, {}, LoginRequest> = async (req, res): Pro
         });
     } catch (error) {
         if (error instanceof AuthError) {
-            res.status(StatusCodes.UNAUTHORIZED).json({ message: error.message });
+            res.status(error.statusCode).json({ message: error.message });
         } else if (error instanceof ValidationError) {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+            res.status(error.statusCode).json({ message: error.message });
         } else {
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: ERROR_MESSAGES.UNKNOWN_ERROR });
         }
@@ -135,7 +135,7 @@ export const logout: RequestHandler = async (req, res): Promise<void> => {
     res.status(StatusCodes.OK).json({ message: RESPONSE_MESSAGES.LOGOUT_SUCCESS });
 };
 
-export const changeNickname: RequestHandler = async (req: RequestWithUser, res): Promise<void> => {
+export const changeNickname: RequestHandler<{}, {}, ChangeNicknameRequest> = async (req: RequestWithUser, res): Promise<void> => {
     try {
         const { nickName } = req.body;
         const email = req.user?.email;
@@ -156,14 +156,14 @@ export const changeNickname: RequestHandler = async (req: RequestWithUser, res):
         });
     } catch (error) {
         if (error instanceof DuplicateError) {
-            res.status(StatusCodes.CONFLICT).json({ message: error.message });
+            res.status(error.statusCode).json({ message: error.message });
         } else {
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: ERROR_MESSAGES.UNKNOWN_ERROR });
         }
     }
 };
 
-export const changePassword: RequestHandler = async (req: RequestWithUser, res): Promise<void> => {
+export const changePassword: RequestHandler<{}, {}, ChangePasswordRequest> = async (req: RequestWithUser, res): Promise<void> => {
     try {
         const { oldPassword, newPassword } = req.body;
         const email = req.user?.email;
@@ -180,9 +180,9 @@ export const changePassword: RequestHandler = async (req: RequestWithUser, res):
         });
     } catch (error) {
         if (error instanceof AuthError) {
-            res.status(StatusCodes.UNAUTHORIZED).json({ message: error.message });
+            res.status(error.statusCode).json({ message: error.message });
         } else if (error instanceof ValidationError) {
-            res.status(StatusCodes.UNAUTHORIZED).json({ message: error.message });
+            res.status(error.statusCode).json({ message: error.message });
         } else {
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: ERROR_MESSAGES.UNKNOWN_ERROR });
         }

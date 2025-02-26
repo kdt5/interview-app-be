@@ -74,7 +74,7 @@ const authMiddleware = {
 
 function handleAuthError(error: unknown, res: Response): Response {
     if (error instanceof AuthError) {
-        return res.status(401).json({
+        return res.status(error.statusCode).json({
             message: error.message
         });
     }
