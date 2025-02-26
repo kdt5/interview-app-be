@@ -27,9 +27,9 @@ export const signup: RequestHandler = async (req, res) => {
 
 export const login: RequestHandler = async (req, res) => {
     try {
-        const { user_id, password } = req.body;
+        const { userId, password } = req.body;
 
-        const { user, token } = await authenticateUser(user_id, password);
+        const { user, token } = await authenticateUser(userId, password);
 
         res.json({
             message: "로그인 성공",
