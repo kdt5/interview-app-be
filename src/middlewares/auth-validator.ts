@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes'
 export const validateSignup = (req: Request, res: Response, next: NextFunction): void => {
     const { userId, password, nickName, email } = req.body;
 
-    if (!userId || !password || !nickName) {
+    if (!userId || !password || !nickName || !email) {
         res.status(StatusCodes.BAD_REQUEST).json({ message: '모든 필드를 입력해주세요.' });
         return;
     }
