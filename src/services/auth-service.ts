@@ -2,6 +2,7 @@ import { hash, compare } from "bcrypt-ts";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
 import { User } from "@prisma/client";
+import { DuplicateError, ValidationError, AuthError } from "../utils/errors/auth-error";
 
 const HASH_ROUNDS = 10;
 
@@ -15,18 +16,14 @@ export interface AuthResponse {
     token: string;
 }
 
-export class AuthError extends Error {
-    constructor(
-        message: string,
-        public readonly code: string = 'AUTH_ERROR'
-    ) {
-        super(message);
-        this.name = 'AuthError';
-    }
+export enum AvailabilityCheckType {
+    EMAIL = "email",
+    NICKNAME = "nickName"
 }
 
-export const checkAvailability = async (item: string, type: keyof UserInfo): Promise<boolean> => {
-    const where = type === "email"
+
+export const checkAvailability = async (item: string, type: AvailabilityCheckType): Promise<boolean> => {
+    const where = type === AvailabilityCheckType.EMAIL
         ? { email: item }
         : { nickName: item };
 
@@ -39,7 +36,7 @@ export const createUser = async (password: string, email: string, nickName: stri
         where: { email: email }
     });
     if (existingEmail) {
-        throw new AuthError("이미 사용 중인 이메일 입니다.", "EMAIL_DUPLICATE");
+        throw new DuplicateError("EMAIL_DUPLICATE");
     }
 
     // 비밀번호 해시화
@@ -60,13 +57,13 @@ export const authenticateUser = async (email: string, password: string): Promise
         where: { email: email }
     });
     if (!user) {
-        throw new AuthError("이메일 또는 비밀번호가 잘못되었습니다.", "INVALID_CREDENTIALS");
+        throw new AuthError("UNAUTHORIZED");
     }
 
     // 비밀번호 확인
     const isValidPassword = await compare(password, user.password);
     if (!isValidPassword) {
-        throw new AuthError("이메일 또는 비밀번호가 잘못되었습니다.", "INVALID_CREDENTIALS");
+        throw new ValidationError("INVALID_PASSWORD");
     }
 
     // JWT 토큰 생성
@@ -84,3 +81,40 @@ export const authenticateUser = async (email: string, password: string): Promise
         token
     };
 };
+
+export const changeUserNickname = async (email: string, nickName: string): Promise<User> => {
+    const existingNickname = await prisma.user.findUnique({
+        where: { nickName: nickName }
+    });
+
+    if (existingNickname) {
+        throw new DuplicateError("NICKNAME_DUPLICATE");
+    }
+
+    return prisma.user.update({
+        where: { email: email },
+        data: { nickName: nickName }
+    });
+};
+
+export const changeUserPassword = async (email: string, oldPassword: string, newPassword: string): Promise<User> => {
+    const user = await prisma.user.findUnique({
+        where: { email: email }
+    });
+    if (!user) {
+        throw new AuthError("UNAUTHORIZED");
+    }
+
+    // 기존 비밀번호 확인
+    const isValidPassword = await compare(oldPassword, user.password);
+    if (!isValidPassword) {
+        throw new ValidationError("INVALID_PASSWORD");
+    }
+    const hashedPassword = await hash(newPassword, HASH_ROUNDS);
+
+    return prisma.user.update({
+        where: { email: email },
+        data: { password: hashedPassword }
+    });
+};
+

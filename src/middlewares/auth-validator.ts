@@ -54,6 +54,10 @@ export const validateNickname = createValidator({
     nickName: validationRules.nickName
 });
 
+export const validatePassword = createValidator({
+    password: validationRules.password
+});
+
 export const validateEmail = createValidator({
     email: validationRules.email
 });
