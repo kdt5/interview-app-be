@@ -1,17 +1,52 @@
 import { RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
-import { createUser, authenticateUser } from "../services/auth-service";
+import { createUser, authenticateUser, checkAvailability } from "../services/auth-service";
 
-export const signup: RequestHandler = async (req, res) => {
+interface SignupRequest {
+    password: string;
+    email: string;
+    nickName: string;
+}
+
+interface LoginRequest {
+    email: string;
+    password: string;
+}
+
+
+export const checkEmailAvailability: RequestHandler = async (req, res): Promise<void> => {
+    const { email } = req.body;
+
+    const isEmailAvailable = await checkAvailability(email, "email");
+
+    if (isEmailAvailable) {
+        res.status(StatusCodes.OK).json({ message: "사용 가능한 이메일 입니다." });
+    } else {
+        res.status(StatusCodes.BAD_REQUEST).json({ message: "이미 사용 중인 이메일 입니다." });
+    }
+};
+
+export const checkNicknameAvailability: RequestHandler = async (req, res): Promise<void> => {
+    const { nickName } = req.body;
+
+    const isNicknameAvailable = await checkAvailability(nickName, "nickName");
+
+    if (isNicknameAvailable) {
+        res.status(StatusCodes.OK).json({ message: "사용 가능한 닉네임 입니다." });
+    } else {
+        res.status(StatusCodes.BAD_REQUEST).json({ message: "이미 사용 중인 닉네임 입니다." });
+    }
+};
+
+export const signup: RequestHandler<{}, {}, SignupRequest> = async (req, res): Promise<void> => {
     try {
-        const { userId, password, email, nickName } = req.body;
+        const { password, email, nickName } = req.body;
 
-        const user = await createUser(userId, password, email, nickName);
+        const user = await createUser(password, email, nickName);
 
         res.status(StatusCodes.CREATED).json({
             message: "회원가입이 완료되었습니다.",
             user: {
-                userId: user.userId,
                 email: user.email,
                 nickName: user.nickName
             }
@@ -25,17 +60,16 @@ export const signup: RequestHandler = async (req, res) => {
     }
 };
 
-export const login: RequestHandler = async (req, res) => {
+export const login: RequestHandler<{}, {}, LoginRequest> = async (req, res): Promise<void> => {
     try {
-        const { userId, password } = req.body;
+        const { email, password } = req.body;
 
-        const { user, token } = await authenticateUser(userId, password);
+        const { user, token } = await authenticateUser(email, password);
 
-        res.json({
+        res.status(StatusCodes.OK).json({
             message: "로그인 성공",
             token,
             user: {
-                userId: user.userId,
                 email: user.email,
                 nickName: user.nickName
             }
@@ -49,7 +83,7 @@ export const login: RequestHandler = async (req, res) => {
     }
 };
 
-export const logout: RequestHandler = async (req, res) => {
+export const logout: RequestHandler = async (req, res): Promise<void> => {
     res.clearCookie("token");
     res.status(StatusCodes.OK).json({ message: "로그아웃 성공" });
 };

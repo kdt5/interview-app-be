@@ -1,63 +1,70 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes'
 
-export const validateSignup = (req: Request, res: Response, next: NextFunction): void => {
-    const { userId, password, nickName, email } = req.body;
+interface ValidationRule {
+    test: (value: string) => boolean;
+    message: string;
+}
 
-    if (!userId || !password || !nickName || !email) {
-        res.status(StatusCodes.BAD_REQUEST).json({ message: '모든 필드를 입력해주세요.' });
-        return;
+const validationRules = {
+    password: {
+        test: (value: string) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,30}$/.test(value),
+        message: '비밀번호는 8-30자의 소문자, 대문자, 숫자, 특수문자를 모두 포함해야 합니다.'
+    },
+    email: {
+        test: (value: string) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value),
+        message: '이메일 형식이 올바르지 않습니다.'
+    },
+    nickName: {
+        test: (value: string) => /^[가-힣a-zA-Z0-9]{2,16}$/.test(value),
+        message: '닉네임은 2-16자의 한글, 영문자, 숫자만 사용 가능합니다.'
     }
+} as const;
 
-    const userIdRegex = /^[a-zA-Z0-9_@\.]{4,20}$/;
-    if (!userIdRegex.test(userId)) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-            message: '사용자 ID는 4-20자의 영문자, 숫자, 언더스코어, @(앳), .(마침표)만 사용 가능합니다.'
-        });
-        return;
+const validateField = (
+    value: string | undefined,
+    fieldName: string,
+    rule?: ValidationRule
+): string | null => {
+    if (!value) {
+        return `${fieldName}을(를) 입력해주세요.`;
     }
-
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,30}$/;
-    if (!passwordRegex.test(password)) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-            message: '비밀번호는 8-30자의 소문자, 대문자, 숫자, 특수문자를 모두 포함해야 합니다.'
-        });
-        return;
+    if (rule && !rule.test(value)) {
+        return rule.message;
     }
-
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(email)) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-            message: '이메일 형식이 올바르지 않습니다.'
-        });
-        return;
-    }
-
-    if (password.toLowerCase().includes(userId.toLowerCase())) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-            message: '비밀번호에 사용자 ID를 포함할 수 없습니다.'
-        });
-        return;
-    }
-
-    const nickNameRegex = /^[가-힣a-zA-Z0-9]{2,16}$/;
-    if (!nickNameRegex.test(nickName)) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-            message: '닉네임은 2-16자의 한글, 영문자, 숫자만 사용 가능합니다.'
-        });
-        return;
-    }
-
-    next();
+    return null;
 };
 
-export const validateLogin = (req: Request, res: Response, next: NextFunction): void => {
-    const { userId, password } = req.body;
+const createValidator = (fields: { [key: string]: ValidationRule | undefined }) => {
+    return (req: Request, res: Response, next: NextFunction): void => {
+        for (const [fieldName, rule] of Object.entries(fields)) {
+            const value = req.body[fieldName];
+            const error = validateField(value, fieldName, rule);
 
-    if (!userId || !password) {
-        res.status(StatusCodes.BAD_REQUEST).json({ message: '아이디와 비밀번호를 모두 입력해주세요.' });
-        return;
-    }
-
-    next();
+            if (error) {
+                res.status(StatusCodes.BAD_REQUEST).json({ message: error });
+                return;
+            }
+        }
+        next();
+    };
 };
+
+export const validateNickname = createValidator({
+    nickName: validationRules.nickName
+});
+
+export const validateEmail = createValidator({
+    email: validationRules.email
+});
+
+export const validateSignup = createValidator({
+    email: validationRules.email,
+    password: validationRules.password,
+    nickName: validationRules.nickName
+});
+
+export const validateLogin = createValidator({
+    email: validationRules.email,
+    password: undefined  // 로그인 시에는 패스워드 형식 검사 불필요
+});
