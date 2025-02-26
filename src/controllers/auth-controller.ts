@@ -84,18 +84,6 @@ export const login: RequestHandler<{}, {}, LoginRequest> = async (req, res): Pro
 };
 
 export const logout: RequestHandler = async (req, res): Promise<void> => {
-    try {
-        // JWT 토큰 확인
-        const token = req.cookies.token;
-        if (!token) {
-            res.status(StatusCodes.UNAUTHORIZED).json({ message: "로그인이 필요합니다." });
-            return;
-        }
-
-        // 쿠키 제거 및 응답
-        res.clearCookie("token");
-        res.status(StatusCodes.OK).json({ message: "로그아웃 성공" });
-    } catch (error) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "로그아웃 처리 중 오류가 발생했습니다." });
-    }
+    res.clearCookie("token");
+    res.status(StatusCodes.OK).json({ message: "로그아웃 성공" });
 };

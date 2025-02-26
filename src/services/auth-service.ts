@@ -5,10 +5,13 @@ import { User } from "@prisma/client";
 
 const HASH_ROUNDS = 10;
 
-type UserInfo = "email" | "nickName"
+export interface UserInfo {
+    email: string;
+    nickName: string;
+}
 
-interface AuthResponse {
-    user: Pick<User, UserInfo>;
+export interface AuthResponse {
+    user: UserInfo;
     token: string;
 }
 
@@ -22,7 +25,7 @@ export class AuthError extends Error {
     }
 }
 
-export const checkAvailability = async (item: string, type: UserInfo): Promise<boolean> => {
+export const checkAvailability = async (item: string, type: keyof UserInfo): Promise<boolean> => {
     const where = type === "email"
         ? { email: item }
         : { nickName: item };

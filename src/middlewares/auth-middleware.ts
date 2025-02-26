@@ -1,0 +1,92 @@
+import jwt, { JwtPayload, JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import { StatusCodes } from 'http-status-codes';
+import prisma from '../lib/prisma';
+import { Request, Response, NextFunction } from 'express';
+import { UserInfo } from '../services/auth-service';
+
+export interface RequestWithUser extends Request {
+    user?: UserInfo;
+}
+
+const AUTH_ERROR_MESSAGES = {
+    UNAUTHORIZED: '인증이 필요합니다.',
+    INVALID_TOKEN: '유효하지 않은 토큰입니다.',
+    TOKEN_EXPIRED: '토큰이 만료되었습니다.',
+    FORBIDDEN: '접근 권한이 없습니다.'
+};
+
+export class AuthenticationError extends Error {
+    constructor(public statusCode: number, message: string) {
+        super(message);
+        this.name = 'AuthenticationError';
+    }
+}
+
+const authMiddleware = {
+    authenticate: async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const token = authMiddleware.extractTokenFromHeader(req);
+            const secret = authMiddleware.getJwtSecret();
+            const user = await authMiddleware.validateTokenAndGetUser(token, secret);
+
+            req.user = {
+                email: user.email,
+                nickName: user.nickName
+            };
+
+            next();
+        } catch (error) {
+            if (error instanceof AuthenticationError) {
+                res.status(error.statusCode).json({ message: error.message });
+                return;
+            }
+            next(error);
+        }
+    },
+
+    extractTokenFromHeader(req: RequestWithUser): string {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            throw new AuthenticationError(StatusCodes.UNAUTHORIZED, AUTH_ERROR_MESSAGES.UNAUTHORIZED);
+        }
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            throw new AuthenticationError(StatusCodes.UNAUTHORIZED, AUTH_ERROR_MESSAGES.UNAUTHORIZED);
+        }
+        return token;
+    },
+
+    getJwtSecret(): string {
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT_SECRET is not defined');
+        }
+        return secret;
+    },
+
+    async validateTokenAndGetUser(token: string, secret: string) {
+        try {
+            const decoded = jwt.verify(token, secret) as JwtPayload & { email: string };
+            const user = await prisma.user.findUnique({
+                where: { email: decoded.email },
+                select: { email: true, nickName: true }
+            });
+
+            if (!user) {
+                throw new AuthenticationError(StatusCodes.UNAUTHORIZED, AUTH_ERROR_MESSAGES.UNAUTHORIZED);
+            }
+
+            return user;
+        } catch (error) {
+            if (error instanceof TokenExpiredError) {
+                throw new AuthenticationError(StatusCodes.UNAUTHORIZED, AUTH_ERROR_MESSAGES.TOKEN_EXPIRED);
+            }
+            if (error instanceof JsonWebTokenError) {
+                throw new AuthenticationError(StatusCodes.UNAUTHORIZED, AUTH_ERROR_MESSAGES.INVALID_TOKEN);
+            }
+            throw new AuthenticationError(StatusCodes.UNAUTHORIZED, AUTH_ERROR_MESSAGES.UNAUTHORIZED);
+        }
+    }
+};
+
+export default authMiddleware;
