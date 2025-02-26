@@ -23,37 +23,32 @@ export class AuthenticationError extends Error {
 }
 
 const authMiddleware = {
-    authenticate: async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
+    authenticate: async (
+        req: RequestWithUser,
+        res: Response,
+        next: NextFunction
+    ): Promise<Response | void> => {
         try {
             const token = authMiddleware.extractTokenFromHeader(req);
             const secret = authMiddleware.getJwtSecret();
             const user = await authMiddleware.validateTokenAndGetUser(token, secret);
 
-            req.user = {
-                email: user.email,
-                nickName: user.nickName
-            };
-
+            req.user = { email: user.email, nickName: user.nickName };
             next();
         } catch (error) {
-            if (error instanceof AuthenticationError) {
-                res.status(error.statusCode).json({ message: error.message });
-                return;
-            }
-            next(error);
+            return handleAuthError(error, res);
         }
     },
 
     extractTokenFromHeader(req: RequestWithUser): string {
         const authHeader = req.headers.authorization;
-        if (!authHeader) {
-            throw new AuthenticationError(StatusCodes.UNAUTHORIZED, AUTH_ERROR_MESSAGES.UNAUTHORIZED);
+        if (!authHeader?.split(' ')[1]) {
+            throw new AuthenticationError(
+                StatusCodes.UNAUTHORIZED,
+                AUTH_ERROR_MESSAGES.UNAUTHORIZED
+            );
         }
-        const token = authHeader.split(' ')[1];
-        if (!token) {
-            throw new AuthenticationError(StatusCodes.UNAUTHORIZED, AUTH_ERROR_MESSAGES.UNAUTHORIZED);
-        }
-        return token;
+        return authHeader.split(' ')[1];
     },
 
     getJwtSecret(): string {
@@ -66,7 +61,11 @@ const authMiddleware = {
 
     async validateTokenAndGetUser(token: string, secret: string) {
         try {
-            const decoded = jwt.verify(token, secret) as JwtPayload & { email: string };
+            const decoded = jwt.verify(token, secret) as JwtPayload;
+            if (!decoded || typeof decoded.email !== 'string') {
+                throw new AuthenticationError(StatusCodes.UNAUTHORIZED, AUTH_ERROR_MESSAGES.INVALID_TOKEN);
+            }
+
             const user = await prisma.user.findUnique({
                 where: { email: decoded.email },
                 select: { email: true, nickName: true }
@@ -88,5 +87,18 @@ const authMiddleware = {
         }
     }
 };
+
+function handleAuthError(error: unknown, res: Response): Response {
+    if (error instanceof AuthenticationError) {
+        return res.status(error.statusCode).json({
+            message: error.message
+        });
+    }
+
+    console.error("Unexpected authentication error:", error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: "서버 오류 발생"
+    });
+}
 
 export default authMiddleware;
