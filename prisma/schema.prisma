@@ -14,8 +14,6 @@ model User {
   id        Int        @id @default(autoincrement())
   /// 사용자 닉네임
   nickName  String     @unique @map("nick_name")
-  /// 사용자 로그인 아이디
-  userId    String     @unique @map("user_id")
   /// 사용자 이메일
   email     String     @unique
   /// 사용자 비밀번호
