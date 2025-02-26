@@ -76,7 +76,7 @@ export const checkNicknameAvailability: RequestHandler<{}, {}, CheckNicknameAvai
         if (isNicknameAvailable) {
             res.status(StatusCodes.OK).json({ message: RESPONSE_MESSAGES.AVAILABLE_NICKNAME });
         } else {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: RESPONSE_MESSAGES.UNAVAILABLE_NICKNAME });
+            res.status(StatusCodes.CONFLICT).json({ message: RESPONSE_MESSAGES.UNAVAILABLE_NICKNAME });
         }
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: ERROR_MESSAGES.UNKNOWN_ERROR });
