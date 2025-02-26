@@ -4,14 +4,15 @@ import { createUser, authenticateUser } from "../services/auth-service";
 
 export const signup: RequestHandler = async (req, res) => {
     try {
-        const { user_id, password, nick_name } = req.body;
+        const { userId, password, email, nickName } = req.body;
 
-        const user = await createUser(user_id, password, nick_name);
+        const user = await createUser(userId, password, email, nickName);
 
         res.status(StatusCodes.CREATED).json({
             message: "회원가입이 완료되었습니다.",
             user: {
                 userId: user.userId,
+                email: user.email,
                 nickName: user.nickName
             }
         });
@@ -35,6 +36,7 @@ export const login: RequestHandler = async (req, res) => {
             token,
             user: {
                 userId: user.userId,
+                email: user.email,
                 nickName: user.nickName
             }
         });

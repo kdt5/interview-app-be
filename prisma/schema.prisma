@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 /// 사용자 정보를 저장하는 모델
@@ -15,6 +16,8 @@ model User {
   nickName  String     @unique @map("nick_name")
   /// 사용자 로그인 아이디
   userId    String     @unique @map("user_id")
+  /// 사용자 이메일
+  email     String     @unique
   /// 사용자 비밀번호
   password  String
   /// 계정 생성일

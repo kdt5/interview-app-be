@@ -13,6 +13,7 @@ npm install
 ```bash
 # .env 파일 생성 후 다음 내용 추가
 DATABASE_URL="mysql://username:password@localhost:3306/database_name"
+SHADOW_DATABASE_URL="mysql://username:password@localhost:3306/shadow_database_name"
 PORT=3000
 JWT_SECRET="your-secret-key"
 ```
