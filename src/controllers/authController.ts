@@ -3,7 +3,6 @@ import { StatusCodes } from "http-status-codes";
 import { createUser, authenticateUser, checkAvailability, AvailabilityCheckType } from "../services/authService";
 import { changeUserNickname, changeUserPassword } from "../services/authService";
 import { RequestWithUser } from "../middlewares/authMiddleware";
-import { DuplicateError, AuthError } from "../utils/errors/authError";
 
 interface CheckEmailAvailabilityRequest {
     email: string;

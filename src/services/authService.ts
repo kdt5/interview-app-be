@@ -2,8 +2,7 @@ import { hash, compare } from "bcrypt-ts";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
 import { User } from "@prisma/client";
-import { DuplicateError, ValidationError, AuthError, CommonError } from "../utils/errors/authError";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { DuplicateError, ValidationError, AuthError } from "../utils/errors/authError";
 
 const HASH_ROUNDS = 10;
 
@@ -65,52 +64,37 @@ export const createUser = async (password: string, email: string, nickName: stri
 };
 
 export const authenticateUser = async (email: string, password: string): Promise<AuthResponse> => {
-    try {
-        const user = await prisma.user.findUnique({
-            where: { email: email }
-        });
+    const user = await prisma.user.findUnique({
+        where: { email: email }
+    })
 
-        if (!user) {
-            const error = new AuthError("UNAUTHORIZED");
-            console.error(`Authentication failed: ${error.getInternalMessage()}`);
-            throw error;
-        }
-
-        const isValidPassword = await compare(password, user.password);
-        if (!isValidPassword) {
-            const error = new ValidationError("INVALID_PASSWORD");
-            console.error(`Password validation failed: ${error.getInternalMessage()}`);
-            throw error;
-        }
-
-        const secret = process.env.JWT_SECRET;
-        if (!secret) {
-            const error = new AuthError("SECRET_KEY_NOT_FOUND");
-            console.error(`JWT Secret error: ${error.getInternalMessage()}`);
-            throw error;
-        }
-
-        const token = jwt.sign(
-            { email: user.email },
-            secret,
-            { expiresIn: "1h" }
-        );
-
-        return {
-            user: {
-                email: user.email,
-                nickName: user.nickName
-            },
-            token
-        };
-    } catch (error) {
-        // Prisma 에러 처리
-        if (error instanceof PrismaClientKnownRequestError) {
-            console.error(`Database error: ${error.code}`, error);
-            throw new CommonError("UNKNOWN_ERROR");
-        }
-        throw error;
+    if (!user) {
+        throw new AuthError("UNAUTHORIZED");
     }
+
+    const isValidPassword = await compare(password, user.password);
+    if (!isValidPassword) {
+        throw new ValidationError("INVALID_PASSWORD");
+    }
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new AuthError("SECRET_KEY_NOT_FOUND");
+    }
+
+    const token = jwt.sign(
+        { email: user.email },
+        secret,
+        { expiresIn: "1h" }
+    );
+
+    return {
+        user: {
+            email: user.email,
+            nickName: user.nickName
+        },
+        token
+    };
 };
 
 export const changeUserNickname = async (email: string | undefined, nickName: string): Promise<User> => {
@@ -132,9 +116,6 @@ export const changeUserNickname = async (email: string | undefined, nickName: st
             data: { nickName: nickName }
         });
     } catch (error) {
-        if (error instanceof PrismaClientKnownRequestError) {
-            throw new CommonError("DATABASE_ERROR");
-        }
         throw error;
     }
 };
@@ -164,9 +145,6 @@ export const changeUserPassword = async (email: string | undefined, oldPassword:
             data: { password: hashedPassword }
         });
     } catch (error) {
-        if (error instanceof PrismaClientKnownRequestError) {
-            throw new CommonError("DATABASE_ERROR");
-        }
         throw error;
     }
 };
