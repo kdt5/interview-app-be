@@ -75,6 +75,22 @@ CREATE TABLE `QuestionCategory` (
     UNIQUE INDEX `QuestionCategory_question_id_category_id_key`(`question_id`, `category_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `RefreshToken` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(191) NOT NULL,
+    `expires_at` DATETIME(3) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `last_used` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `user_id` INTEGER NOT NULL,
+    `device` VARCHAR(255) NULL,
+
+    UNIQUE INDEX `RefreshToken_token_key`(`token`),
+    INDEX `RefreshToken_user_id_idx`(`user_id`),
+    INDEX `RefreshToken_token_idx`(`token`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `Answer` ADD CONSTRAINT `Answer_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -98,3 +114,6 @@ ALTER TABLE `QuestionCategory` ADD CONSTRAINT `QuestionCategory_question_id_fkey
 
 -- AddForeignKey
 ALTER TABLE `QuestionCategory` ADD CONSTRAINT `QuestionCategory_category_id_fkey` FOREIGN KEY (`category_id`) REFERENCES `Category`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `RefreshToken` ADD CONSTRAINT `RefreshToken_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
