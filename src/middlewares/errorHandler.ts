@@ -22,7 +22,12 @@ export const errorHandler = (
     // 에러 로깅
     console.error('[Error]', {
         path: req.path,
-        error: error.message,
+        error: error instanceof AuthError ||
+            error instanceof ValidationError ||
+            error instanceof DuplicateError ||
+            error instanceof CommonError
+            ? error.getInternalMessage()
+            : error.message,
         stack: error.stack,
         timestamp: new Date().toISOString()
     });

@@ -36,13 +36,8 @@ interface ChangePasswordRequest {
 export const checkEmailAvailability: RequestHandler<{}, {}, CheckEmailAvailabilityRequest> = async (req, res, next): Promise<void> => {
     try {
         const { email } = req.body;
-        const isEmailAvailable = await checkAvailability(email, AvailabilityCheckType.EMAIL);
-
-        if (isEmailAvailable) {
-            res.status(StatusCodes.OK).json({ message: "사용 가능한 이메일입니다." });
-        } else {
-            throw new DuplicateError("EMAIL_DUPLICATE");
-        }
+        const result = await checkAvailability(email, AvailabilityCheckType.EMAIL);
+        res.status(StatusCodes.OK).json({ message: result.message });
     } catch (error) {
         next(error);
     }
@@ -51,13 +46,8 @@ export const checkEmailAvailability: RequestHandler<{}, {}, CheckEmailAvailabili
 export const checkNicknameAvailability: RequestHandler<{}, {}, CheckNicknameAvailabilityRequest> = async (req, res, next): Promise<void> => {
     try {
         const { nickName } = req.body;
-        const isNicknameAvailable = await checkAvailability(nickName, AvailabilityCheckType.NICKNAME);
-
-        if (isNicknameAvailable) {
-            res.status(StatusCodes.OK).json({ message: "사용 가능한 닉네임입니다." });
-        } else {
-            throw new DuplicateError("NICKNAME_DUPLICATE");
-        }
+        const result = await checkAvailability(nickName, AvailabilityCheckType.NICKNAME);
+        res.status(StatusCodes.OK).json({ message: result.message });
     } catch (error) {
         next(error);
     }
@@ -107,13 +97,7 @@ export const logout: RequestHandler = async (req, res): Promise<void> => {
 export const changeNickname: RequestHandler<{}, {}, ChangeNicknameRequest> = async (req: RequestWithUser, res, next): Promise<void> => {
     try {
         const { nickName } = req.body;
-        const email = req.user?.email;
-
-        if (!email) {
-            throw new AuthError("UNAUTHORIZED");
-        }
-
-        const user = await changeUserNickname(email, nickName);
+        const user = await changeUserNickname(req.user?.email, nickName);
 
         res.status(StatusCodes.OK).json({
             message: "닉네임이 변경되었습니다.",
@@ -130,13 +114,7 @@ export const changeNickname: RequestHandler<{}, {}, ChangeNicknameRequest> = asy
 export const changePassword: RequestHandler<{}, {}, ChangePasswordRequest> = async (req: RequestWithUser, res, next): Promise<void> => {
     try {
         const { oldPassword, newPassword } = req.body;
-        const email = req.user?.email;
-
-        if (!email) {
-            throw new AuthError("UNAUTHORIZED");
-        }
-
-        await changeUserPassword(email, oldPassword, newPassword);
+        await changeUserPassword(req.user?.email, oldPassword, newPassword);
 
         res.status(StatusCodes.OK).json({
             message: "비밀번호가 변경되었습니다."
