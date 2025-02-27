@@ -62,11 +62,3 @@ npx prisma migrate status
 ```bash
 npx prisma migrate dev
 ```
-
-- 로컬 데이터베이스를 최신 상태로 동기화
-
-```bash
-npx prisma generate
-```
-
-- 타입 생성하기 위한 명령어
