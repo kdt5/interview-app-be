@@ -15,9 +15,9 @@ model User {
   /// 사용자 닉네임
   nickName  String     @unique @map("nick_name")
   /// 사용자 이메일
-  email     String     @unique
+  email     String     @unique @db.VarChar(254)
   /// 사용자 비밀번호
-  password  String
+  password  String     @db.VarChar(60)
   /// 계정 생성일
   createdAt DateTime   @default(now()) @map("created_at")
   /// 계정 수정일
