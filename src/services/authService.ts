@@ -66,10 +66,15 @@ export const authenticateUser = async (email: string, password: string): Promise
         throw new ValidationError("INVALID_PASSWORD");
     }
 
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new AuthError("SECRET_KEY_NOT_FOUND");
+    }
+
     // JWT 토큰 생성
     const token = jwt.sign(
         { email: user.email },
-        process.env.JWT_SECRET || "default-secret-key",
+        secret,
         { expiresIn: "1h" }
     );
 

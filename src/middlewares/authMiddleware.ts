@@ -38,7 +38,7 @@ const authMiddleware = {
     getJwtSecret(): string {
         const secret = process.env.JWT_SECRET;
         if (!secret) {
-            throw new Error('JWT_SECRET is not defined');
+            throw new AuthError("SECRET_KEY_NOT_FOUND");
         }
         return secret;
     },

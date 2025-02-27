@@ -17,6 +17,10 @@ export const AUTH_ERROR_TYPES = {
     FORBIDDEN: {
         code: 'AUTH/FORBIDDEN',
         message: '접근 권한이 없습니다.'
+    },
+    SECRET_KEY_NOT_FOUND: {
+        code: 'AUTH/SECRET_KEY_NOT_FOUND',
+        message: 'JWT 시크릿 키가 존재하지 않습니다.'
     }
 } as const;
 
