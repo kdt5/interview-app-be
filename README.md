@@ -69,4 +69,4 @@ npx prisma migrate dev
 npx prisma generate
 ```
 
-- 새로 생성된 타입을 사용하기 위해 타입 생성
+- 타입 생성하기 위한 명령어
