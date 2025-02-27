@@ -4,7 +4,7 @@ import prisma from "../lib/prisma";
 import { User } from "@prisma/client";
 import { DuplicateError, ValidationError, AuthError } from "../utils/errors/authError";
 
-const HASH_ROUNDS = 12;  // 표준 권장값 12~14
+const HASH_ROUNDS = 10;  // 10 rounds → 약 10ms, 12 rounds → 약 100ms
 
 export interface UserInfo {
     email: string;
