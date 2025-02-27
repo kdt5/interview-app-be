@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes'
+import { VALIDATION_ERROR_TYPES } from '../utils/errors/authError';
 
 interface ValidationRule {
     test: (value: string) => boolean;
@@ -9,15 +10,15 @@ interface ValidationRule {
 const validationRules = {
     password: {
         test: (value: string) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,30}$/.test(value),
-        message: '비밀번호는 8-30자의 소문자, 대문자, 숫자, 특수문자를 모두 포함해야 합니다.'
+        message: VALIDATION_ERROR_TYPES.PASSWORD_REQUIREMENTS.message
     },
     email: {
-        test: (value: string) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value),
-        message: '이메일 형식이 올바르지 않습니다.'
+        test: (value: string) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(value) && value.length <= 254,
+        message: VALIDATION_ERROR_TYPES.INVALID_EMAIL.message
     },
     nickName: {
         test: (value: string) => /^[가-힣a-zA-Z0-9]{2,16}$/.test(value),
-        message: '닉네임은 2-16자의 한글, 영문자, 숫자만 사용 가능합니다.'
+        message: VALIDATION_ERROR_TYPES.INVALID_NICKNAME.message
     }
 } as const;
 

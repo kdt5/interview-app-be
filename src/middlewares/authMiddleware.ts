@@ -1,5 +1,4 @@
 import jwt, { JwtPayload, JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
-import { StatusCodes } from 'http-status-codes';
 import prisma from '../lib/prisma';
 import { Request, Response, NextFunction } from 'express';
 import { UserInfo } from '../services/authService';
@@ -23,7 +22,7 @@ const authMiddleware = {
             req.user = { email: user.email, nickName: user.nickName };
             next();
         } catch (error) {
-            handleAuthError(error, res);
+            next(error);
         }
     },
 
@@ -71,25 +70,5 @@ const authMiddleware = {
         }
     }
 };
-
-function handleAuthError(error: unknown, res: Response): Response {
-    if (error instanceof AuthError) {
-        return res.status(error.statusCode).json({
-            message: error.message
-        });
-    }
-
-    if (error instanceof Error) {
-        console.error("Unexpected authentication error:", error);
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: "서버 오류 발생"
-        });
-    }
-
-    console.error("Unexpected authentication error:", error);
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: "서버 오류 발생"
-    });
-}
 
 export default authMiddleware;
