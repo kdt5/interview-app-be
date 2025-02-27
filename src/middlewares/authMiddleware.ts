@@ -28,10 +28,17 @@ const authMiddleware = {
 
     extractTokenFromHeader(req: RequestWithUser): string {
         const authHeader = req.headers.authorization;
-        if (!authHeader?.split(' ')[1]) {
+        if (!authHeader) {
             throw new AuthError("UNAUTHORIZED");
         }
-        return authHeader.split(' ')[1];
+
+        const [scheme, token] = authHeader.split(' ');
+
+        if (scheme !== 'Bearer' || !token) {
+            throw new AuthError("INVALID_AUTH_SCHEME");
+        }
+
+        return token;
     },
 
     getJwtSecret(): string {

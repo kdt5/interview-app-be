@@ -26,6 +26,16 @@ export const AUTH_ERROR_TYPES = {
         code: 'AUTH/SECRET_KEY_NOT_FOUND',
         message: '서버 설정 오류가 발생했습니다.',
         internalMessage: 'JWT 시크릿 키가 존재하지 않습니다.'
+    },
+    INVALID_AUTH_SCHEME: {
+        code: 'AUTH/INVALID_AUTH_SCHEME',
+        message: '유효하지 않은 인증 헤더입니다.',
+        internalMessage: '유효하지 않은 인증 헤더입니다.'
+    },
+    INVALID_CSRF_TOKEN: {
+        code: 'AUTH/INVALID_CSRF_TOKEN',
+        message: '유효하지 않은 CSRF 토큰입니다.',
+        internalMessage: '유효하지 않은 CSRF 토큰입니다.'
     }
 } as const;
 
