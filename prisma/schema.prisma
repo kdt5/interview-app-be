@@ -20,6 +20,8 @@ model User {
   password  String
   /// 계정 생성일
   createdAt DateTime   @default(now()) @map("created_at")
+  /// 계정 수정일
+  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at")
   /// 사용자가 작성한 답변들
   answers   Answer[]
   /// 사용자가 작성한 댓글들
