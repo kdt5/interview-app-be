@@ -1,9 +1,9 @@
 import { RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
-import { createUser, authenticateUser, checkAvailability, AvailabilityCheckType } from "../services/auth-service";
-import { changeUserNickname, changeUserPassword } from "../services/auth-service";
-import { RequestWithUser } from "../middlewares/auth-middleware";
-import { DuplicateError, AuthError, ValidationError } from "../utils/errors/auth-error";
+import { createUser, authenticateUser, checkAvailability, AvailabilityCheckType } from "../services/authService";
+import { changeUserNickname, changeUserPassword } from "../services/authService";
+import { RequestWithUser } from "../middlewares/authMiddleware";
+import { DuplicateError, AuthError, ValidationError } from "../utils/errors/authError";
 // 응답 메시지 상수
 export const RESPONSE_MESSAGES = {
     AVAILABLE_EMAIL: "사용 가능한 이메일입니다.",

@@ -2,7 +2,7 @@ import { hash, compare } from "bcrypt-ts";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
 import { User } from "@prisma/client";
-import { DuplicateError, ValidationError, AuthError } from "../utils/errors/auth-error";
+import { DuplicateError, ValidationError, AuthError } from "../utils/errors/authError";
 
 const HASH_ROUNDS = 10;
 

@@ -2,8 +2,8 @@ import jwt, { JwtPayload, JsonWebTokenError, TokenExpiredError } from 'jsonwebto
 import { StatusCodes } from 'http-status-codes';
 import prisma from '../lib/prisma';
 import { Request, Response, NextFunction } from 'express';
-import { UserInfo } from '../services/auth-service';
-import { AuthError } from '../utils/errors/auth-error';
+import { UserInfo } from '../services/authService';
+import { AuthError } from '../utils/errors/authError';
 
 export interface RequestWithUser extends Request {
     user?: UserInfo;
