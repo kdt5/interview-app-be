@@ -1,8 +1,9 @@
 import 'dotenv/config';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import authRouter from './src/routes/auth';
 import usersRouter from './src/routes/users';
-import cookieParser from 'cookie-parser';
+
 
 const app = express();
 app.use(express.json());
