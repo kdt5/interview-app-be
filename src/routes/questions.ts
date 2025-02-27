@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { viewQuestionDetail } from "../controllers/questions.controller";
+import { getQuestionDetail, getWeeklyQuestionDetail } from "../controllers/questions.controller";
 import { validateGetQuestionDetail } from "../middlewares/questions.validator";
 
 const router = Router();
 
-router.get('/:id', validateGetQuestionDetail, viewQuestionDetail);
+router.get('/weekly', getWeeklyQuestionDetail);
+router.get('/:id', validateGetQuestionDetail, getQuestionDetail);
 
 export default router;
