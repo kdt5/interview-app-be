@@ -19,18 +19,24 @@ export const errorHandler = (
     };
     let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
 
-    // 에러 로깅
-    console.error('[Error]', {
-        path: req.path,
-        error: error instanceof AuthError ||
+    // 로깅이 필요한 에러인지 확인
+    const shouldLog =
+        error instanceof CommonError ||
+        (error instanceof AuthError && error.errorType === 'SECRET_KEY_NOT_FOUND') ||
+        error instanceof PrismaClientKnownRequestError ||
+        !(error instanceof AuthError ||
             error instanceof ValidationError ||
-            error instanceof DuplicateError ||
-            error instanceof CommonError
-            ? error.getInternalMessage()
-            : error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
-    });
+            error instanceof DuplicateError);
+
+    // 중요 에러만 로깅, TODO: 로깅 레벨 추가 필요
+    if (shouldLog) {
+        console.error('[Error]', {
+            path: req.path,
+            error: error instanceof Error ? (error as CommonError).getInternalMessage?.() || error.message : 'Unknown error',
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
+    }
 
     // 커스텀 에러 처리
     if (error instanceof AuthError ||
