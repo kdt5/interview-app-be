@@ -55,6 +55,7 @@ export const validateNickname = createValidator({
 });
 
 export const validatePassword = createValidator({
+    oldPassword: undefined,
     newPassword: validationRules.password
 });
 
