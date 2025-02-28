@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import type { JwtPayload } from 'jsonwebtoken';
-import prisma from '../lib/prisma';
+import prisma from '../lib/prisma.js';
 import { Request, Response, NextFunction } from 'express';
-import { UserInfo } from '../services/authService';
-import { AuthError } from '../utils/errors/authError';
+import { UserInfo } from '../services/authService.js';
+import { AuthError } from '../utils/errors/authError.js';
 
 export interface RequestWithUser extends Request {
     user?: UserInfo;
