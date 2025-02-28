@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 /// 사용자 정보를 저장하는 모델
@@ -12,19 +13,23 @@ model User {
   /// 고유 식별자
   id        Int        @id @default(autoincrement())
   /// 사용자 닉네임
-  nickName  String     @unique @map("nick_name")
-  /// 사용자 로그인 아이디
-  userId    String     @unique @map("user_id")
+  nickName  String     @unique @map("nick_name") @db.VarChar(50)
+  /// 사용자 이메일
+  email     String     @unique @db.VarChar(254)
   /// 사용자 비밀번호
-  password  String
+  password  String     @db.VarChar(60)
   /// 계정 생성일
   createdAt DateTime   @default(now()) @map("created_at")
+  /// 계정 수정일
+  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at")
   /// 사용자가 작성한 답변들
   answers   Answer[]
   /// 사용자가 작성한 댓글들
   comments  Comment[]
   /// 사용자가 즐겨찾기한 질문들
   favorites Favorite[]
+  /// 사용자의 리프레시 토큰들
+  refreshTokens RefreshToken[]
 }
 
 /// 질문 정보를 저장하는 모델
@@ -138,4 +143,26 @@ enum Position {
   backend
   /// 프론트엔드 개발자
   frontend
+}
+
+model RefreshToken {
+  /// 고유 식별자
+  id        Int      @id @default(autoincrement())
+  /// 토큰 값
+  token     String   @unique
+  /// 토큰 만료일
+  expiresAt DateTime @map("expires_at")
+  /// 토큰 발급일
+  createdAt DateTime @default(now()) @map("created_at")
+  /// 마지막 사용일
+  lastUsed  DateTime @default(now()) @map("last_used")
+  /// 토큰 소유자
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// 사용자 ID
+  userId    Int      @map("user_id")
+  /// 기기 정보 (선택적)
+  device    String?  @db.VarChar(255)
+
+  @@index([userId])
+  @@index([token])
 } 
