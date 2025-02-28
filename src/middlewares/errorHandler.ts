@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthError, ValidationError, DuplicateError, CommonError } from '../utils/errors/authError';
+import { AuthError, ValidationError, DuplicateError, CommonError } from '../utils/errors/authError.js';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { StatusCodes } from 'http-status-codes';
 

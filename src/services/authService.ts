@@ -1,8 +1,8 @@
 import { hash, compare } from "bcrypt-ts";
 import jwt from "jsonwebtoken";
-import prisma from "../lib/prisma";
+import prisma from "../lib/prisma.js";
 import { User } from "@prisma/client";
-import { DuplicateError, ValidationError, AuthError } from "../utils/errors/authError";
+import { DuplicateError, ValidationError, AuthError } from "../utils/errors/authError.js";
 
 const HASH_ROUNDS = 10;  // 10 rounds → 약 10ms, 12 rounds → 약 100ms
 
