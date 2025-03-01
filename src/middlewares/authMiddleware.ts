@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import type { JwtPayload } from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
 import { Request, Response, NextFunction } from 'express';
-import { UserInfo } from '../services/authService.js';
+import { UserInfo, refreshTokens } from '../services/authService.js';
 import { AuthError } from '../utils/errors/authError.js';
 
 export interface RequestWithUser extends Request {
@@ -18,10 +18,48 @@ const authMiddleware = {
         try {
             const token = authMiddleware.extractTokenFromHeader(req);
             const secret = authMiddleware.getJwtSecret();
-            const user = await authMiddleware.validateTokenAndGetUser(token, secret);
 
-            req.user = { email: user.email, nickName: user.nickName };
-            next();
+            try {
+                const user = await authMiddleware.validateTokenAndGetUser(token, secret);
+                req.user = { email: user.email, nickName: user.nickName };
+                next();
+            } catch (error) {
+                // 액세스 토큰이 만료된 경우에만 리프레시 토큰 시도
+                if (error instanceof AuthError && error.errorType === "TOKEN_EXPIRED") {
+                    const refreshToken = req.cookies?.refreshToken;
+
+                    if (!refreshToken) {
+                        throw new AuthError("REFRESH_TOKEN_REQUIRED");
+                    }
+
+                    try {
+                        // 리프레시 토큰으로 새 토큰 발급
+                        const tokens = await refreshTokens(refreshToken);
+
+                        // 새 토큰으로 쿠키 업데이트
+                        res.cookie('refreshToken', tokens.refreshToken, {
+                            httpOnly: true,
+                            secure: process.env.NODE_ENV === 'production',
+                            maxAge: 7 * 24 * 60 * 60 * 1000 // 7일
+                        });
+
+                        // 새 액세스 토큰으로 사용자 정보 가져오기
+                        const user = await authMiddleware.validateTokenAndGetUser(tokens.accessToken, secret);
+                        req.user = { email: user.email, nickName: user.nickName };
+
+                        // 새 액세스 토큰을 응답 헤더에 추가
+                        res.setHeader('X-New-Access-Token', tokens.accessToken);
+
+                        next();
+                    } catch (refreshError) {
+                        // 리프레시 토큰 갱신 실패
+                        next(refreshError);
+                    }
+                } else {
+                    // 다른 인증 오류
+                    next(error);
+                }
+            }
         } catch (error) {
             next(error);
         }

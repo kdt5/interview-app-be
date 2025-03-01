@@ -1,5 +1,5 @@
 import { hash, compare } from "bcrypt-ts";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
 import { User } from "@prisma/client";
 import { DuplicateError, ValidationError, AuthError } from "../utils/errors/authError.js";
@@ -13,7 +13,8 @@ export interface UserInfo {
 
 export interface AuthResponse {
     user: UserInfo;
-    token: string;
+    accessToken: string;
+    refreshToken: string;
 }
 
 export enum AvailabilityCheckType {
@@ -82,18 +83,48 @@ export const authenticateUser = async (email: string, password: string): Promise
         throw new AuthError("SECRET_KEY_NOT_FOUND");
     }
 
-    const token = jwt.sign(
+    const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+    if (!refreshTokenSecret) {
+        throw new AuthError("SECRET_KEY_NOT_FOUND");
+    }
+
+    // 액세스 토큰 생성 (짧은 유효기간)
+    const accessToken = jwt.sign(
         { email: user.email },
         secret,
         { expiresIn: "1h" }
     );
+
+    // 리프레시 토큰 생성 (긴 유효기간)
+    const refreshToken = jwt.sign(
+        { email: user.email },
+        refreshTokenSecret,
+        { expiresIn: "7d" }
+    );
+
+    // 기존 리프레시 토큰 삭제 (선택적)
+    await prisma.refreshToken.deleteMany({
+        where: { userId: user.id }
+    });
+
+    // 새 리프레시 토큰 저장
+    await prisma.refreshToken.create({
+        data: {
+            token: refreshToken,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일
+            userId: user.id,
+            device: null, // 필요시 기기 정보 추가
+            lastUsed: new Date()
+        }
+    });
 
     return {
         user: {
             email: user.email,
             nickName: user.nickName
         },
-        token
+        accessToken,
+        refreshToken
     };
 };
 
@@ -146,6 +177,88 @@ export const changeUserPassword = async (email: string | undefined, oldPassword:
         });
     } catch (error) {
         throw error;
+    }
+};
+
+interface TokenPair {
+    accessToken: string;
+    refreshToken: string;
+}
+
+export const refreshTokens = async (refreshToken: string): Promise<TokenPair> => {
+    try {
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new AuthError("SECRET_KEY_NOT_FOUND");
+        }
+
+        const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+        if (!refreshTokenSecret) {
+            throw new AuthError("SECRET_KEY_NOT_FOUND");
+        }
+
+        // Refresh Token 검증
+        const decoded = jwt.verify(refreshToken, refreshTokenSecret) as JwtPayload;
+
+        // DB에서 Refresh Token 조회
+        const tokenData = await prisma.refreshToken.findUnique({
+            where: { token: refreshToken },
+            include: { user: true }
+        });
+
+        if (!tokenData) {
+            throw new AuthError('INVALID_REFRESH_TOKEN');
+        }
+
+        // 토큰 만료 확인
+        if (new Date() > tokenData.expiresAt) {
+            // 만료된 토큰 삭제
+            await prisma.refreshToken.delete({
+                where: { id: tokenData.id }
+            });
+            throw new AuthError('TOKEN_EXPIRED');
+        }
+
+        // 새로운 토큰 쌍 생성
+        const newAccessToken = jwt.sign(
+            { email: tokenData.user.email },
+            secret,
+            { expiresIn: '1h' }
+        );
+
+        const newRefreshToken = jwt.sign(
+            { email: tokenData.user.email },
+            refreshTokenSecret,
+            { expiresIn: '7d' }
+        );
+
+        // 이전 Refresh Token 삭제 및 새로운 토큰 저장
+        await prisma.refreshToken.delete({
+            where: { id: tokenData.id }
+        });
+
+        await prisma.refreshToken.create({
+            data: {
+                token: newRefreshToken,
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일
+                userId: tokenData.userId,
+                device: tokenData.device,
+                lastUsed: new Date()
+            }
+        });
+
+        return {
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken
+        };
+    } catch (error) {
+        if (error instanceof jwt.TokenExpiredError) {
+            throw new AuthError('TOKEN_EXPIRED');
+        }
+        if (error instanceof jwt.JsonWebTokenError) {
+            throw new AuthError('INVALID_REFRESH_TOKEN');
+        }
+        throw new AuthError('REFRESH_TOKEN_FAILED');
     }
 };
 

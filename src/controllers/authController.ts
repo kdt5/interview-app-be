@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
-import { createUser, authenticateUser, checkAvailability, AvailabilityCheckType } from "../services/authService.js";
+import { createUser, authenticateUser, checkAvailability, AvailabilityCheckType, refreshTokens } from "../services/authService.js";
 import { changeUserNickname, changeUserPassword } from "../services/authService.js";
 import { RequestWithUser } from "../middlewares/authMiddleware.js";
 
@@ -73,11 +73,19 @@ export const signup: RequestHandler<{}, {}, SignupRequest> = async (req, res, ne
 export const login: RequestHandler<{}, {}, LoginRequest> = async (req, res, next): Promise<void> => {
     try {
         const { email, password } = req.body;
-        const { user, token } = await authenticateUser(email, password);
+        const { user, accessToken, refreshToken } = await authenticateUser(email, password);
+
+        // 리프레시 토큰을 HTTP 전용 쿠키로 설정
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+            sameSite: 'strict'
+        });
 
         res.status(StatusCodes.OK).json({
             message: "로그인이 완료되었습니다.",
-            token,
+            accessToken,
             user: {
                 email: user.email,
                 nickName: user.nickName
@@ -89,7 +97,13 @@ export const login: RequestHandler<{}, {}, LoginRequest> = async (req, res, next
 };
 
 export const logout: RequestHandler = async (req, res): Promise<void> => {
-    res.clearCookie("token");
+    // 리프레시 토큰 쿠키 삭제
+    res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+    });
+
     res.status(StatusCodes.OK).json({ message: "로그아웃이 완료되었습니다." });
 };
 
@@ -117,6 +131,36 @@ export const changePassword: RequestHandler<{}, {}, ChangePasswordRequest> = asy
 
         res.status(StatusCodes.OK).json({
             message: "비밀번호가 변경되었습니다."
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const refresh: RequestHandler = async (req, res, next): Promise<void> => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+
+        if (!refreshToken) {
+            res.status(StatusCodes.UNAUTHORIZED).json({
+                message: "리프레시 토큰이 필요합니다."
+            });
+            return;
+        }
+
+        const { accessToken, refreshToken: newRefreshToken } = await refreshTokens(refreshToken);
+
+        // 새 리프레시 토큰을 쿠키에 설정
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+            sameSite: 'strict'
+        });
+
+        res.status(StatusCodes.OK).json({
+            message: "토큰이 갱신되었습니다.",
+            accessToken
         });
     } catch (error) {
         next(error);
