@@ -16,7 +16,7 @@ const authMiddleware = {
         next: NextFunction
     ): Promise<void> => {
         try {
-            const token = authMiddleware.extractTokenFromHeader(req);
+            const token = authMiddleware.extractTokenFromCookie(req);
             const secret = authMiddleware.getJwtSecret();
 
             try {
@@ -61,18 +61,11 @@ const authMiddleware = {
         }
     },
 
-    extractTokenFromHeader(req: RequestWithUser): string {
-        const authHeader = req.headers.authorization;
-        if (!authHeader) {
+    extractTokenFromCookie(req: RequestWithUser): string {
+        const token = req.cookies.accessToken;
+        if (!token) {
             throw new AuthError("UNAUTHORIZED");
         }
-
-        const [scheme, token] = authHeader.split(' ');
-
-        if (scheme !== 'Bearer' || !token) {
-            throw new AuthError("INVALID_AUTH_SCHEME");
-        }
-
         return token;
     },
 
@@ -125,6 +118,25 @@ const authMiddleware = {
     // 리프레시 토큰 쿠키 삭제 함수
     clearRefreshTokenCookie(res: Response): void {
         res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
+    },
+
+    // 액세스 토큰 쿠키 설정 함수
+    setAccessTokenCookie(res: Response, accessToken: string): void {
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 60 * 60 * 1000, // 1시간
+            sameSite: 'strict'
+        });
+    },
+
+    // 액세스 토큰 쿠키 삭제 함수
+    clearAccessTokenCookie(res: Response): void {
+        res.clearCookie('accessToken', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict'

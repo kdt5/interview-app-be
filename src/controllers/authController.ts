@@ -76,12 +76,12 @@ export const login: RequestHandler<{}, {}, LoginRequest> = async (req, res, next
         const { email, password } = req.body;
         const { user, accessToken, refreshToken } = await authenticateUser(email, password);
 
-        // 리프레시 토큰을 HTTP 전용 쿠키로 설정
+        // 액세스 토큰과 리프레시 토큰을 모두 쿠키에 설정
+        authMiddleware.setAccessTokenCookie(res, accessToken);
         authMiddleware.setRefreshTokenCookie(res, refreshToken);
 
         res.status(StatusCodes.OK).json({
             message: "로그인이 완료되었습니다.",
-            accessToken,
             user: {
                 email: user.email,
                 nickName: user.nickName
@@ -93,7 +93,8 @@ export const login: RequestHandler<{}, {}, LoginRequest> = async (req, res, next
 };
 
 export const logout: RequestHandler = async (req, res): Promise<void> => {
-    // 리프레시 토큰 쿠키 삭제
+    // 액세스 토큰과 리프레시 토큰 쿠키 모두 삭제
+    authMiddleware.clearAccessTokenCookie(res);
     authMiddleware.clearRefreshTokenCookie(res);
 
     res.status(StatusCodes.OK).json({ message: "로그아웃이 완료되었습니다." });
@@ -142,12 +143,12 @@ export const refresh: RequestHandler = async (req, res, next): Promise<void> => 
 
         const { accessToken, refreshToken: newRefreshToken } = await refreshTokens(refreshToken);
 
-        // 새 리프레시 토큰을 쿠키에 설정
+        // 새 액세스 토큰과 리프레시 토큰을 쿠키에 설정
+        authMiddleware.setAccessTokenCookie(res, accessToken);
         authMiddleware.setRefreshTokenCookie(res, newRefreshToken);
 
         res.status(StatusCodes.OK).json({
-            message: "토큰이 갱신되었습니다.",
-            accessToken
+            message: "토큰이 갱신되었습니다."
         });
     } catch (error) {
         next(error);
