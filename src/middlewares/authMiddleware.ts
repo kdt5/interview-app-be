@@ -37,11 +37,7 @@ const authMiddleware = {
                         const tokens = await refreshTokens(refreshToken);
 
                         // 새 토큰으로 쿠키 업데이트
-                        res.cookie('refreshToken', tokens.refreshToken, {
-                            httpOnly: true,
-                            secure: process.env.NODE_ENV === 'production',
-                            maxAge: 7 * 24 * 60 * 60 * 1000 // 7일
-                        });
+                        authMiddleware.setRefreshTokenCookie(res, tokens.refreshToken);
 
                         // 새 액세스 토큰으로 사용자 정보 가져오기
                         const user = await authMiddleware.validateTokenAndGetUser(tokens.accessToken, secret);
@@ -114,6 +110,25 @@ const authMiddleware = {
             }
             throw new AuthError("UNAUTHORIZED");
         }
+    },
+
+    // 리프레시 토큰 쿠키 설정 함수
+    setRefreshTokenCookie(res: Response, refreshToken: string): void {
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+            sameSite: 'strict'
+        });
+    },
+
+    // 리프레시 토큰 쿠키 삭제 함수
+    clearRefreshTokenCookie(res: Response): void {
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
     }
 };
 

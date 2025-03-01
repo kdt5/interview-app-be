@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { createUser, authenticateUser, checkAvailability, AvailabilityCheckType, refreshTokens } from "../services/authService.js";
 import { changeUserNickname, changeUserPassword } from "../services/authService.js";
 import { RequestWithUser } from "../middlewares/authMiddleware.js";
+import authMiddleware from '../middlewares/authMiddleware.js';
 
 interface CheckEmailAvailabilityRequest {
     email: string;
@@ -76,12 +77,7 @@ export const login: RequestHandler<{}, {}, LoginRequest> = async (req, res, next
         const { user, accessToken, refreshToken } = await authenticateUser(email, password);
 
         // 리프레시 토큰을 HTTP 전용 쿠키로 설정
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
-            sameSite: 'strict'
-        });
+        authMiddleware.setRefreshTokenCookie(res, refreshToken);
 
         res.status(StatusCodes.OK).json({
             message: "로그인이 완료되었습니다.",
@@ -98,11 +94,7 @@ export const login: RequestHandler<{}, {}, LoginRequest> = async (req, res, next
 
 export const logout: RequestHandler = async (req, res): Promise<void> => {
     // 리프레시 토큰 쿠키 삭제
-    res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-    });
+    authMiddleware.clearRefreshTokenCookie(res);
 
     res.status(StatusCodes.OK).json({ message: "로그아웃이 완료되었습니다." });
 };
@@ -151,12 +143,7 @@ export const refresh: RequestHandler = async (req, res, next): Promise<void> => 
         const { accessToken, refreshToken: newRefreshToken } = await refreshTokens(refreshToken);
 
         // 새 리프레시 토큰을 쿠키에 설정
-        res.cookie('refreshToken', newRefreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
-            sameSite: 'strict'
-        });
+        authMiddleware.setRefreshTokenCookie(res, newRefreshToken);
 
         res.status(StatusCodes.OK).json({
             message: "토큰이 갱신되었습니다.",
