@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
-import { createUser, authenticateUser, checkAvailability, AvailabilityCheckType } from "../services/authService.js";
+import { createUser, authenticateUser, checkAvailability, AvailabilityCheckType, deleteRefreshToken } from "../services/authService.js";
 import { changeUserNickname, changeUserPassword } from "../services/authService.js";
 import { RequestWithUser } from "../middlewares/authMiddleware.js";
 import authMiddleware from '../middlewares/authMiddleware.js';
@@ -67,8 +67,6 @@ export const checkNicknameAvailability: RequestHandler<EmptyObject, MessageRespo
     }
 };
 
-
-
 export const signup: RequestHandler<EmptyObject, MessageResponseWithUser, SignupRequest> = async (req, res, next): Promise<void> => {
     try {
         const { password, email, nickName } = req.body;
@@ -86,8 +84,6 @@ export const signup: RequestHandler<EmptyObject, MessageResponseWithUser, Signup
         next(error);
     }
 };
-
-
 
 export const login: RequestHandler<EmptyObject, MessageResponseWithUser, LoginRequest> = async (req, res, next): Promise<void> => {
     try {
@@ -110,12 +106,21 @@ export const login: RequestHandler<EmptyObject, MessageResponseWithUser, LoginRe
     }
 };
 
-export const logout: RequestHandler = async (req, res): Promise<void> => {
-    // 액세스 토큰과 리프레시 토큰 쿠키 모두 삭제
-    authMiddleware.clearAccessTokenCookie(res);
-    authMiddleware.clearRefreshTokenCookie(res);
+export const logout: RequestHandler = async (req: RequestWithUser, res, next): Promise<void> => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
 
-    res.status(StatusCodes.OK).json({ message: "로그아웃이 완료되었습니다." });
+        if (refreshToken) {
+            await deleteRefreshToken(refreshToken);
+        }
+
+        authMiddleware.clearAccessTokenCookie(res);
+        authMiddleware.clearRefreshTokenCookie(res);
+
+        res.status(StatusCodes.OK).json({ message: "로그아웃이 완료되었습니다." });
+    } catch (error) {
+        next(error);
+    }
 };
 
 export const changeNickname: RequestHandler<EmptyObject, MessageResponseWithUser, ChangeNicknameRequest> = async (req: RequestWithUser, res, next): Promise<void> => {

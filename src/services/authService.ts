@@ -128,6 +128,12 @@ export const authenticateUser = async (email: string, password: string): Promise
     };
 };
 
+export const deleteRefreshToken = async (refreshToken: string): Promise<void> => {
+    await prisma.refreshToken.deleteMany({
+        where: { token: refreshToken }
+    });
+};
+
 export const changeUserNickname = async (email: string | undefined, nickName: string): Promise<User> => {
     if (!email) {
         throw new AuthError("UNAUTHORIZED");
