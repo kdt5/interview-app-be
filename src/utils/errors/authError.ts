@@ -26,6 +26,11 @@ export const AUTH_ERROR_TYPES: Record<string, ErrorType> = {
         code: 'AUTH/REFRESH_TOKEN_FAILED',
         message: '토큰 갱신에 실패했습니다.'
     },
+    INVALID_REFRESH_TOKEN: {
+        code: 'AUTH/INVALID_REFRESH_TOKEN',
+        message: '인증에 실패했습니다.',
+        internalMessage: '유효하지 않은 리프레시 토큰입니다.'
+    },
     FORBIDDEN: {
         code: 'AUTH/FORBIDDEN',
         message: '접근 권한이 없습니다.'
