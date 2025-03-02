@@ -141,14 +141,10 @@ export const changeUserNickname = async (email: string | undefined, nickName: st
         throw new DuplicateError("NICKNAME_DUPLICATE");
     }
 
-    try {
-        return await prisma.user.update({
-            where: { email: email },
-            data: { nickName: nickName }
-        });
-    } catch (error) {
-        throw error;
-    }
+    return await prisma.user.update({
+        where: { email: email },
+        data: { nickName: nickName }
+    });
 };
 
 export const changeUserPassword = async (email: string | undefined, oldPassword: string, newPassword: string): Promise<User> => {
@@ -169,15 +165,11 @@ export const changeUserPassword = async (email: string | undefined, oldPassword:
         throw new ValidationError("PASSWORD_MISMATCH");
     }
 
-    try {
-        const hashedPassword = await hash(newPassword, HASH_ROUNDS);
-        return await prisma.user.update({
-            where: { email: email },
-            data: { password: hashedPassword }
-        });
-    } catch (error) {
-        throw error;
-    }
+    const hashedPassword = await hash(newPassword, HASH_ROUNDS);
+    return await prisma.user.update({
+        where: { email: email },
+        data: { password: hashedPassword }
+    });
 };
 
 interface TokenPair {
@@ -198,7 +190,7 @@ export const refreshTokens = async (refreshToken: string): Promise<TokenPair> =>
         }
 
         // Refresh Token 검증
-        const decoded = jwt.verify(refreshToken, refreshTokenSecret) as JwtPayload;
+        jwt.verify(refreshToken, refreshTokenSecret) as JwtPayload;
 
         // DB에서 Refresh Token 조회
         const tokenData = await prisma.refreshToken.findUnique({

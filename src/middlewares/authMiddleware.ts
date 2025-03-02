@@ -33,19 +33,9 @@ const authMiddleware = {
                     }
 
                     try {
-                        // 리프레시 토큰으로 새 토큰 발급
-                        const tokens = await refreshTokens(refreshToken);
-
-                        // 새 토큰으로 쿠키 업데이트
-                        authMiddleware.setRefreshTokenCookie(res, tokens.refreshToken);
-
-                        // 새 액세스 토큰으로 사용자 정보 가져오기
-                        const user = await authMiddleware.validateTokenAndGetUser(tokens.accessToken, secret);
-                        req.user = { email: user.email, nickName: user.nickName };
-
-                        // 새 액세스 토큰을 응답 헤더에 추가
-                        res.setHeader('X-New-Access-Token', tokens.accessToken);
-
+                        // 토큰 순환 메서드 사용
+                        const { user } = await authMiddleware.rotateTokens(refreshToken, res);
+                        req.user = user;
                         next();
                     } catch (refreshError) {
                         // 리프레시 토큰 갱신 실패
@@ -141,6 +131,72 @@ const authMiddleware = {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict'
         });
+    },
+
+    // 토큰 순환 메서드: 리프레시 토큰을 사용하여 새 액세스 토큰과 리프레시 토큰을 발급
+    async rotateTokens(refreshToken: string, res: Response): Promise<{
+        accessToken: string;
+        user: UserInfo;
+    }> {
+        try {
+            // 리프레시 토큰 검증 및 새 토큰 발급
+            const tokens = await refreshTokens(refreshToken);
+
+            // 새 토큰을 쿠키에 설정
+            this.setAccessTokenCookie(res, tokens.accessToken);
+            this.setRefreshTokenCookie(res, tokens.refreshToken);
+
+            // 새 액세스 토큰으로 사용자 정보 가져오기
+            const secret = this.getJwtSecret();
+            const user = await this.validateTokenAndGetUser(tokens.accessToken, secret);
+
+            return {
+                accessToken: tokens.accessToken,
+                user: { email: user.email, nickName: user.nickName }
+            };
+        } catch (error) {
+            // 리프레시 토큰 재사용 감지 로직 추가
+            if (error instanceof AuthError &&
+                (error.errorType === "INVALID_REFRESH_TOKEN" || error.errorType === "TOKEN_EXPIRED")) {
+                // 잠재적 토큰 도난 감지 - 해당 사용자의 모든 리프레시 토큰 무효화
+                await this.revokeAllUserTokens(refreshToken);
+            }
+            throw error;
+        }
+    },
+
+    // 리프레시 토큰으로부터 사용자 ID를 추출하여 모든 토큰 무효화
+    async revokeAllUserTokens(refreshToken: string): Promise<void> {
+        try {
+            const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+            if (!refreshTokenSecret) {
+                throw new AuthError("SECRET_KEY_NOT_FOUND");
+            }
+
+            // 토큰에서 사용자 정보 추출 시도
+            const decoded = jwt.verify(refreshToken, refreshTokenSecret) as JwtPayload;
+            if (!decoded || typeof decoded.email !== 'string') {
+                return; // 유효하지 않은 토큰이면 조용히 반환
+            }
+
+            // 사용자 조회
+            const user = await prisma.user.findUnique({
+                where: { email: decoded.email }
+            });
+
+            if (user) {
+                // 해당 사용자의 모든 리프레시 토큰 삭제
+                await prisma.refreshToken.deleteMany({
+                    where: { userId: user.id }
+                });
+
+                // 선택적: 보안 이벤트 로깅
+                console.warn(`Security alert: Detected potential token theft for user ${user.email}. All refresh tokens revoked.`);
+            }
+        } catch (error) {
+            // 토큰 검증 실패 시 조용히 처리
+            console.error('Failed to revoke tokens:', error);
+        }
     }
 };
 

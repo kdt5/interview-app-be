@@ -12,7 +12,7 @@ export const errorHandler = (
     error: Error,
     req: Request,
     res: Response,
-    next: NextFunction
+    _next: NextFunction
 ) => {
     let response: ErrorResponse = {
         message: '서버 오류가 발생했습니다.'

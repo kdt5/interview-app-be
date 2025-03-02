@@ -1,9 +1,10 @@
 import { RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
-import { createUser, authenticateUser, checkAvailability, AvailabilityCheckType, refreshTokens } from "../services/authService.js";
+import { createUser, authenticateUser, checkAvailability, AvailabilityCheckType } from "../services/authService.js";
 import { changeUserNickname, changeUserPassword } from "../services/authService.js";
 import { RequestWithUser } from "../middlewares/authMiddleware.js";
 import authMiddleware from '../middlewares/authMiddleware.js';
+import { AuthError } from "../utils/errors/authError.js";
 
 interface CheckEmailAvailabilityRequest {
     email: string;
@@ -33,7 +34,20 @@ interface ChangePasswordRequest {
     newPassword: string;
 }
 
-export const checkEmailAvailability: RequestHandler<{}, {}, CheckEmailAvailabilityRequest> = async (req, res, next): Promise<void> => {
+type EmptyObject = Record<string, never>;
+
+interface MessageResponse {
+    message: string;
+}
+
+interface MessageResponseWithUser extends MessageResponse {
+    user: {
+        email: string;
+        nickName: string;
+    };
+}
+
+export const checkEmailAvailability: RequestHandler<EmptyObject, MessageResponse, CheckEmailAvailabilityRequest> = async (req, res, next): Promise<void> => {
     try {
         const { email } = req.body;
         const result = await checkAvailability(email, AvailabilityCheckType.EMAIL);
@@ -43,7 +57,7 @@ export const checkEmailAvailability: RequestHandler<{}, {}, CheckEmailAvailabili
     }
 };
 
-export const checkNicknameAvailability: RequestHandler<{}, {}, CheckNicknameAvailabilityRequest> = async (req, res, next): Promise<void> => {
+export const checkNicknameAvailability: RequestHandler<EmptyObject, MessageResponse, CheckNicknameAvailabilityRequest> = async (req, res, next): Promise<void> => {
     try {
         const { nickName } = req.body;
         const result = await checkAvailability(nickName, AvailabilityCheckType.NICKNAME);
@@ -53,7 +67,9 @@ export const checkNicknameAvailability: RequestHandler<{}, {}, CheckNicknameAvai
     }
 };
 
-export const signup: RequestHandler<{}, {}, SignupRequest> = async (req, res, next): Promise<void> => {
+
+
+export const signup: RequestHandler<EmptyObject, MessageResponseWithUser, SignupRequest> = async (req, res, next): Promise<void> => {
     try {
         const { password, email, nickName } = req.body;
 
@@ -71,7 +87,9 @@ export const signup: RequestHandler<{}, {}, SignupRequest> = async (req, res, ne
     }
 };
 
-export const login: RequestHandler<{}, {}, LoginRequest> = async (req, res, next): Promise<void> => {
+
+
+export const login: RequestHandler<EmptyObject, MessageResponseWithUser, LoginRequest> = async (req, res, next): Promise<void> => {
     try {
         const { email, password } = req.body;
         const { user, accessToken, refreshToken } = await authenticateUser(email, password);
@@ -100,7 +118,7 @@ export const logout: RequestHandler = async (req, res): Promise<void> => {
     res.status(StatusCodes.OK).json({ message: "로그아웃이 완료되었습니다." });
 };
 
-export const changeNickname: RequestHandler<{}, {}, ChangeNicknameRequest> = async (req: RequestWithUser, res, next): Promise<void> => {
+export const changeNickname: RequestHandler<EmptyObject, MessageResponseWithUser, ChangeNicknameRequest> = async (req: RequestWithUser, res, next): Promise<void> => {
     try {
         const { nickName } = req.body;
         const user = await changeUserNickname(req.user?.email, nickName);
@@ -117,7 +135,7 @@ export const changeNickname: RequestHandler<{}, {}, ChangeNicknameRequest> = asy
     }
 };
 
-export const changePassword: RequestHandler<{}, {}, ChangePasswordRequest> = async (req: RequestWithUser, res, next): Promise<void> => {
+export const changePassword: RequestHandler<EmptyObject, MessageResponse, ChangePasswordRequest> = async (req: RequestWithUser, res, next): Promise<void> => {
     try {
         const { oldPassword, newPassword } = req.body;
         await changeUserPassword(req.user?.email, oldPassword, newPassword);
@@ -141,15 +159,30 @@ export const refresh: RequestHandler = async (req, res, next): Promise<void> => 
             return;
         }
 
-        const { accessToken, refreshToken: newRefreshToken } = await refreshTokens(refreshToken);
+        try {
+            // 토큰 순환 메서드 사용
+            await authMiddleware.rotateTokens(refreshToken, res);
 
-        // 새 액세스 토큰과 리프레시 토큰을 쿠키에 설정
-        authMiddleware.setAccessTokenCookie(res, accessToken);
-        authMiddleware.setRefreshTokenCookie(res, newRefreshToken);
+            res.status(StatusCodes.OK).json({
+                message: "토큰이 갱신되었습니다."
+            });
+        } catch (error) {
+            // 토큰 재사용 시도 등의 보안 이슈 처리
+            if (error instanceof AuthError &&
+                (error.errorType === "INVALID_REFRESH_TOKEN" || error.errorType === "TOKEN_EXPIRED")) {
+                // 클라이언트에게 재로그인 요청
+                authMiddleware.clearAccessTokenCookie(res);
+                authMiddleware.clearRefreshTokenCookie(res);
 
-        res.status(StatusCodes.OK).json({
-            message: "토큰이 갱신되었습니다."
-        });
+                res.status(StatusCodes.UNAUTHORIZED).json({
+                    message: "보안상의 이유로 재로그인이 필요합니다.",
+                    code: "SECURITY_RELOGIN_REQUIRED"
+                });
+                return;
+            }
+
+            next(error);
+        }
     } catch (error) {
         next(error);
     }
