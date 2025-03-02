@@ -47,6 +47,15 @@ export const AUTH_ERROR_TYPES: Record<string, ErrorType> = {
     INVALID_CSRF_TOKEN: {
         code: 'AUTH/INVALID_CSRF_TOKEN',
         message: '유효하지 않은 CSRF 토큰입니다.'
+    },
+    REFRESH_TOKEN_REQUIRED: {
+        code: 'AUTH/REFRESH_TOKEN_REQUIRED',
+        message: '리프레시 토큰이 필요합니다.'
+    },
+    SECURITY_RELOGIN_REQUIRED: {
+        code: 'AUTH/SECURITY_RELOGIN_REQUIRED',
+        message: '보안상의 이유로 재로그인이 필요합니다.',
+        internalMessage: '잠재적 토큰 도난 또는 재사용 시도가 감지되었습니다.'
     }
 } as const;
 

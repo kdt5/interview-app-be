@@ -66,5 +66,14 @@ export const errorHandler = (
         };
     }
 
+    // 특별 보안 에러 처리
+    if (error instanceof AuthError && error.errorType === 'SECURITY_RELOGIN_REQUIRED') {
+        response = {
+            message: error.message,
+            code: 'SECURITY_RELOGIN_REQUIRED'
+        };
+        statusCode = StatusCodes.UNAUTHORIZED;
+    }
+
     res.status(statusCode).json(response);
 }; 
