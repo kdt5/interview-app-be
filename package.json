@@ -22,8 +22,6 @@
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.13.5",
     "bcrypt-ts": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -36,11 +34,16 @@
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.21.0",
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.5",
     "@types/jsonwebtoken": "^9.0.9",
+    "eslint": "^9.21.0",
     "prisma": "^6.4.1",
     "tsx": "^4.19.3",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.25.0"
   }
 }
