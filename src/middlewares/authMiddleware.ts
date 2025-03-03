@@ -156,10 +156,13 @@ const authMiddleware = {
             };
         } catch (error) {
             // 리프레시 토큰 재사용 감지 로직 추가
-            if (error instanceof AuthError &&
-                (error.errorType === "INVALID_REFRESH_TOKEN" || error.errorType === "TOKEN_EXPIRED")) {
-                // 잠재적 토큰 도난 감지 - 해당 사용자의 모든 리프레시 토큰 무효화
-                await this.revokeAllUserTokens(refreshToken);
+            if (error instanceof AuthError) {
+                if (error.errorType === "INVALID_REFRESH_TOKEN") {
+                    // 잠재적 토큰 도난 감지 - 해당 사용자의 모든 리프레시 토큰 무효화
+                    await this.revokeAllUserTokens(refreshToken);
+                }
+                // TOKEN_EXPIRED는 해당 토큰만 삭제 (이미 refreshTokens 함수에서 처리됨)
+                // 다른 기기의 세션은 유지
             }
             throw error;
         }

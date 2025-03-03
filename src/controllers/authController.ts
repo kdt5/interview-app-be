@@ -167,13 +167,22 @@ export const refresh: RequestHandler = async (req, res, next): Promise<void> => 
     } catch (error) {
         // 토큰 재사용 시도 등의 보안 이슈는 컨트롤러 레벨에서 특별 처리
         // 이는 쿠키 삭제와 같은 응답 객체 조작이 필요하기 때문
-        if (error instanceof AuthError &&
-            (error.errorType === "INVALID_REFRESH_TOKEN" || error.errorType === "TOKEN_EXPIRED")) {
+        if (error instanceof AuthError) {
             authMiddleware.clearAccessTokenCookie(res);
             authMiddleware.clearRefreshTokenCookie(res);
 
-            const securityError = new AuthError("SECURITY_RELOGIN_REQUIRED");
-            next(securityError);
+            if (error.errorType === "INVALID_REFRESH_TOKEN") {
+                // 토큰 도난 의심 - 보안 경고
+                const securityError = new AuthError("SECURITY_RELOGIN_REQUIRED");
+                next(securityError);
+            } else if (error.errorType === "TOKEN_EXPIRED") {
+                // 단순 만료 - 일반적인 재로그인 요청
+                res.status(StatusCodes.UNAUTHORIZED).json({
+                    message: "세션이 만료되었습니다. 다시 로그인해주세요."
+                });
+            } else {
+                next(error);
+            }
             return;
         }
 

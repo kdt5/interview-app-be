@@ -56,6 +56,10 @@ export const AUTH_ERROR_TYPES: Record<string, ErrorType> = {
         code: 'AUTH/SECURITY_RELOGIN_REQUIRED',
         message: '보안상의 이유로 재로그인이 필요합니다.',
         internalMessage: '잠재적 토큰 도난 또는 재사용 시도가 감지되었습니다.'
+    },
+    SESSION_EXPIRED: {
+        code: 'AUTH/SESSION_EXPIRED',
+        message: '세션이 만료되었습니다. 다시 로그인해주세요.'
     }
 } as const;
 
@@ -76,7 +80,8 @@ export const VALIDATION_ERROR_TYPES: Record<string, ErrorType> = {
     },
     PASSWORD_MISMATCH: {
         code: 'VALIDATION/PASSWORD_MISMATCH',
-        message: '현재 비밀번호가 일치하지 않습니다.'
+        message: '입력하신 정보를 다시 확인해주세요.',
+        internalMessage: '비밀번호가 올바르지 않습니다.'
     },
     PASSWORD_REQUIREMENTS: {
         code: 'VALIDATION/PASSWORD_REQUIREMENTS',
