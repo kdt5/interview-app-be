@@ -64,7 +64,7 @@ export const checkEmailAvailability: RequestHandler<
     const { email } = req.body;
     const isAvailable = await checkAvailability(email, "email");
 
-    res.status(StatusCodes.OK).json({
+    res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).json({
       message: isAvailable
         ? "사용 가능한 이메일입니다."
         : "이미 사용 중인 이메일입니다.",
@@ -83,7 +83,7 @@ export const checkNicknameAvailability: RequestHandler<
     const { nickName } = req.body;
     const isAvailable = await checkAvailability(nickName, "nickName");
 
-    res.status(StatusCodes.OK).json({
+    res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).json({
       message: isAvailable
         ? "사용 가능한 닉네임입니다."
         : "이미 사용 중인 닉네임입니다.",
