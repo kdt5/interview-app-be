@@ -1,7 +1,7 @@
 import { hash, compare } from "bcrypt-ts";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
-import { User } from "@prisma/client";
+import { User, Prisma } from "@prisma/client";
 import {
   DuplicateError,
   ValidationError,
@@ -21,32 +21,18 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
-export enum AvailabilityCheckType {
-  EMAIL = "email",
-  NICKNAME = "nickName",
-}
+type CheckType = "email" | "nickName";
 
 export const checkAvailability = async (
   item: string,
-  type: AvailabilityCheckType
-): Promise<{ message: string }> => {
-  const where =
-    type === AvailabilityCheckType.EMAIL ? { email: item } : { nickName: item };
+  type: CheckType
+): Promise<boolean> => {
+  const where = {
+    [type]: item,
+  } as unknown as Prisma.UserWhereUniqueInput;
 
   const existingItem = await prisma.user.findUnique({ where });
-
-  if (existingItem) {
-    throw type === AvailabilityCheckType.EMAIL
-      ? new DuplicateError("EMAIL_DUPLICATE")
-      : new DuplicateError("NICKNAME_DUPLICATE");
-  }
-
-  return {
-    message:
-      type === AvailabilityCheckType.EMAIL
-        ? "사용 가능한 이메일입니다."
-        : "사용 가능한 닉네임입니다.",
-  };
+  return !existingItem;
 };
 
 export const createUser = async (

@@ -4,7 +4,6 @@ import {
   createUser,
   authenticateUser,
   checkAvailability,
-  AvailabilityCheckType,
   deleteRefreshToken,
 } from "../services/authService.js";
 import {
@@ -63,8 +62,13 @@ export const checkEmailAvailability: RequestHandler<
 > = async (req, res, next): Promise<void> => {
   try {
     const { email } = req.body;
-    const result = await checkAvailability(email, AvailabilityCheckType.EMAIL);
-    res.status(StatusCodes.OK).json({ message: result.message });
+    const isAvailable = await checkAvailability(email, "email");
+
+    res.status(StatusCodes.OK).json({
+      message: isAvailable
+        ? "사용 가능한 이메일입니다."
+        : "이미 사용 중인 이메일입니다.",
+    });
   } catch (error) {
     next(error);
   }
@@ -77,12 +81,13 @@ export const checkNicknameAvailability: RequestHandler<
 > = async (req, res, next): Promise<void> => {
   try {
     const { nickName } = req.body;
-    const result = await checkAvailability(
-      nickName,
-      AvailabilityCheckType.NICKNAME
-    );
+    const isAvailable = await checkAvailability(nickName, "nickName");
 
-    res.status(StatusCodes.OK).json({ message: result.message });
+    res.status(StatusCodes.OK).json({
+      message: isAvailable
+        ? "사용 가능한 닉네임입니다."
+        : "이미 사용 중인 닉네임입니다.",
+    });
   } catch (error) {
     next(error);
   }
