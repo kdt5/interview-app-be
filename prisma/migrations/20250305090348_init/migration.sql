@@ -81,7 +81,6 @@ CREATE TABLE `RefreshToken` (
     `token` VARCHAR(191) NOT NULL,
     `expires_at` DATETIME(3) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `last_used` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `user_id` INTEGER NOT NULL,
     `device` VARCHAR(255) NULL,
 

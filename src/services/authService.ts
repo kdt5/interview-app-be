@@ -2,11 +2,8 @@ import { hash, compare } from "bcrypt-ts";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
 import { User, Prisma } from "@prisma/client";
-import {
-  DuplicateError,
-  ValidationError,
-  AuthError,
-} from "../constants/errors/authError.js";
+import { DuplicateError, AuthError } from "../constants/errors/authError.js";
+import dbDayjs from "../lib/dayjs.js";
 
 const HASH_ROUNDS = 10; // 10 rounds → 약 10ms, 12 rounds → 약 100ms
 
@@ -47,6 +44,13 @@ export const createUser = async (
     throw new DuplicateError("EMAIL_DUPLICATE");
   }
 
+  const existingNickname = await prisma.user.findUnique({
+    where: { nickName: nickName },
+  });
+  if (existingNickname) {
+    throw new DuplicateError("NICKNAME_DUPLICATE");
+  }
+
   // 비밀번호 해시화
   const hashedPassword = await hash(password, HASH_ROUNDS);
 
@@ -56,6 +60,8 @@ export const createUser = async (
       password: hashedPassword,
       email: email,
       nickName: nickName,
+      createdAt: dbDayjs(),
+      updatedAt: dbDayjs(),
     },
   });
 };
@@ -69,12 +75,12 @@ export const authenticateUser = async (
   });
 
   if (!user) {
-    throw new AuthError("UNAUTHORIZED");
+    throw new AuthError("NOT_FOUND_USER");
   }
 
   const isValidPassword = await compare(password, user.password);
   if (!isValidPassword) {
-    throw new ValidationError("INVALID_PASSWORD");
+    throw new AuthError("INVALID_PASSWORD");
   }
 
   const secret = process.env.JWT_SECRET;
@@ -106,10 +112,10 @@ export const authenticateUser = async (
   await prisma.refreshToken.create({
     data: {
       token: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일
+      expiresAt: dbDayjs({ minutes: 7 * 24 * 60 }), // 7일
       userId: user.id,
       device: null, // 필요시 기기 정보 추가
-      lastUsed: new Date(),
+      createdAt: dbDayjs(),
     },
   });
 
@@ -134,7 +140,7 @@ export const deleteRefreshToken = async (
 export const changeUserNickname = async (
   email: string | undefined,
   nickName: string
-): Promise<User> => {
+): Promise<void> => {
   if (!email) {
     throw new AuthError("UNAUTHORIZED");
   }
@@ -147,9 +153,9 @@ export const changeUserNickname = async (
     throw new DuplicateError("NICKNAME_DUPLICATE");
   }
 
-  return await prisma.user.update({
+  await prisma.user.update({
     where: { email: email },
-    data: { nickName: nickName },
+    data: { nickName: nickName, updatedAt: dbDayjs() },
   });
 };
 
@@ -157,7 +163,7 @@ export const changeUserPassword = async (
   email: string | undefined,
   oldPassword: string,
   newPassword: string
-): Promise<User> => {
+): Promise<void> => {
   if (!email) {
     throw new AuthError("UNAUTHORIZED");
   }
@@ -172,14 +178,26 @@ export const changeUserPassword = async (
 
   const isValidPassword = await compare(oldPassword, user.password);
   if (!isValidPassword) {
-    throw new ValidationError("PASSWORD_MISMATCH");
+    throw new AuthError("PASSWORD_MISMATCH");
   }
 
   const hashedPassword = await hash(newPassword, HASH_ROUNDS);
-  return await prisma.user.update({
+  await prisma.user.update({
     where: { email: email },
-    data: { password: hashedPassword },
+    data: { password: hashedPassword, updatedAt: dbDayjs() },
   });
+};
+
+export const getUserByEmail = async (email: string): Promise<UserInfo> => {
+  const user = await prisma.user.findUnique({
+    where: { email: email },
+  });
+
+  if (!user) {
+    throw new AuthError("UNAUTHORIZED");
+  }
+
+  return { email: user.email, nickName: user.nickName };
 };
 
 interface TokenPair {
@@ -242,10 +260,10 @@ export const refreshTokens = async (
     await prisma.refreshToken.create({
       data: {
         token: newRefreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일
+        expiresAt: dbDayjs({ minutes: 7 * 24 * 60 }), // 7일
         userId: tokenData.userId,
         device: tokenData.device,
-        lastUsed: new Date(),
+        createdAt: dbDayjs(),
       },
     });
 

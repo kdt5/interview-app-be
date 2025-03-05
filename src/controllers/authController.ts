@@ -6,10 +6,6 @@ import {
   checkAvailability,
   deleteRefreshToken,
 } from "../services/authService.js";
-import {
-  changeUserNickname,
-  changeUserPassword,
-} from "../services/authService.js";
 import { RequestWithUser } from "../middlewares/authMiddleware.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import { AuthError } from "../constants/errors/authError.js";
@@ -33,42 +29,27 @@ interface LoginRequest {
   password: string;
 }
 
-interface ChangeNicknameRequest {
+export type EmptyObject = Record<string, never>;
+
+export interface UserResponse {
+  email: string;
   nickName: string;
 }
-
-interface ChangePasswordRequest {
-  oldPassword: string;
-  newPassword: string;
-}
-
-type EmptyObject = Record<string, never>;
 
 interface MessageResponse {
   message: string;
 }
 
-interface MessageResponseWithUser extends MessageResponse {
-  user: {
-    email: string;
-    nickName: string;
-  };
-}
-
 export const checkEmailAvailability: RequestHandler<
   EmptyObject,
-  MessageResponse,
+  void,
   CheckEmailAvailabilityRequest
 > = async (req, res, next): Promise<void> => {
   try {
     const { email } = req.body;
     const isAvailable = await checkAvailability(email, "email");
 
-    res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).json({
-      message: isAvailable
-        ? "사용 가능한 이메일입니다."
-        : "이미 사용 중인 이메일입니다.",
-    });
+    res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).send();
   } catch (error) {
     next(error);
   }
@@ -76,18 +57,14 @@ export const checkEmailAvailability: RequestHandler<
 
 export const checkNicknameAvailability: RequestHandler<
   EmptyObject,
-  MessageResponse,
+  void,
   CheckNicknameAvailabilityRequest
 > = async (req, res, next): Promise<void> => {
   try {
     const { nickName } = req.body;
     const isAvailable = await checkAvailability(nickName, "nickName");
 
-    res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).json({
-      message: isAvailable
-        ? "사용 가능한 닉네임입니다."
-        : "이미 사용 중인 닉네임입니다.",
-    });
+    res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).send();
   } catch (error) {
     next(error);
   }
@@ -95,19 +72,33 @@ export const checkNicknameAvailability: RequestHandler<
 
 export const signup: RequestHandler<
   EmptyObject,
-  MessageResponseWithUser,
+  UserResponse | MessageResponse,
   SignupRequest
 > = async (req, res, next): Promise<void> => {
   try {
     const { password, email, nickName } = req.body;
+
+    const isEmailAvailable = await checkAvailability(email, "email");
+    if (!isEmailAvailable) {
+      res.status(StatusCodes.CONFLICT).json({
+        message: "이미 사용 중인 이메일입니다.",
+      });
+      return;
+    }
+
+    const isNicknameAvailable = await checkAvailability(nickName, "nickName");
+    if (!isNicknameAvailable) {
+      res.status(StatusCodes.CONFLICT).json({
+        message: "이미 사용 중인 닉네임입니다.",
+      });
+      return;
+    }
+
     const user = await createUser(password, email, nickName);
 
     res.status(StatusCodes.CREATED).json({
-      message: "회원가입이 완료되었습니다.",
-      user: {
-        email: user.email,
-        nickName: user.nickName,
-      },
+      email: user.email,
+      nickName: user.nickName,
     });
   } catch (error) {
     next(error);
@@ -116,7 +107,7 @@ export const signup: RequestHandler<
 
 export const login: RequestHandler<
   EmptyObject,
-  MessageResponseWithUser,
+  UserResponse,
   LoginRequest
 > = async (req, res, next): Promise<void> => {
   try {
@@ -130,11 +121,8 @@ export const login: RequestHandler<
     authMiddleware.setRefreshTokenCookie(res, refreshToken);
 
     res.status(StatusCodes.OK).json({
-      message: "로그인이 완료되었습니다.",
-      user: {
-        email: user.email,
-        nickName: user.nickName,
-      },
+      email: user.email,
+      nickName: user.nickName,
     });
   } catch (error) {
     next(error);
@@ -155,45 +143,7 @@ export const logout: RequestHandler = async (
     authMiddleware.clearAccessTokenCookie(res);
     authMiddleware.clearRefreshTokenCookie(res);
 
-    res.status(StatusCodes.OK).json({ message: "로그아웃이 완료되었습니다." });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const changeNickname: RequestHandler<
-  EmptyObject,
-  MessageResponseWithUser,
-  ChangeNicknameRequest
-> = async (req: RequestWithUser, res, next): Promise<void> => {
-  try {
-    const { nickName } = req.body;
-    const user = await changeUserNickname(req.user?.email, nickName);
-
-    res.status(StatusCodes.OK).json({
-      message: "닉네임이 변경되었습니다.",
-      user: {
-        email: user.email,
-        nickName: user.nickName,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const changePassword: RequestHandler<
-  EmptyObject,
-  MessageResponse,
-  ChangePasswordRequest
-> = async (req: RequestWithUser, res, next): Promise<void> => {
-  try {
-    const { oldPassword, newPassword } = req.body;
-    await changeUserPassword(req.user?.email, oldPassword, newPassword);
-
-    res.status(StatusCodes.OK).json({
-      message: "비밀번호가 변경되었습니다.",
-    });
+    res.status(StatusCodes.OK).send();
   } catch (error) {
     next(error);
   }
@@ -213,9 +163,7 @@ export const refresh: RequestHandler = async (
     // 토큰 순환 메서드 사용
     await authMiddleware.rotateTokens(refreshToken, res);
 
-    res.status(StatusCodes.OK).json({
-      message: "토큰이 갱신되었습니다.",
-    });
+    res.status(StatusCodes.OK).send();
   } catch (error) {
     // 토큰 재사용 시도 등의 보안 이슈는 컨트롤러 레벨에서 특별 처리
     // 이는 쿠키 삭제와 같은 응답 객체 조작이 필요하기 때문
@@ -229,9 +177,7 @@ export const refresh: RequestHandler = async (
         next(securityError);
       } else if (error.errorType === "TOKEN_EXPIRED") {
         // 단순 만료 - 일반적인 재로그인 요청
-        res.status(StatusCodes.UNAUTHORIZED).json({
-          message: "세션이 만료되었습니다. 다시 로그인해주세요.",
-        });
+        res.status(StatusCodes.NO_CONTENT).send();
       } else {
         next(error);
       }
