@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes'
-import { VALIDATION_ERROR_TYPES } from '../utils/errors/authError';
+import { VALIDATION_ERROR_TYPES } from '../utils/errors/authError.js';
 
 interface ValidationRule {
     test: (value: string) => boolean;

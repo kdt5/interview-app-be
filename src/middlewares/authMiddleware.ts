@@ -1,8 +1,9 @@
-import jwt, { JwtPayload, JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
-import prisma from '../lib/prisma';
+import jwt from 'jsonwebtoken';
+import type { JwtPayload } from 'jsonwebtoken';
+import prisma from '../lib/prisma.js';
 import { Request, Response, NextFunction } from 'express';
-import { UserInfo } from '../services/authService';
-import { AuthError } from '../utils/errors/authError';
+import { UserInfo } from '../services/authService.js';
+import { AuthError } from '../utils/errors/authError.js';
 
 export interface RequestWithUser extends Request {
     user?: UserInfo;
@@ -67,10 +68,10 @@ const authMiddleware = {
 
             return user;
         } catch (error) {
-            if (error instanceof TokenExpiredError) {
+            if (error instanceof Error && error.name === 'TokenExpiredError') {
                 throw new AuthError("TOKEN_EXPIRED");
             }
-            if (error instanceof JsonWebTokenError) {
+            if (error instanceof Error && error.name === 'JsonWebTokenError') {
                 throw new AuthError("INVALID_TOKEN");
             }
             throw new AuthError("UNAUTHORIZED");

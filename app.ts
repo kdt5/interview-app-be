@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import { errorHandler } from './src/middlewares/errorHandler';
-import authRouter from './src/routes/auth';
-import usersRouter from './src/routes/users';
+import { errorHandler } from './src/middlewares/errorHandler.js';
+import authRouter from './src/routes/auth.js';
+import usersRouter from './src/routes/users.js';
 import questionsRouter from './src/routes/questions.js';
 
 const app = express();
