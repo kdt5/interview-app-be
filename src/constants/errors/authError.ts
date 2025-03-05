@@ -1,10 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-
-interface ErrorType {
-  code: string;
-  message: string;
-  internalMessage?: string; // 보안상 노출하지 않는 메시지
-}
+import { BaseError, ErrorType } from "./commonError";
 
 // 인증 관련 에러
 export const AUTH_ERROR_TYPES: Record<string, ErrorType> = {
@@ -102,105 +97,29 @@ export const DUPLICATE_ERROR_TYPES: Record<string, ErrorType> = {
   },
 } as const;
 
-// 공통 에러
-export const COMMON_ERROR_TYPES: Record<string, ErrorType> = {
-  UNKNOWN_ERROR: {
-    code: "COMMON/UNKNOWN_ERROR",
-    message: "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-    internalMessage: "알 수 없는 오류가 발생했습니다.",
-  },
-  DATABASE_ERROR: {
-    code: "COMMON/DATABASE_ERROR",
-    message: "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-    internalMessage: "데이터베이스 작업 중 오류 발생",
-  },
-  NETWORK_ERROR: {
-    code: "COMMON/NETWORK_ERROR",
-    message: "네트워크 연결을 확인해주세요.",
-    internalMessage: "네트워크 통신 오류",
-  },
-} as const;
-
-export class AuthError extends Error {
-  public readonly code: string;
-  private readonly internalMessage: string;
-
+export class AuthError extends BaseError {
   constructor(
-    public readonly errorType: keyof typeof AUTH_ERROR_TYPES,
-    public readonly statusCode: StatusCodes = StatusCodes.UNAUTHORIZED
+    errorType: keyof typeof AUTH_ERROR_TYPES,
+    statusCode: StatusCodes = StatusCodes.UNAUTHORIZED
   ) {
-    super(AUTH_ERROR_TYPES[errorType].message);
-    this.name = "AuthError";
-    this.code = AUTH_ERROR_TYPES[errorType].code;
-    this.internalMessage =
-      AUTH_ERROR_TYPES[errorType].internalMessage ||
-      AUTH_ERROR_TYPES[errorType].message;
-  }
-
-  getInternalMessage(): string {
-    return this.internalMessage;
+    super(AUTH_ERROR_TYPES, errorType, statusCode, "AuthError");
   }
 }
 
-export class ValidationError extends Error {
-  public readonly code: string;
-  private readonly internalMessage: string;
-
+export class ValidationError extends BaseError {
   constructor(
-    public readonly errorType: keyof typeof VALIDATION_ERROR_TYPES,
-    public readonly statusCode: StatusCodes = StatusCodes.BAD_REQUEST
+    errorType: keyof typeof VALIDATION_ERROR_TYPES,
+    statusCode: StatusCodes = StatusCodes.BAD_REQUEST
   ) {
-    super(VALIDATION_ERROR_TYPES[errorType].message);
-    this.name = "ValidationError";
-    this.code = VALIDATION_ERROR_TYPES[errorType].code;
-    this.internalMessage =
-      VALIDATION_ERROR_TYPES[errorType].internalMessage ||
-      VALIDATION_ERROR_TYPES[errorType].message;
-  }
-
-  getInternalMessage(): string {
-    return this.internalMessage;
+    super(VALIDATION_ERROR_TYPES, errorType, statusCode, "ValidationError");
   }
 }
 
-export class DuplicateError extends Error {
-  public readonly code: string;
-  private readonly internalMessage: string;
-
+export class DuplicateError extends BaseError {
   constructor(
-    public readonly errorType: keyof typeof DUPLICATE_ERROR_TYPES,
-    public readonly statusCode: StatusCodes = StatusCodes.CONFLICT
+    errorType: keyof typeof DUPLICATE_ERROR_TYPES,
+    statusCode: StatusCodes = StatusCodes.CONFLICT
   ) {
-    super(DUPLICATE_ERROR_TYPES[errorType].message);
-    this.name = "DuplicateError";
-    this.code = DUPLICATE_ERROR_TYPES[errorType].code;
-    this.internalMessage =
-      DUPLICATE_ERROR_TYPES[errorType].internalMessage ||
-      DUPLICATE_ERROR_TYPES[errorType].message;
-  }
-
-  getInternalMessage(): string {
-    return this.internalMessage;
-  }
-}
-
-export class CommonError extends Error {
-  public readonly code: string;
-  private readonly internalMessage: string;
-
-  constructor(
-    public readonly errorType: keyof typeof COMMON_ERROR_TYPES,
-    public readonly statusCode: StatusCodes = StatusCodes.INTERNAL_SERVER_ERROR
-  ) {
-    super(COMMON_ERROR_TYPES[errorType].message);
-    this.name = "CommonError";
-    this.code = COMMON_ERROR_TYPES[errorType].code;
-    this.internalMessage =
-      COMMON_ERROR_TYPES[errorType].internalMessage ||
-      COMMON_ERROR_TYPES[errorType].message;
-  }
-
-  getInternalMessage(): string {
-    return this.internalMessage;
+    super(DUPLICATE_ERROR_TYPES, errorType, statusCode, "DuplicateError");
   }
 }
