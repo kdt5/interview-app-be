@@ -3,6 +3,10 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
 import { User, Prisma } from "@prisma/client";
 import { DuplicateError, AuthError } from "../constants/errors/authError.js";
+import {
+  REFRESH_TOKEN_EXPIRY,
+  ACCESS_TOKEN_EXPIRY,
+} from "../middlewares/authMiddleware.js";
 import dbDayjs from "../lib/dayjs.js";
 
 const HASH_ROUNDS = 10; // 10 rounds → 약 10ms, 12 rounds → 약 100ms
@@ -95,12 +99,12 @@ export const authenticateUser = async (
 
   // 액세스 토큰 생성 (짧은 유효기간)
   const accessToken = jwt.sign({ email: user.email }, secret, {
-    expiresIn: "1h",
+    expiresIn: `${ACCESS_TOKEN_EXPIRY}m`,
   });
 
   // 리프레시 토큰 생성 (긴 유효기간)
   const refreshToken = jwt.sign({ email: user.email }, refreshTokenSecret, {
-    expiresIn: "7d",
+    expiresIn: `${REFRESH_TOKEN_EXPIRY}m`,
   });
 
   // 기존 리프레시 토큰 삭제 (선택적)
@@ -112,7 +116,7 @@ export const authenticateUser = async (
   await prisma.refreshToken.create({
     data: {
       token: refreshToken,
-      expiresAt: dbDayjs({ minutes: 7 * 24 * 60 }), // 7일
+      expiresAt: dbDayjs({ minutes: REFRESH_TOKEN_EXPIRY }),
       userId: user.id,
       device: null, // 필요시 기기 정보 추가
       createdAt: dbDayjs(),
@@ -243,13 +247,13 @@ export const refreshTokens = async (
 
     // 새로운 토큰 쌍 생성
     const newAccessToken = jwt.sign({ email: tokenData.user.email }, secret, {
-      expiresIn: "1h",
+      expiresIn: `${ACCESS_TOKEN_EXPIRY}m`,
     });
 
     const newRefreshToken = jwt.sign(
       { email: tokenData.user.email },
       refreshTokenSecret,
-      { expiresIn: "7d" }
+      { expiresIn: `${REFRESH_TOKEN_EXPIRY}m` }
     );
 
     // 이전 Refresh Token 삭제 및 새로운 토큰 저장
@@ -260,7 +264,7 @@ export const refreshTokens = async (
     await prisma.refreshToken.create({
       data: {
         token: newRefreshToken,
-        expiresAt: dbDayjs({ minutes: 7 * 24 * 60 }), // 7일
+        expiresAt: dbDayjs({ minutes: REFRESH_TOKEN_EXPIRY }),
         userId: tokenData.userId,
         device: tokenData.device,
         createdAt: dbDayjs(),

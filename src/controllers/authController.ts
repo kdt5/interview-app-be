@@ -1,4 +1,4 @@
-import { RequestHandler } from "express";
+import { Request, NextFunction, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import {
   createUser,
@@ -6,7 +6,6 @@ import {
   checkAvailability,
   deleteRefreshToken,
 } from "../services/authService.js";
-import { RequestWithUser } from "../middlewares/authMiddleware.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import { AuthError } from "../constants/errors/authError.js";
 
@@ -29,22 +28,11 @@ interface LoginRequest {
   password: string;
 }
 
-export type EmptyObject = Record<string, never>;
-
-export interface UserResponse {
-  email: string;
-  nickName: string;
-}
-
-interface MessageResponse {
-  message: string;
-}
-
-export const checkEmailAvailability: RequestHandler<
-  EmptyObject,
-  void,
-  CheckEmailAvailabilityRequest
-> = async (req, res, next): Promise<void> => {
+export const checkEmailAvailability = async (
+  req: Request & { body: CheckEmailAvailabilityRequest },
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { email } = req.body;
     const isAvailable = await checkAvailability(email, "email");
@@ -55,11 +43,11 @@ export const checkEmailAvailability: RequestHandler<
   }
 };
 
-export const checkNicknameAvailability: RequestHandler<
-  EmptyObject,
-  void,
-  CheckNicknameAvailabilityRequest
-> = async (req, res, next): Promise<void> => {
+export const checkNicknameAvailability = async (
+  req: Request & { body: CheckNicknameAvailabilityRequest },
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { nickName } = req.body;
     const isAvailable = await checkAvailability(nickName, "nickName");
@@ -70,11 +58,11 @@ export const checkNicknameAvailability: RequestHandler<
   }
 };
 
-export const signup: RequestHandler<
-  EmptyObject,
-  UserResponse | MessageResponse,
-  SignupRequest
-> = async (req, res, next): Promise<void> => {
+export const signup = async (
+  req: Request & { body: SignupRequest },
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { password, email, nickName } = req.body;
 
@@ -105,11 +93,11 @@ export const signup: RequestHandler<
   }
 };
 
-export const login: RequestHandler<
-  EmptyObject,
-  UserResponse,
-  LoginRequest
-> = async (req, res, next): Promise<void> => {
+export const login = async (
+  req: Request & { body: LoginRequest },
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { email, password } = req.body;
     const { user, accessToken, refreshToken } = await authenticateUser(
@@ -129,17 +117,16 @@ export const login: RequestHandler<
   }
 };
 
-export const logout: RequestHandler = async (
-  req: RequestWithUser,
-  res,
-  next
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const refreshToken = req.cookies.refreshToken;
     if (refreshToken) {
       await deleteRefreshToken(refreshToken);
     }
-
     authMiddleware.clearAccessTokenCookie(res);
     authMiddleware.clearRefreshTokenCookie(res);
 
@@ -149,10 +136,10 @@ export const logout: RequestHandler = async (
   }
 };
 
-export const refresh: RequestHandler = async (
-  req,
-  res,
-  next
+export const refresh = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const refreshToken = req.cookies.refreshToken;

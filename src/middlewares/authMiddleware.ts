@@ -6,12 +6,15 @@ import { UserInfo, refreshTokens } from "../services/authService.js";
 import { AuthError } from "../constants/errors/authError.js";
 
 export interface RequestWithUser extends Request {
-  user?: UserInfo;
+  user: UserInfo;
 }
+
+export const ACCESS_TOKEN_EXPIRY = 15; // 15분 (분 단위)
+export const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60; // 7일 (분 단위)
 
 const authMiddleware = {
   authenticate: async (
-    req: RequestWithUser,
+    req: Request & { user?: UserInfo },
     res: Response,
     next: NextFunction
   ): Promise<void> => {
@@ -57,7 +60,7 @@ const authMiddleware = {
     }
   },
 
-  extractTokenFromCookie(req: RequestWithUser): string {
+  extractTokenFromCookie(req: Request): string {
     const token = req.cookies.accessToken;
     if (!token) {
       throw new AuthError("UNAUTHORIZED");
@@ -106,7 +109,7 @@ const authMiddleware = {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+      maxAge: REFRESH_TOKEN_EXPIRY * 60 * 1000,
       sameSite: "strict",
     });
   },
@@ -125,7 +128,7 @@ const authMiddleware = {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 1000, // 1시간
+      maxAge: ACCESS_TOKEN_EXPIRY * 60 * 1000,
       sameSite: "strict",
     });
   },

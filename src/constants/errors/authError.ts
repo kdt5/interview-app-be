@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import { BaseError, ErrorType } from "./commonError";
+import { BaseError, ErrorType } from "./commonError.js";
 
 // 인증 관련 에러
 export const AUTH_ERROR_TYPES: Record<string, ErrorType> = {
@@ -10,12 +10,10 @@ export const AUTH_ERROR_TYPES: Record<string, ErrorType> = {
   INVALID_TOKEN: {
     code: "AUTH/INVALID_TOKEN",
     message: "인증에 실패했습니다.",
-    internalMessage: "유효하지 않은 토큰입니다.",
   },
   TOKEN_EXPIRED: {
     code: "AUTH/TOKEN_EXPIRED",
     message: "인증에 실패했습니다.",
-    internalMessage: "토큰이 만료되었습니다.",
   },
   REFRESH_TOKEN_FAILED: {
     code: "AUTH/REFRESH_TOKEN_FAILED",
@@ -24,7 +22,6 @@ export const AUTH_ERROR_TYPES: Record<string, ErrorType> = {
   INVALID_REFRESH_TOKEN: {
     code: "AUTH/INVALID_REFRESH_TOKEN",
     message: "인증에 실패했습니다.",
-    internalMessage: "유효하지 않은 리프레시 토큰입니다.",
   },
   FORBIDDEN: {
     code: "AUTH/FORBIDDEN",
@@ -59,17 +56,14 @@ export const AUTH_ERROR_TYPES: Record<string, ErrorType> = {
   NOT_FOUND_USER: {
     code: "VALIDATION/NOT_FOUND_USER",
     message: "입력하신 정보를 다시 확인해주세요.",
-    internalMessage: "존재하지 않는 유저입니다.",
   },
   INVALID_PASSWORD: {
     code: "VALIDATION/INVALID_PASSWORD",
     message: "입력하신 정보를 다시 확인해주세요.",
-    internalMessage: "비밀번호가 올바르지 않습니다.",
   },
   PASSWORD_MISMATCH: {
     code: "VALIDATION/PASSWORD_MISMATCH",
     message: "입력하신 정보를 다시 확인해주세요.",
-    internalMessage: "변경 전 비밀번호가 올바르지 않습니다.",
   },
 } as const;
 

@@ -1,13 +1,11 @@
-import { RequestHandler } from "express";
+import { NextFunction, RequestHandler, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { RequestWithUser } from "../middlewares/authMiddleware.js";
 import {
   changeUserNickname,
   changeUserPassword,
   getUserByEmail,
 } from "../services/authService.js";
-import { EmptyObject, UserResponse } from "./authController.js";
-import { AuthError } from "../constants/errors/authError.js";
+import { RequestWithUser } from "../middlewares/authMiddleware.js";
 
 interface ChangeNicknameRequest {
   nickName: string;
@@ -18,16 +16,12 @@ interface ChangePasswordRequest {
   newPassword: string;
 }
 
-export const getMe: RequestHandler<
-  EmptyObject,
-  UserResponse,
-  EmptyObject
-> = async (req: RequestWithUser, res, next): Promise<void> => {
+export const getMe = (async (
+  req: RequestWithUser,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    if (!req.user?.email) {
-      throw new AuthError("UNAUTHORIZED");
-    }
-
     const user = await getUserByEmail(req.user.email);
 
     res.status(StatusCodes.OK).json({
@@ -37,34 +31,34 @@ export const getMe: RequestHandler<
   } catch (error) {
     next(error);
   }
-};
+}) as RequestHandler;
 
-export const changeNickname: RequestHandler<
-  EmptyObject,
-  void,
-  ChangeNicknameRequest
-> = async (req: RequestWithUser, res, next): Promise<void> => {
+export const changeNickname = (async (
+  req: RequestWithUser & { body: ChangeNicknameRequest },
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { nickName } = req.body;
-    await changeUserNickname(req.user?.email, nickName);
+    await changeUserNickname(req.user.email, nickName);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
     next(error);
   }
-};
+}) as RequestHandler;
 
-export const changePassword: RequestHandler<
-  EmptyObject,
-  void,
-  ChangePasswordRequest
-> = async (req: RequestWithUser, res, next): Promise<void> => {
+export const changePassword = (async (
+  req: RequestWithUser & { body: ChangePasswordRequest },
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { oldPassword, newPassword } = req.body;
-    await changeUserPassword(req.user?.email, oldPassword, newPassword);
+    await changeUserPassword(req.user.email, oldPassword, newPassword);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
     next(error);
   }
-};
+}) as RequestHandler;
