@@ -33,7 +33,6 @@ export const COMMON_ERROR_TYPES: Record<string, ErrorType> = {
   UNKNOWN_ERROR: {
     code: "COMMON/UNKNOWN_ERROR",
     message: "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-    internalMessage: "알 수 없는 오류가 발생했습니다.",
   },
   DATABASE_ERROR: {
     code: "COMMON/DATABASE_ERROR",
@@ -43,7 +42,6 @@ export const COMMON_ERROR_TYPES: Record<string, ErrorType> = {
   NETWORK_ERROR: {
     code: "COMMON/NETWORK_ERROR",
     message: "네트워크 연결을 확인해주세요.",
-    internalMessage: "네트워크 통신 오류",
   },
 } as const;
 
