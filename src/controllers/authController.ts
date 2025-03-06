@@ -9,27 +9,41 @@ import {
 import authMiddleware from "../middlewares/authMiddleware.js";
 import { AuthError } from "../constants/errors/authError.js";
 
-interface CheckEmailAvailabilityRequest {
-  email: string;
+interface CheckEmailAvailabilityRequest extends Request {
+  body: {
+    email: string;
+  };
 }
 
-interface CheckNicknameAvailabilityRequest {
-  nickName: string;
+interface CheckNicknameAvailabilityRequest extends Request {
+  body: {
+    nickName: string;
+  };
 }
 
-interface SignupRequest {
-  password: string;
-  email: string;
-  nickName: string;
+interface SignupRequest extends Request {
+  body: {
+    password: string;
+    email: string;
+    nickName: string;
+  };
 }
 
-interface LoginRequest {
-  email: string;
-  password: string;
+interface LoginRequest extends Request {
+  body: {
+    email: string;
+    password: string;
+  };
+}
+
+interface RefreshRequest extends Request {
+  cookies: {
+    refreshToken: string;
+  };
 }
 
 export const checkEmailAvailability = async (
-  req: Request & { body: CheckEmailAvailabilityRequest },
+  req: CheckEmailAvailabilityRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -44,7 +58,7 @@ export const checkEmailAvailability = async (
 };
 
 export const checkNicknameAvailability = async (
-  req: Request & { body: CheckNicknameAvailabilityRequest },
+  req: CheckNicknameAvailabilityRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -59,7 +73,7 @@ export const checkNicknameAvailability = async (
 };
 
 export const signup = async (
-  req: Request & { body: SignupRequest },
+  req: SignupRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -94,7 +108,7 @@ export const signup = async (
 };
 
 export const login = async (
-  req: Request & { body: LoginRequest },
+  req: LoginRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -137,7 +151,7 @@ export const logout = async (
 };
 
 export const refresh = async (
-  req: Request & { cookies: { refreshToken: string } },
+  req: RefreshRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {

@@ -7,13 +7,17 @@ import {
 } from "../services/authService.js";
 import { RequestWithUser } from "../middlewares/authMiddleware.js";
 
-interface ChangeNicknameRequest {
-  nickName: string;
+interface ChangeNicknameRequest extends RequestWithUser {
+  body: {
+    nickName: string;
+  };
 }
 
-interface ChangePasswordRequest {
-  oldPassword: string;
-  newPassword: string;
+interface ChangePasswordRequest extends RequestWithUser {
+  body: {
+    oldPassword: string;
+    newPassword: string;
+  };
 }
 
 export const getMe = (async (
@@ -34,7 +38,7 @@ export const getMe = (async (
 }) as RequestHandler;
 
 export const changeNickname = (async (
-  req: RequestWithUser & { body: ChangeNicknameRequest },
+  req: ChangeNicknameRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -49,7 +53,7 @@ export const changeNickname = (async (
 }) as RequestHandler;
 
 export const changePassword = (async (
-  req: RequestWithUser & { body: ChangePasswordRequest },
+  req: ChangePasswordRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {

@@ -76,7 +76,10 @@ const authMiddleware = {
     return secret;
   },
 
-  async validateTokenAndGetUser(token: string, secret: string) {
+  async validateTokenAndGetUser(
+    token: string,
+    secret: string
+  ): Promise<UserInfo> {
     try {
       const decoded = jwt.verify(token, secret) as JwtPayload;
       if (!decoded || typeof decoded.email !== "string") {
