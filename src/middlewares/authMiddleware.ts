@@ -151,6 +151,9 @@ const authMiddleware = {
     user: UserInfo;
   }> {
     try {
+      if (!refreshToken) {
+        throw new AuthError("REFRESH_TOKEN_REQUIRED");
+      }
       // 리프레시 토큰 검증 및 새 토큰 발급
       const tokens = await refreshTokens(refreshToken);
 

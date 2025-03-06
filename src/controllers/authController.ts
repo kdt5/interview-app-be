@@ -142,30 +142,17 @@ export const refresh = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // 토큰 순환 메서드 사용
     await authMiddleware.rotateTokens(req.cookies.refreshToken, res);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
-    // 토큰 재사용 시도 등의 보안 이슈는 컨트롤러 레벨에서 특별 처리
-    // 이는 쿠키 삭제와 같은 응답 객체 조작이 필요하기 때문
     if (error instanceof AuthError) {
       authMiddleware.clearAccessTokenCookie(res);
       authMiddleware.clearRefreshTokenCookie(res);
 
-      if (error.errorType === "INVALID_REFRESH_TOKEN") {
-        // 토큰 도난 의심 - 보안 경고
-        const securityError = new AuthError("SECURITY_RELOGIN_REQUIRED");
-        next(securityError);
-      } else if (error.errorType === "TOKEN_EXPIRED") {
-        // 단순 만료 - 일반적인 재로그인 요청
-        res.status(StatusCodes.UNAUTHORIZED).send();
-      } else {
-        next(error);
-      }
+      res.status(StatusCodes.UNAUTHORIZED).send();
       return;
     }
-
     next(error);
   }
 };
