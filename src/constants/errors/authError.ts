@@ -1,4 +1,5 @@
 import { StatusCodes } from "http-status-codes";
+import { BaseError } from "./commonError.js";
 
 export const AUTH_ERROR = {
   UNAUTHORIZED: "인증이 필요합니다.",
@@ -30,42 +31,20 @@ export const DUPLICATE_ERROR = {
   EMAIL_DUPLICATE: "이미 사용 중인 이메일입니다.",
 } as const;
 
-export class AuthError extends Error {
-  statusCode: StatusCodes;
-  errorType: keyof typeof AUTH_ERROR;
-
-  constructor(
-    errorType: keyof typeof AUTH_ERROR,
-    statusCode: StatusCodes = StatusCodes.UNAUTHORIZED
-  ) {
-    super(AUTH_ERROR[errorType]);
-    this.statusCode = statusCode;
-    this.errorType = errorType;
+export class AuthError extends BaseError<typeof AUTH_ERROR> {
+  constructor(errorType: keyof typeof AUTH_ERROR) {
+    super(AUTH_ERROR, errorType, StatusCodes.UNAUTHORIZED);
   }
 }
 
-export class ValidationError extends Error {
-  statusCode: StatusCodes;
-  errorType: keyof typeof VALIDATION_ERROR;
-  constructor(
-    errorType: keyof typeof VALIDATION_ERROR,
-    statusCode: StatusCodes = StatusCodes.BAD_REQUEST
-  ) {
-    super(VALIDATION_ERROR[errorType]);
-    this.statusCode = statusCode;
-    this.errorType = errorType;
+export class ValidationError extends BaseError<typeof VALIDATION_ERROR> {
+  constructor(errorType: keyof typeof VALIDATION_ERROR) {
+    super(VALIDATION_ERROR, errorType, StatusCodes.BAD_REQUEST);
   }
 }
 
-export class DuplicateError extends Error {
-  statusCode: StatusCodes;
-  errorType: keyof typeof DUPLICATE_ERROR;
-  constructor(
-    errorType: keyof typeof DUPLICATE_ERROR,
-    statusCode: StatusCodes = StatusCodes.CONFLICT
-  ) {
-    super(DUPLICATE_ERROR[errorType]);
-    this.statusCode = statusCode;
-    this.errorType = errorType;
+export class DuplicateError extends BaseError<typeof DUPLICATE_ERROR> {
+  constructor(errorType: keyof typeof DUPLICATE_ERROR) {
+    super(DUPLICATE_ERROR, errorType, StatusCodes.CONFLICT);
   }
 }

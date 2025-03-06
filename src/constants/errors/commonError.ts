@@ -6,15 +6,24 @@ export const COMMON_ERROR = {
   NETWORK_ERROR: "네트워크 연결을 확인해주세요.",
 } as const;
 
-export class CommonError extends Error {
+export abstract class BaseError<
+  T extends Record<string, string>
+> extends Error {
   statusCode: StatusCodes;
-  errorType: keyof typeof COMMON_ERROR;
+  errorType: keyof T;
+
+  constructor(errorTypes: T, errorType: keyof T, statusCode: StatusCodes) {
+    super(errorTypes[errorType]);
+    this.statusCode = statusCode;
+    this.errorType = errorType;
+  }
+}
+
+export class CommonError extends BaseError<typeof COMMON_ERROR> {
   constructor(
     errorType: keyof typeof COMMON_ERROR,
     statusCode: StatusCodes = StatusCodes.INTERNAL_SERVER_ERROR
   ) {
-    super(COMMON_ERROR[errorType]);
-    this.statusCode = statusCode;
-    this.errorType = errorType;
+    super(COMMON_ERROR, errorType, statusCode);
   }
 }
