@@ -4,13 +4,15 @@ import {
   validatePassword,
 } from "../middlewares/authValidator.js";
 import {
+  getMe,
   changeNickname,
   changePassword,
-} from "../controllers/authController.js";
+} from "../controllers/userController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
+router.get("/me", authMiddleware.authenticate, getMe);
 router.patch(
   "/change-nickname;",
   authMiddleware.authenticate,

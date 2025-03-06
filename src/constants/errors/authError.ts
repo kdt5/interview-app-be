@@ -56,15 +56,25 @@ export const AUTH_ERROR_TYPES: Record<string, ErrorType> = {
     code: "AUTH/SESSION_EXPIRED",
     message: "세션이 만료되었습니다. 다시 로그인해주세요.",
   },
-} as const;
-
-// 유효성 검사 관련 에러
-export const VALIDATION_ERROR_TYPES: Record<string, ErrorType> = {
+  NOT_FOUND_USER: {
+    code: "VALIDATION/NOT_FOUND_USER",
+    message: "입력하신 정보를 다시 확인해주세요.",
+    internalMessage: "존재하지 않는 유저입니다.",
+  },
   INVALID_PASSWORD: {
     code: "VALIDATION/INVALID_PASSWORD",
     message: "입력하신 정보를 다시 확인해주세요.",
     internalMessage: "비밀번호가 올바르지 않습니다.",
   },
+  PASSWORD_MISMATCH: {
+    code: "VALIDATION/PASSWORD_MISMATCH",
+    message: "입력하신 정보를 다시 확인해주세요.",
+    internalMessage: "변경 전 비밀번호가 올바르지 않습니다.",
+  },
+} as const;
+
+// 유효성 검사 관련 에러
+export const VALIDATION_ERROR_TYPES: Record<string, ErrorType> = {
   INVALID_EMAIL: {
     code: "VALIDATION/INVALID_EMAIL",
     message: "유효하지 않은 이메일 형식입니다.",
@@ -72,11 +82,6 @@ export const VALIDATION_ERROR_TYPES: Record<string, ErrorType> = {
   INVALID_NICKNAME: {
     code: "VALIDATION/INVALID_NICKNAME",
     message: "유효하지 않은 닉네임 형식입니다.",
-  },
-  PASSWORD_MISMATCH: {
-    code: "VALIDATION/PASSWORD_MISMATCH",
-    message: "입력하신 정보를 다시 확인해주세요.",
-    internalMessage: "비밀번호가 올바르지 않습니다.",
   },
   PASSWORD_REQUIREMENTS: {
     code: "VALIDATION/PASSWORD_REQUIREMENTS",
