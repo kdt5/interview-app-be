@@ -137,18 +137,13 @@ export const logout = async (
 };
 
 export const refresh = async (
-  req: Request,
+  req: Request & { cookies: { refreshToken: string } },
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
-      throw new AuthError("REFRESH_TOKEN_REQUIRED");
-    }
-
     // 토큰 순환 메서드 사용
-    await authMiddleware.rotateTokens(refreshToken, res);
+    await authMiddleware.rotateTokens(req.cookies.refreshToken, res);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
@@ -164,7 +159,7 @@ export const refresh = async (
         next(securityError);
       } else if (error.errorType === "TOKEN_EXPIRED") {
         // 단순 만료 - 일반적인 재로그인 요청
-        res.status(StatusCodes.NO_CONTENT).send();
+        res.status(StatusCodes.UNAUTHORIZED).send();
       } else {
         next(error);
       }
