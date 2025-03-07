@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { VALIDATION_ERROR_TYPES } from "../constants/errors/authError.js";
+import { VALIDATION_ERROR } from "../constants/errors/authError.js";
 
 interface ValidationRule {
   test: (value: string) => boolean;
@@ -13,17 +13,17 @@ const validationRules = {
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,30}$/.test(
         value
       ),
-    message: VALIDATION_ERROR_TYPES.PASSWORD_REQUIREMENTS.message,
+    message: VALIDATION_ERROR.PASSWORD_REQUIREMENTS,
   },
   email: {
     test: (value: string) =>
       /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(value) &&
       value.length <= 254,
-    message: VALIDATION_ERROR_TYPES.INVALID_EMAIL.message,
+    message: VALIDATION_ERROR.INVALID_EMAIL,
   },
   nickName: {
     test: (value: string) => /^[가-힣a-zA-Z0-9]{2,16}$/.test(value),
-    message: VALIDATION_ERROR_TYPES.INVALID_NICKNAME.message,
+    message: VALIDATION_ERROR.INVALID_NICKNAME,
   },
 } as const;
 
