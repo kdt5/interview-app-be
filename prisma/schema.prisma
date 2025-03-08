@@ -154,8 +154,6 @@ model RefreshToken {
   expiresAt DateTime @map("expires_at")
   /// 토큰 발급일
   createdAt DateTime @default(now()) @map("created_at")
-  /// 마지막 사용일
-  lastUsed  DateTime @default(now()) @map("last_used")
   /// 토큰 소유자
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// 사용자 ID

@@ -1,126 +1,172 @@
-import { RequestHandler } from "express";
+import { Request, NextFunction, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { createUser, authenticateUser, checkAvailability, AvailabilityCheckType } from "../services/authService.js";
-import { changeUserNickname, changeUserPassword } from "../services/authService.js";
-import { RequestWithUser } from "../middlewares/authMiddleware.js";
+import {
+  createUser,
+  authenticateUser,
+  checkAvailability,
+  deleteRefreshToken,
+} from "../services/authService.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
+import { AuthError } from "../constants/errors/authError.js";
 
-interface CheckEmailAvailabilityRequest {
+interface CheckEmailAvailabilityRequest extends Request {
+  body: {
     email: string;
+  };
 }
 
-interface CheckNicknameAvailabilityRequest {
+interface CheckNicknameAvailabilityRequest extends Request {
+  body: {
     nickName: string;
+  };
 }
 
-interface SignupRequest {
+interface SignupRequest extends Request {
+  body: {
     password: string;
     email: string;
     nickName: string;
+  };
 }
 
-interface LoginRequest {
+interface LoginRequest extends Request {
+  body: {
     email: string;
     password: string;
+  };
 }
 
-interface ChangeNicknameRequest {
-    nickName: string;
+interface RefreshRequest extends Request {
+  cookies: {
+    refreshToken: string;
+  };
 }
 
-interface ChangePasswordRequest {
-    oldPassword: string;
-    newPassword: string;
-}
+export const checkEmailAvailability = async (
+  req: CheckEmailAvailabilityRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email } = req.body;
+    const isAvailable = await checkAvailability(email, "email");
 
-export const checkEmailAvailability: RequestHandler<{}, {}, CheckEmailAvailabilityRequest> = async (req, res, next): Promise<void> => {
-    try {
-        const { email } = req.body;
-        const result = await checkAvailability(email, AvailabilityCheckType.EMAIL);
-        res.status(StatusCodes.OK).json({ message: result.message });
-    } catch (error) {
-        next(error);
+    res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const checkNicknameAvailability = async (
+  req: CheckNicknameAvailabilityRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { nickName } = req.body;
+    const isAvailable = await checkAvailability(nickName, "nickName");
+
+    res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const signup = async (
+  req: SignupRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { password, email, nickName } = req.body;
+
+    const isEmailAvailable = await checkAvailability(email, "email");
+    if (!isEmailAvailable) {
+      res.status(StatusCodes.CONFLICT).json({
+        message: "이미 사용 중인 이메일입니다.",
+      });
+      return;
     }
-};
 
-export const checkNicknameAvailability: RequestHandler<{}, {}, CheckNicknameAvailabilityRequest> = async (req, res, next): Promise<void> => {
-    try {
-        const { nickName } = req.body;
-        const result = await checkAvailability(nickName, AvailabilityCheckType.NICKNAME);
-        res.status(StatusCodes.OK).json({ message: result.message });
-    } catch (error) {
-        next(error);
+    const isNicknameAvailable = await checkAvailability(nickName, "nickName");
+    if (!isNicknameAvailable) {
+      res.status(StatusCodes.CONFLICT).json({
+        message: "이미 사용 중인 닉네임입니다.",
+      });
+      return;
     }
+
+    const user = await createUser(password, email, nickName);
+
+    res.status(StatusCodes.CREATED).json({
+      email: user.email,
+      nickName: user.nickName,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const signup: RequestHandler<{}, {}, SignupRequest> = async (req, res, next): Promise<void> => {
-    try {
-        const { password, email, nickName } = req.body;
+export const login = async (
+  req: LoginRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email, password } = req.body;
+    const { user, accessToken, refreshToken } = await authenticateUser(
+      email,
+      password
+    );
 
-        const user = await createUser(password, email, nickName);
+    authMiddleware.setAccessTokenCookie(res, accessToken);
+    authMiddleware.setRefreshTokenCookie(res, refreshToken);
 
-        res.status(StatusCodes.CREATED).json({
-            message: "회원가입이 완료되었습니다.",
-            user: {
-                email: user.email,
-                nickName: user.nickName
-            }
-        });
-    } catch (error) {
-        next(error);
+    res.status(StatusCodes.OK).json({
+      email: user.email,
+      nickName: user.nickName,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (refreshToken) {
+      await deleteRefreshToken(refreshToken);
     }
+    authMiddleware.clearAccessTokenCookie(res);
+    authMiddleware.clearRefreshTokenCookie(res);
+
+    res.status(StatusCodes.OK).send();
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const login: RequestHandler<{}, {}, LoginRequest> = async (req, res, next): Promise<void> => {
-    try {
-        const { email, password } = req.body;
-        const { user, token } = await authenticateUser(email, password);
+export const refresh = async (
+  req: RefreshRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    await authMiddleware.rotateTokens(req.cookies.refreshToken, res);
 
-        res.status(StatusCodes.OK).json({
-            message: "로그인이 완료되었습니다.",
-            token,
-            user: {
-                email: user.email,
-                nickName: user.nickName
-            }
-        });
-    } catch (error) {
-        next(error);
+    res.status(StatusCodes.OK).send();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      authMiddleware.clearAccessTokenCookie(res);
+      authMiddleware.clearRefreshTokenCookie(res);
+
+      res.status(StatusCodes.UNAUTHORIZED).send();
+      return;
     }
+    next(error);
+  }
 };
-
-export const logout: RequestHandler = async (req, res): Promise<void> => {
-    res.clearCookie("token");
-    res.status(StatusCodes.OK).json({ message: "로그아웃이 완료되었습니다." });
-};
-
-export const changeNickname: RequestHandler<{}, {}, ChangeNicknameRequest> = async (req: RequestWithUser, res, next): Promise<void> => {
-    try {
-        const { nickName } = req.body;
-        const user = await changeUserNickname(req.user?.email, nickName);
-
-        res.status(StatusCodes.OK).json({
-            message: "닉네임이 변경되었습니다.",
-            user: {
-                email: user.email,
-                nickName: user.nickName
-            }
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-export const changePassword: RequestHandler<{}, {}, ChangePasswordRequest> = async (req: RequestWithUser, res, next): Promise<void> => {
-    try {
-        const { oldPassword, newPassword } = req.body;
-        await changeUserPassword(req.user?.email, oldPassword, newPassword);
-
-        res.status(StatusCodes.OK).json({
-            message: "비밀번호가 변경되었습니다."
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-
