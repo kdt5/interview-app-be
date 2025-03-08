@@ -62,3 +62,42 @@ export const getWeeklyQuestionDetail : RequestHandler = async(req, res) => {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }
 }
+
+export const getAllQuestions : RequestHandler = async(req, res) => {
+    try{
+        const questions = await prisma.question.findMany({
+            select: {
+                id: true,
+                title: true,
+            }
+        });
+
+        if(!questions){
+            res.status(StatusCodes.NOT_FOUND).json({message: "주간 질문이 존재하지 않습니다."});
+        } else {
+            try{
+                const updatedQuestions = await Promise.all(
+                    questions.map(async (question) => {
+                        const categories = await prisma.questionCategory.findMany({
+                            where: { questionId: question.id },
+                            select: {
+                                category: true,
+                            },
+                        });
+                
+                        return {
+                            ...question,
+                            category: categories.map(c => c.category.name),
+                        };
+                    })
+                );
+                
+                res.status(StatusCodes.OK).json(updatedQuestions);
+            } catch(error){
+                res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+            }
+        }
+    } catch(error){
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+    }
+}
