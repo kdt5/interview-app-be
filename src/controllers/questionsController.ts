@@ -4,14 +4,21 @@ import prisma from '../lib/prisma';
 
 export const getQuestionDetail : RequestHandler = async(req, res) => {
     try{
-        let {id} = req.params;
+        const {id} = req.params;
         const question_id = parseInt(id);
 
         const question = await prisma.question.findUnique({
             where: {id: question_id}
         });
+
+        const categories = await prisma.questionCategory.findMany({
+            where: {questionId: question_id},
+            select: {
+                category: true,
+            },
+        });
         
-        if(!question){
+        if(!question || !categories){
             res.status(StatusCodes.NOT_FOUND).json({message: "존재하지 않는 질문입니다."});
         } else {
             res.status(StatusCodes.OK).json({
@@ -20,13 +27,14 @@ export const getQuestionDetail : RequestHandler = async(req, res) => {
                     title: question.title,
                     content: question.content,
                     is_weekly: question.isWeekly,
-                    created_at: question.createdAt
+                    created_at: question.createdAt,
+                    category: categories.map(c => c.category.name),
                 }
             });
         }
 
     } catch(error) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: '서버 오류가 발생했습니다.' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }
 }
 
@@ -51,6 +59,6 @@ export const getWeeklyQuestionDetail : RequestHandler = async(req, res) => {
         }
 
     } catch(error) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: '서버 오류가 발생했습니다.' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }
 }
