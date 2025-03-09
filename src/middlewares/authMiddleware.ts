@@ -27,7 +27,11 @@ const authMiddleware = {
           token,
           secret
         );
-        req.user = { email: user.email, nickName: user.nickName };
+        req.user = {
+          userId: user.userId,
+          email: user.email,
+          nickName: user.nickName,
+        };
         next();
       } catch (error) {
         // 액세스 토큰이 만료된 경우에만 리프레시 토큰 시도
@@ -88,14 +92,14 @@ const authMiddleware = {
 
       const user = await prisma.user.findUnique({
         where: { email: decoded.email },
-        select: { email: true, nickName: true },
+        select: { id: true, email: true, nickName: true },
       });
 
       if (!user) {
         throw new AuthError("UNAUTHORIZED");
       }
 
-      return user;
+      return { userId: user.id, email: user.email, nickName: user.nickName };
     } catch (error) {
       if (error instanceof Error && error.name === "TokenExpiredError") {
         throw new AuthError("TOKEN_EXPIRED");
@@ -173,7 +177,11 @@ const authMiddleware = {
 
       return {
         accessToken: tokens.accessToken,
-        user: { email: user.email, nickName: user.nickName },
+        user: {
+          userId: user.userId,
+          email: user.email,
+          nickName: user.nickName,
+        },
       };
     } catch (error) {
       // 리프레시 토큰 재사용 감지 로직 추가
