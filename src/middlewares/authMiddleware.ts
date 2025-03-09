@@ -28,7 +28,9 @@ const authMiddleware = {
           secret
         );
         req.user = {
-          userId: user.userId,
+          userId: user.id,
+          email: user.email,
+          nickName: user.nickName,
           email: user.email,
           nickName: user.nickName,
         };
