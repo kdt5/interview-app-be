@@ -22,12 +22,12 @@ export const getQuestionDetail : RequestHandler = async(req, res) => {
             res.status(StatusCodes.NOT_FOUND).json({message: "존재하지 않는 질문입니다."});
         } else {
             res.status(StatusCodes.OK).json({
-                question_detail: {
+                questionDetail: {
                     id: question.id,
                     title: question.title,
                     content: question.content,
-                    is_weekly: question.isWeekly,
-                    created_at: question.createdAt,
+                    isWeekly: question.isWeekly,
+                    createdAt: question.createdAt,
                     category: categories.map(c => c.category.name),
                 }
             });
@@ -48,12 +48,12 @@ export const getWeeklyQuestionDetail : RequestHandler = async(req, res) => {
             res.status(StatusCodes.NOT_FOUND).json({message: "주간 질문이 존재하지 않습니다."});
         } else {
             res.status(StatusCodes.OK).json({
-                question_detail: {
+                questionDetail: {
                     id: question.id,
                     title: question.title,
                     content: question.content,
-                    is_weekly: question.isWeekly,
-                    created_at: question.createdAt
+                    isWeekly: question.isWeekly,
+                    createdAt: question.createdAt
                 }
             });
         }
@@ -64,6 +64,7 @@ export const getWeeklyQuestionDetail : RequestHandler = async(req, res) => {
 }
 
 export const getAllQuestions : RequestHandler = async(req, res) => {
+
     try{
         const questions = await prisma.question.findMany({
             select: {
