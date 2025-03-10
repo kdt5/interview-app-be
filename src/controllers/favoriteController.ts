@@ -1,21 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { favoriteService } from "../services/favoriteService.js";
-import { ParamsDictionary } from "express-serve-static-core";
-
-interface AddFavoritesParams extends ParamsDictionary {
-  id: string;
-}
-
-interface AddFavoritesBody {
-  userId: number;
-}
-
-type AddFavoritesRequest = Request<
-  AddFavoritesParams,
-  object,
-  AddFavoritesBody
->;
+import { UserInfo } from "../services/authService.js";
 
 const validateFavoriteRequest = (userId: number, questionId: number) => {
   if (!userId || isNaN(questionId)) {
@@ -25,14 +11,16 @@ const validateFavoriteRequest = (userId: number, questionId: number) => {
 };
 
 export const addFavorite = async (
-  req: AddFavoritesRequest,
+  req: Request & { user?: UserInfo },
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
     const questionId = parseInt(id);
-    const { userId } = req.body;
+    const userId = req.user?.userId;
+
+    if (!userId) return;
 
     validateFavoriteRequest(userId, questionId);
 
@@ -54,14 +42,16 @@ export const addFavorite = async (
 };
 
 export const removeFavorite = async (
-  req: AddFavoritesRequest,
+  req: Request & { user?: UserInfo },
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
     const questionId = parseInt(id);
-    const { userId } = req.body;
+    const userId = req.user?.userId;
+
+    if (!userId) return;
 
     validateFavoriteRequest(userId, questionId);
 
