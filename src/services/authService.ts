@@ -12,6 +12,7 @@ import dbDayjs from "../lib/dayjs.js";
 const HASH_ROUNDS = 10; // 10 rounds → 약 10ms, 12 rounds → 약 100ms
 
 export interface UserInfo {
+  userId: number;
   email: string;
   nickName: string;
 }
@@ -125,6 +126,7 @@ export const authenticateUser = async (
 
   return {
     user: {
+      userId: user.id,
       email: user.email,
       nickName: user.nickName,
     },
@@ -201,7 +203,7 @@ export const getUserByEmail = async (email: string): Promise<UserInfo> => {
     throw new AuthError("UNAUTHORIZED");
   }
 
-  return { email: user.email, nickName: user.nickName };
+  return { userId: user.id, email: user.email, nickName: user.nickName };
 };
 
 interface TokenPair {
