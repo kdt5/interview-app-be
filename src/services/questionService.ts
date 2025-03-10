@@ -1,14 +1,14 @@
 import prisma from '../lib/prisma';
 
-export const getQuestionById = async (question_id: number) => {
+export const getQuestionById = async (questionId: number) => {
     return await prisma.question.findUnique({
-        where: { id: question_id },
+        where: { id: questionId },
     });
 };
 
-export const getCategoriesByQuestionId = async (question_id: number) => {
+export const getCategoriesByQuestionId = async (questionId: number) => {
     return await prisma.questionCategory.findMany({
-        where: { questionId: question_id },
+        where: { questionId: questionId },
         select: { category: true },
     });
 };

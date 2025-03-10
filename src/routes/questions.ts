@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getQuestionDetail, getWeeklyQuestionDetail, getAllQuestions } from "../controllers/questionsController";
-import { validateGetQuestionDetail } from "../middlewares/questions.validator";
+import { validateGetQuestionDetail } from "../middlewares/questionsValidator";
 import authMiddleware from "../middlewares/authMiddleware";
 
 const router = Router();

@@ -9,9 +9,9 @@ import {
 
 export const getQuestionDetail: RequestHandler = async (req, res) => {
     try {
-        const question_id = parseInt(req.params.id);
-        const question = await getQuestionById(question_id);
-        const categories = await getCategoriesByQuestionId(question_id);
+        const questionId = parseInt(req.params.id);
+        const question = await getQuestionById(questionId);
+        const categories = await getCategoriesByQuestionId(questionId);
 
         if (!question || !categories) {
             res.status(StatusCodes.NOT_FOUND).json({ message: "존재하지 않는 질문입니다." });

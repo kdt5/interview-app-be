@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes'
 
 export const validateGetQuestionDetail = (req: Request, res: Response, next: NextFunction): void => {
-    let {id} = req.params;
+    const {id} = req.params;
 
     const questionIdRegex = /^[0-9]/;
     if(!questionIdRegex.test(id)){
