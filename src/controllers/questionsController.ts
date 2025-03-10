@@ -1,19 +1,22 @@
-import { RequestHandler } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import {
     getQuestionById,
-    getCategoriesByQuestionId,
     getWeeklyQuestion,
     getAllQuestionsWithCategories
 } from '../services/questionService';
+import { Position } from '@prisma/client';
 
-export const getQuestionDetail: RequestHandler = async (req, res) => {
+export const getQuestionDetail: RequestHandler<{ id: string }> = async (
+    req: Request<{ id: string }>, 
+    res: Response, 
+    next: NextFunction
+): Promise<void> => {
     try {
         const questionId = parseInt(req.params.id);
         const question = await getQuestionById(questionId);
-        const categories = await getCategoriesByQuestionId(questionId);
 
-        if (!question || !categories) {
+        if (!question) {
             res.status(StatusCodes.NOT_FOUND).json({ message: "존재하지 않는 질문입니다." });
             return;
         }
@@ -25,15 +28,20 @@ export const getQuestionDetail: RequestHandler = async (req, res) => {
                 content: question.content,
                 isWeekly: question.isWeekly,
                 createdAt: question.createdAt,
-                category: categories.map((c) => c.category.name),
+                categories: question.categories.map(qc => qc.category.name)
             },
         });
     } catch (error) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+        console.error(error);
+        next(error);
     }
 };
 
-export const getWeeklyQuestionDetail: RequestHandler = async (req, res) => {
+export const getWeeklyQuestionDetail = async (
+    req: Request, 
+    res: Response, 
+    next: NextFunction
+): Promise<void> => {
     try {
         const question = await getWeeklyQuestion();
 
@@ -49,17 +57,28 @@ export const getWeeklyQuestionDetail: RequestHandler = async (req, res) => {
                 content: question.content,
                 isWeekly: question.isWeekly,
                 createdAt: question.createdAt,
+                categories: question.categories.map(qc => qc.category.name)
             },
         });
     } catch (error) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+        console.error(error);
+        next(error);
     }
 };
 
-export const getAllQuestions: RequestHandler = async (req, res) => {
+interface QuestionQueryParams {
+    position?: Position;
+    category?: string;
+}
+
+export const getAllQuestions: RequestHandler<QuestionQueryParams> = async (
+    req: Request<QuestionQueryParams>, 
+    res: Response, 
+    next: NextFunction
+): Promise<void> => {
     try {
-        const position = typeof req.query.position === "string" ? req.query.position : undefined;
-        const category = typeof req.query.category === "string" ? req.query.category : undefined;
+        const category = req.query.category as string | undefined;
+        const position = req.query.position as Position | undefined;
 
         const questions = await getAllQuestionsWithCategories(position, category);
         if(questions.length === 0){
@@ -69,6 +88,7 @@ export const getAllQuestions: RequestHandler = async (req, res) => {
 
         res.status(StatusCodes.OK).json(questions);
     } catch (error) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
+        console.error(error);
+        next(error);
     }
 };

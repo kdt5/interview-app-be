@@ -4,30 +4,37 @@ import prisma from '../lib/prisma';
 export const getQuestionById = async (questionId: number) => {
     return await prisma.question.findUnique({
         where: { id: questionId },
-    });
-};
-
-export const getCategoriesByQuestionId = async (questionId: number) => {
-    return await prisma.questionCategory.findMany({
-        where: { questionId: questionId },
-        select: { category: true },
+        include: {
+            categories: {
+                include: {
+                    category: true
+                }
+            }
+        }
     });
 };
 
 export const getWeeklyQuestion = async () => {
     return await prisma.question.findFirst({
         where: { isWeekly: true },
+        include: {
+            categories: {
+                include: {
+                    category: true
+                }
+            }
+        }
     });
 };
 
-export const getAllQuestionsWithCategories = async (position? : string, category? : string) => {
+export const getAllQuestionsWithCategories = async (position? : Position, category? : string) => {
     const whereClause: Prisma.QuestionWhereInput = {};
 
     if(position && category){
         whereClause.categories = {
             some: {
                 category: {
-                    position: position as Position,
+                    position: position,
                     name: category
                 }
             }
@@ -36,7 +43,7 @@ export const getAllQuestionsWithCategories = async (position? : string, category
         whereClause.categories = {
             some: {
                 category: {
-                    position: position as Position
+                    position: position
                 }
             }
         };
@@ -52,16 +59,24 @@ export const getAllQuestionsWithCategories = async (position? : string, category
 
     const questions = await prisma.question.findMany({
         where: whereClause,
-        select: { id: true, title: true },
+        select: {
+            id: true,
+            title: true,
+            categories: {
+                select: {
+                    category: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            }
+        }
     });
 
-    return await Promise.all(
-        questions.map(async (question) => {
-            const categories = await getCategoriesByQuestionId(question.id);
-            return {
-                ...question,
-                category: categories.map((c) => c.category.name),
-            };
-        })
-    );
+    return questions.map(question => ({
+        id: question.id,
+        title: question.title,
+        categories: question.categories.map(qc => qc.category.name)
+    }))
 };
