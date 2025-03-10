@@ -1,3 +1,4 @@
+import { Position, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 
 export const getQuestionById = async (questionId: number) => {
@@ -19,8 +20,38 @@ export const getWeeklyQuestion = async () => {
     });
 };
 
-export const getAllQuestionsWithCategories = async () => {
+export const getAllQuestionsWithCategories = async (position? : string, category? : string) => {
+    const whereClause: Prisma.QuestionWhereInput = {};
+
+    if(position && category){
+        whereClause.categories = {
+            some: {
+                category: {
+                    position: position as Position,
+                    name: category
+                }
+            }
+        };
+    } else if (position) {
+        whereClause.categories = {
+            some: {
+                category: {
+                    position: position as Position
+                }
+            }
+        };
+    } else if (category) {
+        whereClause.categories = {
+            some: {
+                category: {
+                    name: category
+                }
+            }
+        };
+    }
+
     const questions = await prisma.question.findMany({
+        where: whereClause,
         select: { id: true, title: true },
     });
 

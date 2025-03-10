@@ -58,7 +58,15 @@ export const getWeeklyQuestionDetail: RequestHandler = async (req, res) => {
 
 export const getAllQuestions: RequestHandler = async (req, res) => {
     try {
-        const questions = await getAllQuestionsWithCategories();
+        const position = typeof req.query.position === "string" ? req.query.position : undefined;
+        const category = typeof req.query.category === "string" ? req.query.category : undefined;
+
+        const questions = await getAllQuestionsWithCategories(position, category);
+        if(questions.length === 0){
+            res.status(StatusCodes.NOT_FOUND).json({ message: "조건에 해당하는 질문이 존재하지 않습니다." });
+            return;
+        }
+
         res.status(StatusCodes.OK).json(questions);
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
