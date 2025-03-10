@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import {
   AuthError,
   ValidationError,
@@ -12,7 +12,6 @@ export const errorHandler = (
   error: Error,
   req: Request,
   res: Response,
-  next: NextFunction
 ) => {
   let statusCode: StatusCodes;
 
