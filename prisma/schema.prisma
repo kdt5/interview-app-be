@@ -108,6 +108,9 @@ model Favorite {
   questionId Int      @map("question_id")
   /// 즐겨찾기 생성일
   createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, questionId])
+  @@index([userId, questionId])
 }
 
 /// 카테고리 정보를 저장하는 모델
