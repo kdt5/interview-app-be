@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { RequestHandler, Router } from "express";
 import {
   validateNickname,
   validatePassword,
@@ -12,18 +12,18 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
-router.get("/me", authMiddleware.authenticate, getMe);
+router.get("/me", authMiddleware.authenticate, getMe as RequestHandler);
 router.patch(
   "/change-nickname;",
   authMiddleware.authenticate,
   validateNickname,
-  changeNickname
+  changeNickname as RequestHandler
 );
 router.patch(
   "/change-password",
   authMiddleware.authenticate,
   validatePassword,
-  changePassword
+  changePassword as RequestHandler
 );
 
 export default router;

@@ -7,6 +7,7 @@ import { errorHandler } from "./src/middlewares/errorHandler.js";
 import authRouter from "./src/routes/auth.js";
 import usersRouter from "./src/routes/users.js";
 import favoriteRouter from "./src/routes/favorites.js";
+import questionsRouter from './src/routes/questions.js';
 
 const app = express();
 app.use(helmet());
@@ -22,6 +23,7 @@ app.use(
 app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/favorites", favoriteRouter);
+app.use('/api/questions', questionsRouter);
 
 app.use(errorHandler);
 

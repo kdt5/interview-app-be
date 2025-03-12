@@ -1,4 +1,4 @@
-import { NextFunction, RequestHandler, Response } from "express";
+import { NextFunction, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import {
   changeUserNickname,
@@ -20,11 +20,11 @@ interface ChangePasswordRequest extends RequestWithUser {
   };
 }
 
-export const getMe = (async (
+export async function getMe(
   req: RequestWithUser,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const user = await getUserByEmail(req.user.email);
 
@@ -35,13 +35,13 @@ export const getMe = (async (
   } catch (error) {
     next(error);
   }
-}) as RequestHandler;
+}
 
-export const changeNickname = (async (
+export async function changeNickname(
   req: ChangeNicknameRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const { nickName } = req.body;
     await changeUserNickname(req.user.email, nickName);
@@ -50,13 +50,13 @@ export const changeNickname = (async (
   } catch (error) {
     next(error);
   }
-}) as RequestHandler;
+}
 
-export const changePassword = (async (
+export async function changePassword(
   req: ChangePasswordRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const { oldPassword, newPassword } = req.body;
     await changeUserPassword(req.user.email, oldPassword, newPassword);
@@ -65,4 +65,4 @@ export const changePassword = (async (
   } catch (error) {
     next(error);
   }
-}) as RequestHandler;
+}

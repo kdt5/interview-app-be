@@ -42,11 +42,11 @@ interface RefreshRequest extends Request {
   };
 }
 
-export const checkEmailAvailability = async (
+export async function checkEmailAvailability(
   req: CheckEmailAvailabilityRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const { email } = req.body;
     const isAvailable = await checkAvailability(email, "email");
@@ -55,13 +55,13 @@ export const checkEmailAvailability = async (
   } catch (error) {
     next(error);
   }
-};
+}
 
-export const checkNicknameAvailability = async (
+export async function checkNicknameAvailability(
   req: CheckNicknameAvailabilityRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const { nickName } = req.body;
     const isAvailable = await checkAvailability(nickName, "nickName");
@@ -70,13 +70,13 @@ export const checkNicknameAvailability = async (
   } catch (error) {
     next(error);
   }
-};
+}
 
-export const signup = async (
+export async function signup(
   req: SignupRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const { password, email, nickName } = req.body;
 
@@ -105,13 +105,13 @@ export const signup = async (
   } catch (error) {
     next(error);
   }
-};
+}
 
-export const login = async (
+export async function login(
   req: LoginRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const { email, password } = req.body;
     const { user, accessToken, refreshToken } = await authenticateUser(
@@ -129,13 +129,13 @@ export const login = async (
   } catch (error) {
     next(error);
   }
-};
+}
 
-export const logout = async (
+export async function logout(
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const refreshToken = req.cookies.refreshToken;
     if (refreshToken) {
@@ -148,13 +148,13 @@ export const logout = async (
   } catch (error) {
     next(error);
   }
-};
+}
 
-export const refresh = async (
+export async function refresh(
   req: RefreshRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     await authMiddleware.rotateTokens(req.cookies.refreshToken, res);
 
@@ -169,4 +169,4 @@ export const refresh = async (
     }
     next(error);
   }
-};
+}
