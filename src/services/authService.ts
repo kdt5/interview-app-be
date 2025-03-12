@@ -25,23 +25,23 @@ export interface AuthResponse {
 
 type CheckType = "email" | "nickName";
 
-export const checkAvailability = async (
+export async function checkAvailability(
   item: string,
   type: CheckType
-): Promise<boolean> => {
+): Promise<boolean> {
   const where = {
     [type]: item,
   } as unknown as Prisma.UserWhereUniqueInput;
 
   const existingItem = await prisma.user.findUnique({ where });
   return !existingItem;
-};
+}
 
-export const createUser = async (
+export async function createUser(
   password: string,
   email: string,
   nickName: string
-): Promise<User> => {
+): Promise<User> {
   const existingEmail = await prisma.user.findUnique({
     where: { email: email },
   });
@@ -69,12 +69,12 @@ export const createUser = async (
       updatedAt: dbDayjs(),
     },
   });
-};
+}
 
-export const authenticateUser = async (
+export async function authenticateUser(
   email: string,
   password: string
-): Promise<AuthResponse> => {
+): Promise<AuthResponse> {
   const user = await prisma.user.findUnique({
     where: { email: email },
   });
@@ -133,20 +133,18 @@ export const authenticateUser = async (
     accessToken,
     refreshToken,
   };
-};
+}
 
-export const deleteRefreshToken = async (
-  refreshToken: string
-): Promise<void> => {
+export async function deleteRefreshToken(refreshToken: string): Promise<void> {
   await prisma.refreshToken.deleteMany({
     where: { token: refreshToken },
   });
-};
+}
 
-export const changeUserNickname = async (
+export async function changeUserNickname(
   email: string | undefined,
   nickName: string
-): Promise<void> => {
+): Promise<void> {
   if (!email) {
     throw new AuthError("UNAUTHORIZED");
   }
@@ -163,13 +161,13 @@ export const changeUserNickname = async (
     where: { email: email },
     data: { nickName: nickName, updatedAt: dbDayjs() },
   });
-};
+}
 
-export const changeUserPassword = async (
+export async function changeUserPassword(
   email: string | undefined,
   oldPassword: string,
   newPassword: string
-): Promise<void> => {
+): Promise<void> {
   if (!email) {
     throw new AuthError("UNAUTHORIZED");
   }
@@ -192,9 +190,9 @@ export const changeUserPassword = async (
     where: { email: email },
     data: { password: hashedPassword, updatedAt: dbDayjs() },
   });
-};
+}
 
-export const getUserByEmail = async (email: string): Promise<UserInfo> => {
+export async function getUserByEmail(email: string): Promise<UserInfo> {
   const user = await prisma.user.findUnique({
     where: { email: email },
   });
@@ -204,16 +202,14 @@ export const getUserByEmail = async (email: string): Promise<UserInfo> => {
   }
 
   return { userId: user.id, email: user.email, nickName: user.nickName };
-};
+}
 
 interface TokenPair {
   accessToken: string;
   refreshToken: string;
 }
 
-export const refreshTokens = async (
-  refreshToken: string
-): Promise<TokenPair> => {
+export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
   try {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
@@ -286,4 +282,4 @@ export const refreshTokens = async (
     }
     throw new AuthError("REFRESH_TOKEN_FAILED");
   }
-};
+}

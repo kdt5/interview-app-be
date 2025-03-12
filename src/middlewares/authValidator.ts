@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import { VALIDATION_ERROR } from "../constants/errors/authError.js";
 
@@ -41,9 +41,9 @@ const validateField = (
   return null;
 };
 
-const createValidator = (fields: {
+function createValidator(fields: {
   [key: string]: ValidationRule | undefined;
-}) => {
+}): RequestHandler {
   return (req: Request, res: Response, next: NextFunction): void => {
     for (const [fieldName, rule] of Object.entries(fields)) {
       const value = req.body[fieldName];
@@ -56,7 +56,7 @@ const createValidator = (fields: {
     }
     next();
   };
-};
+}
 
 export const validateNickname = createValidator({
   nickName: validationRules.nickName,
