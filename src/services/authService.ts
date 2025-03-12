@@ -235,7 +235,7 @@ export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
     }
 
     // 토큰 만료 확인
-    if (new Date() > tokenData.expiresAt) {
+    if (dbDayjs() > tokenData.expiresAt) {
       // 만료된 토큰 삭제
       await prisma.refreshToken.delete({
         where: { id: tokenData.id },
