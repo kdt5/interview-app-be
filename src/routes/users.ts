@@ -14,7 +14,7 @@ const router = Router();
 
 router.get("/me", authMiddleware.authenticate, getMe as RequestHandler);
 router.patch(
-  "/change-nickname;",
+  "/change-nickname",
   authMiddleware.authenticate,
   validateNickname,
   changeNickname as RequestHandler
