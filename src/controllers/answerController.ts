@@ -5,6 +5,13 @@ import answerService from "../services/answerService";
 import { checkQuestionExists } from "../services/questionService";
 import { RequestWithUser } from "../middlewares/authMiddleware";
 
+interface RecordAnswerRequest extends RequestWithUser {
+  body: {
+    questionId: string;
+    content: string;
+  };
+}
+
 export async function recordAnswer(
   req: RecordAnswerRequest,
   res: Response,
@@ -82,10 +89,3 @@ export const deleteAnswer: RequestHandler = async (
     }
   }
 };
-
-interface RecordAnswerRequest extends RequestWithUser {
-  body: {
-    questionId: string;
-    content: string;
-  };
-}
