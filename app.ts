@@ -9,6 +9,7 @@ import usersRouter from "./src/routes/users.js";
 import favoriteRouter from "./src/routes/favorites.js";
 import questionsRouter from './src/routes/questions.js';
 import categoriesRouter from './src/routes/categories.js';
+import answersRouter from "./src/routes/answers.js";
 
 const app = express();
 app.use(helmet());
@@ -26,6 +27,7 @@ app.use("/api/users", usersRouter);
 app.use("/api/favorites", favoriteRouter);
 app.use('/api/questions', questionsRouter);
 app.use("/api/categories", categoriesRouter);
+app.use("/api/answers", answersRouter);
 
 app.use(errorHandler);
 
