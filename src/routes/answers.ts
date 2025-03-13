@@ -5,7 +5,12 @@ import { validateEditAnswer } from "../middlewares/answersValidator";
 
 const router = Router();
 
-router.patch('/:id', authMiddleware.authenticate, validateEditAnswer, editAnswer);
-router.delete('/:id', authMiddleware.authenticate);
+router.patch(
+  "/:id",
+  authMiddleware.authenticate,
+  validateEditAnswer,
+  editAnswer
+);
+router.delete("/:id", authMiddleware.authenticate);
 
 export default router;
