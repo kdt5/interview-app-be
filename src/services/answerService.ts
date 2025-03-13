@@ -12,3 +12,11 @@ export const updateAnswerTable = async (id: number, editAnswer: string) => {
 
   return newAnswer;
 };
+
+export const deleteDBAnswer = async (id: number) => {
+  const deletedAnswer = await prisma.answer.delete({
+    where: { id: id },
+  });
+
+  return deletedAnswer;
+};

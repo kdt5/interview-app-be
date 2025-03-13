@@ -25,3 +25,22 @@ export const validateEditAnswer = (
 
   next();
 };
+
+export const validateDeleteAnswer = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const { id } = req.params;
+
+  const answerIdRegex = /^[0-9]+$/;
+
+  if (!answerIdRegex.test(id)) {
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "답변 아이디는 숫자만 가능합니다." });
+    return;
+  }
+
+  next();
+};
