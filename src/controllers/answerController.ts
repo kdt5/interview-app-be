@@ -6,8 +6,10 @@ import { checkQuestionExists } from "../services/questionService";
 import { RequestWithUser } from "../middlewares/authMiddleware";
 
 interface RecordAnswerRequest extends RequestWithUser {
-  body: {
+  params: {
     questionId: string;
+  };
+  body: {
     content: string;
   };
 }
