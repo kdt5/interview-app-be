@@ -1,7 +1,36 @@
 import { Prisma } from "@prisma/client";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
-import { deleteDBAnswer, updateAnswerTable } from "../services/answerService";
+import answerService from "../services/answerService";
+import { checkQuestionExists } from "../services/questionService";
+import { RequestWithUser } from "../middlewares/authMiddleware";
+
+export async function recordAnswer(
+  req: RecordAnswerRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { content } = req.body;
+    const questionId = parseInt(req.body.questionId);
+    const userId = req.user.userId;
+
+    const questionExists = await checkQuestionExists(questionId);
+
+    if (!questionExists) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        message: "존재하지 않는 질문입니다.",
+      });
+      return;
+    }
+
+    answerService.recordAnswer(userId, questionId, content);
+
+    res.status(StatusCodes.CREATED).end();
+  } catch (error) {
+    next(error);
+  }
+}
 
 export const editAnswer: RequestHandler = async (
   req: Request,
@@ -12,7 +41,7 @@ export const editAnswer: RequestHandler = async (
     const id = parseInt(req.params.id);
     const editAnswer = String(req.body.newAnswer);
 
-    const answer = await updateAnswerTable(id, editAnswer);
+    const answer = await answerService.updateAnswerTable(id, editAnswer);
     res.status(StatusCodes.ACCEPTED).json(answer);
   } catch (error) {
     console.error(error);
@@ -37,7 +66,7 @@ export const deleteAnswer: RequestHandler = async (
   try {
     const id = parseInt(req.params.id);
 
-    await deleteDBAnswer(id);
+    await answerService.deleteAnswer(id);
     res.status(StatusCodes.NO_CONTENT).json();
   } catch (error) {
     console.error(error);
@@ -53,3 +82,10 @@ export const deleteAnswer: RequestHandler = async (
     }
   }
 };
+
+interface RecordAnswerRequest extends RequestWithUser {
+  body: {
+    questionId: string;
+    content: string;
+  };
+}
