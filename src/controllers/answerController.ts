@@ -41,7 +41,7 @@ export const editAnswer: RequestHandler = async (
     const id = parseInt(req.params.id);
     const editAnswer = String(req.body.newAnswer);
 
-    const answer = await answerService.updateAnswerTable(id, editAnswer);
+    const answer = await answerService.updateAnswer(id, editAnswer);
     res.status(StatusCodes.ACCEPTED).json(answer);
   } catch (error) {
     console.error(error);

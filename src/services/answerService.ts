@@ -1,7 +1,11 @@
 import dbDayjs from "../lib/dayjs";
 import prisma from "../lib/prisma";
 
-const answerService = { recordAnswer, updateAnswerTable, deleteAnswer };
+const answerService = {
+  recordAnswer,
+  updateAnswer,
+  deleteAnswer,
+};
 export default answerService;
 
 export async function recordAnswer(
@@ -18,7 +22,7 @@ export async function recordAnswer(
   });
 }
 
-export async function updateAnswerTable(id: number, editAnswer: string) {
+export async function updateAnswer(id: number, editAnswer: string) {
   const newAnswer = await prisma.answer.update({
     where: { id: id },
     data: {
