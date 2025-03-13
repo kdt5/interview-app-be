@@ -1,14 +1,9 @@
-import { RequestHandler, Router } from "express";
+import { Router } from "express";
 import authMiddleware from "../middlewares/authMiddleware";
-import {
-  deleteAnswer,
-  editAnswer,
-  recordAnswer,
-} from "../controllers/answerController";
+import { deleteAnswer, editAnswer } from "../controllers/answerController";
 import {
   validateDeleteAnswer,
   validateEditAnswer,
-  validateRecordAnswer,
 } from "../middlewares/answerValidator";
 
 const router = Router();
@@ -25,13 +20,6 @@ router.delete(
   authMiddleware.authenticate,
   validateDeleteAnswer,
   deleteAnswer
-);
-
-router.post(
-  "/",
-  authMiddleware.authenticate,
-  validateRecordAnswer,
-  recordAnswer as RequestHandler
 );
 
 export default router;

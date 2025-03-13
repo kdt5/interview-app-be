@@ -6,7 +6,8 @@ export function validateRecordAnswer(
   res: Response,
   next: NextFunction
 ): void {
-  const { questionId, content } = req.body;
+  const { questionId } = req.params;
+  const { content } = req.body;
 
   const validQuestionId = /^[0-9]+$/.test(questionId);
   const validContent = /^.{1,500}$/.test(content);

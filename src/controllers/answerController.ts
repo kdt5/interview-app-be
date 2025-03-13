@@ -19,7 +19,7 @@ export async function recordAnswer(
 ): Promise<void> {
   try {
     const { content } = req.body;
-    const questionId = parseInt(req.body.questionId);
+    const questionId = parseInt(req.params.questionId);
     const userId = req.user.userId;
 
     const questionExists = await checkQuestionExists(questionId);
