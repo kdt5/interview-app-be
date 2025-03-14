@@ -7,6 +7,7 @@ import {
   validateRecordAnswer,
 } from "../middlewares/answerValidator";
 import { recordAnswer } from "../controllers/answerController";
+import answersMiddleware from "../middlewares/answerMiddleware";
 
 const router = Router();
 
@@ -14,6 +15,7 @@ router.patch(
   "/:id",
   authMiddleware.authenticate,
   validateEditAnswer,
+  answersMiddleware.checkAnswerOwnership,
   editAnswer
 );
 
@@ -21,6 +23,7 @@ router.delete(
   "/:id",
   authMiddleware.authenticate,
   validateDeleteAnswer,
+  answersMiddleware.checkAnswerOwnership,
   deleteAnswer
 );
 
