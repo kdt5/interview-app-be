@@ -13,7 +13,7 @@ export const editAnswer: RequestHandler = async (
     const editAnswer = String(req.body.newAnswer);
 
     const answer = await updateAnswerTable(id, editAnswer);
-    res.status(StatusCodes.ACCEPTED).json(answer);
+    res.status(StatusCodes.OK).json(answer);
   } catch (error) {
     console.error(error);
     if (
