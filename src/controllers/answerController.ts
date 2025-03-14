@@ -27,7 +27,7 @@ export async function recordAnswer(
     const questionExists = await checkQuestionExists(questionId);
 
     if (!questionExists) {
-      res.status(StatusCodes.BAD_REQUEST).json({
+      res.status(StatusCodes.NOT_FOUND).json({
         message: "존재하지 않는 질문입니다.",
       });
       return;
