@@ -2,7 +2,7 @@ import { RequestHandler, Router } from "express";
 import authMiddleware from "../middlewares/authMiddleware";
 import { deleteAnswer, editAnswer } from "../controllers/answerController";
 import {
-  validateDeleteAnswer,
+  validateAnswerId,
   validateEditAnswer,
   validateRecordAnswer,
 } from "../middlewares/answerValidator";
@@ -10,6 +10,14 @@ import { recordAnswer } from "../controllers/answerController";
 import answersMiddleware from "../middlewares/answerMiddleware";
 
 const router = Router();
+
+router.get(
+  "/:id",
+  authMiddleware.authenticate,
+  validateAnswerId,
+  answersMiddleware.checkAnswerOwnership,
+  editAnswer
+);
 
 router.patch(
   "/:id",
@@ -22,7 +30,7 @@ router.patch(
 router.delete(
   "/:id",
   authMiddleware.authenticate,
-  validateDeleteAnswer,
+  validateAnswerId,
   answersMiddleware.checkAnswerOwnership,
   deleteAnswer
 );

@@ -41,6 +41,29 @@ export async function recordAnswer(
   }
 }
 
+export async function getAnswer(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const answerId = parseInt(req.params.id);
+
+    const answer = await answerService.getAnswer(answerId);
+
+    if(!answer){
+      res.status(StatusCodes.NOT_FOUND).json({
+        message: "존재하지 않는 질문입니다.",
+      });
+      return;
+    }
+
+    res.status(StatusCodes.OK).json(answer);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export const editAnswer: RequestHandler = async (
   req: Request,
   res: Response,

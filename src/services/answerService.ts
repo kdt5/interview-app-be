@@ -5,6 +5,7 @@ const answerService = {
   recordAnswer,
   updateAnswer,
   deleteAnswer,
+  getAnswer,
 };
 export default answerService;
 
@@ -19,6 +20,14 @@ export async function recordAnswer(
       questionId,
       content,
     },
+  });
+}
+
+export async function getAnswer(
+  answerId: number
+) {
+  return await prisma.answer.findUnique({
+    where: {id: answerId}
   });
 }
 
