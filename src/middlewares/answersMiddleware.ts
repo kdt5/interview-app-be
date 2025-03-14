@@ -1,23 +1,15 @@
 import prisma from "../lib/prisma";
-import { NextFunction, Request, RequestHandler, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { UserInfo } from "../services/authService";
 
-export const checkAnswerOwnership: RequestHandler = async (
-  req: Request & { user?: UserInfo },
+export const checkAnswerOwnership = async (
+  req: Request & { user: UserInfo },
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   const answerId = parseInt(req.params.id);
-  const user = req.user;
-  let userId;
-
-  if (!user) {
-    res.status(401).json({ message: "인증이 필요합니다." });
-    return;
-  } else {
-    userId = user.userId;
-  }
-
+  const userId = req.user.userId;
+  
   try {
     const answer = await prisma.answer.findUnique({
       where: { id: answerId },
