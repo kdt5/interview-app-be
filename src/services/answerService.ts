@@ -1,7 +1,28 @@
 import dbDayjs from "../lib/dayjs";
 import prisma from "../lib/prisma";
 
-export const updateAnswerTable = async (id: number, editAnswer: string) => {
+const answerService = {
+  recordAnswer,
+  updateAnswer,
+  deleteAnswer,
+};
+export default answerService;
+
+export async function recordAnswer(
+  userId: number,
+  questionId: number,
+  content: string
+) {
+  return await prisma.answer.create({
+    data: {
+      userId,
+      questionId,
+      content,
+    },
+  });
+}
+
+export async function updateAnswer(id: number, editAnswer: string) {
   const newAnswer = await prisma.answer.update({
     where: { id: id },
     data: {
@@ -11,12 +32,12 @@ export const updateAnswerTable = async (id: number, editAnswer: string) => {
   });
 
   return newAnswer;
-};
+}
 
-export const deleteDBAnswer = async (id: number) => {
+export async function deleteAnswer(id: number) {
   const deletedAnswer = await prisma.answer.delete({
     where: { id: id },
   });
 
   return deletedAnswer;
-};
+}

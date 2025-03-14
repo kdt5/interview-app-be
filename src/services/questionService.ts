@@ -1,6 +1,12 @@
 import { Position, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 
+export async function checkQuestionExists(questionId: number) {
+    return null !== await prisma.question.findUnique({
+        where: { id: questionId },
+    });
+}
+
 export const getQuestionById = async (questionId: number) => {
     return await prisma.question.findUnique({
         where: { id: questionId },
