@@ -1,11 +1,13 @@
-import { Router } from "express";
+import { RequestHandler, Router } from "express";
 import authMiddleware from "../middlewares/authMiddleware";
-import { deleteAnswer, editAnswer } from "../controllers/answersController";
+import { deleteAnswer, editAnswer } from "../controllers/answerController";
 import {
   validateDeleteAnswer,
   validateEditAnswer,
-} from "../middlewares/answersValidator";
-import { checkAnswerOwnership } from "../middlewares/answersMiddleware";
+  validateRecordAnswer,
+} from "../middlewares/answerValidator";
+import { recordAnswer } from "../controllers/answerController";
+import answersMiddleware from "../middlewares/answersMiddleware";
 
 const router = Router();
 
@@ -13,15 +15,23 @@ router.patch(
   "/:id",
   authMiddleware.authenticate,
   validateEditAnswer,
-  checkAnswerOwnership,
+  answersMiddleware.checkAnswerOwnership,
   editAnswer
 );
+
 router.delete(
   "/:id",
   authMiddleware.authenticate,
   validateDeleteAnswer,
   checkAnswerOwnership,
   deleteAnswer
+);
+
+router.post(
+  "/:questionId/answers",
+  authMiddleware.authenticate,
+  validateRecordAnswer,
+  recordAnswer as RequestHandler
 );
 
 export default router;
