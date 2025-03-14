@@ -17,7 +17,7 @@ interface CheckEmailAvailabilityRequest extends Request {
 
 interface CheckNicknameAvailabilityRequest extends Request {
   body: {
-    nickName: string;
+    nickname: string;
   };
 }
 
@@ -25,7 +25,7 @@ interface SignupRequest extends Request {
   body: {
     password: string;
     email: string;
-    nickName: string;
+    nickname: string;
   };
 }
 
@@ -63,8 +63,8 @@ export async function checkNicknameAvailability(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { nickName } = req.body;
-    const isAvailable = await checkAvailability(nickName, "nickName");
+    const { nickname } = req.body;
+    const isAvailable = await checkAvailability(nickname, "nickname");
 
     res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).send();
   } catch (error) {
@@ -78,7 +78,7 @@ export async function signup(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { password, email, nickName } = req.body;
+    const { password, email, nickname } = req.body;
 
     const isEmailAvailable = await checkAvailability(email, "email");
     if (!isEmailAvailable) {
@@ -88,7 +88,7 @@ export async function signup(
       return;
     }
 
-    const isNicknameAvailable = await checkAvailability(nickName, "nickName");
+    const isNicknameAvailable = await checkAvailability(nickname, "nickname");
     if (!isNicknameAvailable) {
       res.status(StatusCodes.CONFLICT).json({
         message: "이미 사용 중인 닉네임입니다.",
@@ -96,11 +96,11 @@ export async function signup(
       return;
     }
 
-    const user = await createUser(password, email, nickName);
+    const user = await createUser(password, email, nickname);
 
     res.status(StatusCodes.CREATED).json({
       email: user.email,
-      nickName: user.nickName,
+      nickname: user.nickname,
     });
   } catch (error) {
     next(error);
@@ -124,7 +124,7 @@ export async function login(
 
     res.status(StatusCodes.OK).json({
       email: user.email,
-      nickName: user.nickName,
+      nickname: user.nickname,
     });
   } catch (error) {
     next(error);
