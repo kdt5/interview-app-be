@@ -14,7 +14,7 @@ const HASH_ROUNDS = 10; // 10 rounds → 약 10ms, 12 rounds → 약 100ms
 export interface UserInfo {
   userId: number;
   email: string;
-  nickName: string;
+  nickname: string;
 }
 
 export interface AuthResponse {
@@ -23,7 +23,7 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
-type CheckType = "email" | "nickName";
+type CheckType = "email" | "nickname";
 
 export async function checkAvailability(
   item: string,
@@ -40,7 +40,7 @@ export async function checkAvailability(
 export async function createUser(
   password: string,
   email: string,
-  nickName: string
+  nickname: string
 ): Promise<User> {
   const existingEmail = await prisma.user.findUnique({
     where: { email: email },
@@ -50,7 +50,7 @@ export async function createUser(
   }
 
   const existingNickname = await prisma.user.findUnique({
-    where: { nickName: nickName },
+    where: { nickname: nickname },
   });
   if (existingNickname) {
     throw new DuplicateError("NICKNAME_DUPLICATE");
@@ -64,7 +64,7 @@ export async function createUser(
     data: {
       password: hashedPassword,
       email: email,
-      nickName: nickName,
+      nickname: nickname,
       createdAt: dbDayjs(),
       updatedAt: dbDayjs(),
     },
@@ -128,7 +128,7 @@ export async function authenticateUser(
     user: {
       userId: user.id,
       email: user.email,
-      nickName: user.nickName,
+      nickname: user.nickname,
     },
     accessToken,
     refreshToken,
@@ -143,14 +143,14 @@ export async function deleteRefreshToken(refreshToken: string): Promise<void> {
 
 export async function changeUserNickname(
   email: string | undefined,
-  nickName: string
+  nickname: string
 ): Promise<void> {
   if (!email) {
     throw new AuthError("UNAUTHORIZED");
   }
 
   const existingNickname = await prisma.user.findUnique({
-    where: { nickName: nickName },
+    where: { nickname: nickname },
   });
 
   if (existingNickname) {
@@ -159,7 +159,7 @@ export async function changeUserNickname(
 
   await prisma.user.update({
     where: { email: email },
-    data: { nickName: nickName, updatedAt: dbDayjs() },
+    data: { nickname: nickname, updatedAt: dbDayjs() },
   });
 }
 
@@ -201,7 +201,7 @@ export async function getUserByEmail(email: string): Promise<UserInfo> {
     throw new AuthError("UNAUTHORIZED");
   }
 
-  return { userId: user.id, email: user.email, nickName: user.nickName };
+  return { userId: user.id, email: user.email, nickname: user.nickname };
 }
 
 interface TokenPair {

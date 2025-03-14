@@ -9,7 +9,7 @@ import { RequestWithUser } from "../middlewares/authMiddleware.js";
 
 interface ChangeNicknameRequest extends RequestWithUser {
   body: {
-    nickName: string;
+    nickname: string;
   };
 }
 
@@ -30,7 +30,7 @@ export async function getMe(
 
     res.status(StatusCodes.OK).json({
       email: user.email,
-      nickName: user.nickName,
+      nickname: user.nickname,
     });
   } catch (error) {
     next(error);
@@ -43,8 +43,8 @@ export async function changeNickname(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { nickName } = req.body;
-    await changeUserNickname(req.user.email, nickName);
+    const { nickname } = req.body;
+    await changeUserNickname(req.user.email, nickname);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
