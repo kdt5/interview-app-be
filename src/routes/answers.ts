@@ -7,7 +7,7 @@ import {
   validateRecordAnswer,
 } from "../middlewares/answerValidator";
 import { recordAnswer } from "../controllers/answerController";
-import answersMiddleware from "../middlewares/answersMiddleware";
+import answersMiddleware from "../middlewares/answerMiddleware";
 
 const router = Router();
 

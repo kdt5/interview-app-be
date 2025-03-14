@@ -1,6 +1,7 @@
 import prisma from "../lib/prisma";
 import { NextFunction, Request, Response } from "express";
 import { UserInfo } from "../services/authService";
+import { StatusCodes } from "http-status-codes";
 
 const answersMiddleware = {
   checkAnswerOwnership: async (
@@ -20,14 +21,14 @@ const answersMiddleware = {
   
       if (!answer) {
         res
-          .status(404)
+          .status(StatusCodes.NOT_FOUND)
           .json({ message: "조건에 해당하는 답변이 존재하지 않습니다." });
         return;
       }
   
       if (answer.userId !== userId) {
         res
-          .status(403)
+          .status(StatusCodes.FORBIDDEN)
           .json({ message: "다른 사용자의 답변은 접근 불가합니다." });
         return;
       }
