@@ -4,12 +4,13 @@ import { UserInfo } from "../services/authService";
 
 const answersMiddleware = {
   checkAnswerOwnership: async (
-    req: Request & { user: UserInfo },
+    req: Request & { user?: UserInfo },
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     const answerId = parseInt(req.params.id);
-    const userId = req.user.userId;
+    const user = req.user as UserInfo;
+    const userId = user.userId;
     
     try {
       const answer = await prisma.answer.findUnique({

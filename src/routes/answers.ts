@@ -23,7 +23,7 @@ router.delete(
   "/:id",
   authMiddleware.authenticate,
   validateDeleteAnswer,
-  checkAnswerOwnership,
+  answersMiddleware.checkAnswerOwnership,
   deleteAnswer
 );
 
