@@ -25,7 +25,9 @@ export const checkAnswerOwnership: RequestHandler = async (
     });
 
     if (!answer) {
-      res.status(404).json({ message: "조건에 해당하는 답변이 존재하지 않습니다." });
+      res
+        .status(404)
+        .json({ message: "조건에 해당하는 답변이 존재하지 않습니다." });
       return;
     }
 
