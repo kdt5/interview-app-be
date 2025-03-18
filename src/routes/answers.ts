@@ -3,6 +3,7 @@ import authMiddleware from "../middlewares/authMiddleware";
 import {
   deleteAnswer,
   editAnswer,
+  getAnswer,
   getAnsweredQuestions,
 } from "../controllers/answerController";
 import {
@@ -26,7 +27,7 @@ router.get(
   authMiddleware.authenticate,
   validateAnswerId,
   answersMiddleware.checkAnswerOwnership,
-  editAnswer
+  getAnswer
 );
 
 router.patch(
