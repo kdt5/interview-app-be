@@ -53,23 +53,20 @@ export async function getAnsweredQuestions(
     let userId;
 
     try {
-      const user = await authMiddleware.validateTokenAndGetUser(
-        token,
-        secret
-      );
+      const user = await authMiddleware.validateTokenAndGetUser(token, secret);
 
       userId = user.userId;
     } catch (error) {
       next(error);
     }
 
-    if(!userId){
+    if (!userId) {
       res.status(StatusCodes.UNAUTHORIZED);
       return;
     }
 
     const questions = await answerService.getAnsweredQuestions(userId);
-    if(!questions){
+    if (!questions) {
       res.status(StatusCodes.NOT_FOUND);
       return;
     }
@@ -78,7 +75,6 @@ export async function getAnsweredQuestions(
     console.log(typeof questions);
 
     res.status(StatusCodes.OK).json(questions);
-
   } catch (error) {
     next(error);
   }
@@ -94,7 +90,7 @@ export async function getAnswer(
 
     const answer = await answerService.getAnswer(answerId);
 
-    if(!answer){
+    if (!answer) {
       res.status(StatusCodes.NOT_FOUND).json({
         message: "존재하지 않는 질문입니다.",
       });

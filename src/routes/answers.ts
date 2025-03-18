@@ -16,11 +16,7 @@ import answersMiddleware from "../middlewares/answerMiddleware";
 
 const router = Router();
 
-router.get(
-  "/mine",
-  authMiddleware.authenticate,
-  getAnsweredQuestions
-);
+router.get("/mine", authMiddleware.authenticate, getAnsweredQuestions);
 
 router.get(
   "/:id",

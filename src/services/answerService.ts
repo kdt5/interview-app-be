@@ -24,28 +24,24 @@ export async function recordAnswer(
   });
 }
 
-export async function getAnsweredQuestions(
-  userId: number
-) {
+export async function getAnsweredQuestions(userId: number) {
   return await prisma.answer.findMany({
-    where: {userId: userId},
+    where: { userId: userId },
     select: {
       id: true,
       question: {
         select: {
           id: true,
           title: true,
-        }
-      }
-    }
-  })
+        },
+      },
+    },
+  });
 }
 
-export async function getAnswer(
-  answerId: number
-) {
+export async function getAnswer(answerId: number) {
   return await prisma.answer.findUnique({
-    where: {id: answerId}
+    where: { id: answerId },
   });
 }
 
