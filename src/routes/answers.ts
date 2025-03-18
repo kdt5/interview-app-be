@@ -1,6 +1,10 @@
 import { RequestHandler, Router } from "express";
 import authMiddleware from "../middlewares/authMiddleware";
-import { deleteAnswer, editAnswer } from "../controllers/answerController";
+import {
+  deleteAnswer,
+  editAnswer,
+  getAnsweredQuestions,
+} from "../controllers/answerController";
 import {
   validateAnswerId,
   validateEditAnswer,
@@ -10,6 +14,12 @@ import { recordAnswer } from "../controllers/answerController";
 import answersMiddleware from "../middlewares/answerMiddleware";
 
 const router = Router();
+
+router.get(
+  "/mine",
+  authMiddleware.authenticate,
+  getAnsweredQuestions
+);
 
 router.get(
   "/:id",

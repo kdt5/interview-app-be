@@ -3,7 +3,8 @@ import { Request, Response, NextFunction, RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import answerService from "../services/answerService";
 import { checkQuestionExists } from "../services/questionService";
-import { RequestWithUser } from "../middlewares/authMiddleware";
+import authMiddleware, { RequestWithUser } from "../middlewares/authMiddleware";
+import { UserInfo } from "../services/authService";
 
 interface RecordAnswerRequest extends RequestWithUser {
   params: {
@@ -36,6 +37,48 @@ export async function recordAnswer(
     answerService.recordAnswer(userId, questionId, content);
 
     res.status(StatusCodes.CREATED).end();
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getAnsweredQuestions(
+  req: Request & { user?: UserInfo },
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const token = authMiddleware.extractTokenFromCookie(req);
+    const secret = authMiddleware.getJwtSecret();
+    let userId;
+
+    try {
+      const user = await authMiddleware.validateTokenAndGetUser(
+        token,
+        secret
+      );
+
+      userId = user.userId;
+    } catch (error) {
+      next(error);
+    }
+
+    if(!userId){
+      res.status(StatusCodes.UNAUTHORIZED);
+      return;
+    }
+
+    const questions = await answerService.getAnsweredQuestions(userId);
+    if(!questions){
+      res.status(StatusCodes.NOT_FOUND);
+      return;
+    }
+
+    console.log(questions);
+    console.log(typeof questions);
+
+    res.status(StatusCodes.OK).json(questions);
+
   } catch (error) {
     next(error);
   }
