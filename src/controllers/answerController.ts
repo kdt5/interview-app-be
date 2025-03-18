@@ -58,6 +58,7 @@ export async function getAnsweredQuestions(
       userId = user.userId;
     } catch (error) {
       next(error);
+      return;
     }
 
     if (!userId) {
@@ -70,9 +71,6 @@ export async function getAnsweredQuestions(
       res.status(StatusCodes.NOT_FOUND);
       return;
     }
-
-    console.log(questions);
-    console.log(typeof questions);
 
     res.status(StatusCodes.OK).json(questions);
   } catch (error) {
