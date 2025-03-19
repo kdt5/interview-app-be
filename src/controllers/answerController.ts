@@ -3,7 +3,7 @@ import { Request, Response, NextFunction, RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import answerService from "../services/answerService";
 import { checkQuestionExists } from "../services/questionService";
-import authMiddleware, { RequestWithUser } from "../middlewares/authMiddleware";
+import { RequestWithUser } from "../middlewares/authMiddleware";
 import { UserInfo } from "../services/authService";
 
 interface RecordAnswerRequest extends RequestWithUser {
@@ -43,28 +43,12 @@ export async function recordAnswer(
 }
 
 export async function getAnsweredQuestions(
-  req: Request & { user?: UserInfo },
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const token = authMiddleware.extractTokenFromCookie(req);
-    const secret = authMiddleware.getJwtSecret();
-    let userId;
-
-    try {
-      const user = await authMiddleware.validateTokenAndGetUser(token, secret);
-
-      userId = user.userId;
-    } catch (error) {
-      next(error);
-      return;
-    }
-
-    if (!userId) {
-      res.status(StatusCodes.UNAUTHORIZED);
-      return;
-    }
+    const userId = (req as Request & { user: UserInfo }).user.userId;
 
     const questions = await answerService.getAnsweredQuestions(userId);
     if (!questions) {
