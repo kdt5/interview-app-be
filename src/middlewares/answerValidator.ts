@@ -6,7 +6,7 @@ export function validateRecordAnswer(
   res: Response,
   next: NextFunction
 ): void {
-  const { questionId } = req.params;
+  const { "question-id": questionId } = req.params;
   const { content } = req.body;
 
   const validQuestionId = /^[0-9]+$/.test(questionId);
@@ -40,12 +40,12 @@ export function validateEditAnswer(
   res: Response,
   next: NextFunction
 ): void {
-  const { id } = req.params;
+  const { "answer-id": answerId } = req.params;
   const { newAnswer } = req.body;
 
   const answerIdRegex = /^[0-9]+$/;
 
-  if (!answerIdRegex.test(id)) {
+  if (!answerIdRegex.test(answerId)) {
     res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "답변 아이디는 숫자만 가능합니다." });
@@ -65,11 +65,11 @@ export function validateAnswerId(
   res: Response,
   next: NextFunction
 ): void {
-  const { id } = req.params;
+  const { "answer-id": answerId } = req.params;
 
   const answerIdRegex = /^[0-9]+$/;
 
-  if (!answerIdRegex.test(id)) {
+  if (!answerIdRegex.test(answerId)) {
     res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "답변 아이디는 숫자만 가능합니다." });

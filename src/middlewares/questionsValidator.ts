@@ -7,10 +7,10 @@ export function validateGetQuestionDetail(
   res: Response,
   next: NextFunction
 ): void {
-  const { id } = req.params;
+  const { "question-id": questionId } = req.params;
 
   const questionIdRegex = /^[0-9]+$/;
-  if (!questionIdRegex.test(id)) {
+  if (!questionIdRegex.test(questionId)) {
     res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "질문 아이디는 숫자만 가능합니다." });
