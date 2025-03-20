@@ -1,14 +1,14 @@
 import { Prisma } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import answerService from "../services/answerService";
-import { checkQuestionExists } from "../services/questionService";
-import { RequestWithUser } from "../middlewares/authMiddleware";
-import { UserInfo } from "../services/authService";
+import answerService from "../services/answerService.js";
+import { checkQuestionExists } from "../services/questionService.js";
+import { RequestWithUser } from "../middlewares/authMiddleware.js";
+import { UserInfo } from "../services/authService.js";
 
 interface RecordAnswerRequest extends RequestWithUser {
   params: {
-    "question-id": string;
+    questionId: string;
   };
   body: {
     content: string;
@@ -22,10 +22,10 @@ export async function recordAnswer(
 ): Promise<void> {
   try {
     const { content } = req.body;
-    const questionId = parseInt(req.params["question-id"]);
+    const { questionId } = req.params;
     const userId = req.user.userId;
 
-    const questionExists = await checkQuestionExists(questionId);
+    const questionExists = await checkQuestionExists(parseInt(questionId));
 
     if (!questionExists) {
       res.status(StatusCodes.NOT_FOUND).json({
@@ -34,7 +34,7 @@ export async function recordAnswer(
       return;
     }
 
-    answerService.recordAnswer(userId, questionId, content);
+    answerService.recordAnswer(userId, parseInt(questionId), content);
 
     res.status(StatusCodes.CREATED).end();
   } catch (error) {
@@ -68,9 +68,9 @@ export async function getAnswer(
   next: NextFunction
 ): Promise<void> {
   try {
-    const answerId = parseInt(req.params["answer-id"]);
+    const { answerId } = req.params;
 
-    const answer = await answerService.getAnswer(answerId);
+    const answer = await answerService.getAnswer(parseInt(answerId));
 
     if (!answer) {
       res.status(StatusCodes.NOT_FOUND).json({
@@ -91,10 +91,13 @@ export async function editAnswer(
   next: NextFunction
 ): Promise<void> {
   try {
-    const answerId = parseInt(req.params["answer-id"]);
+    const { answerId } = req.params;
     const editAnswer = String(req.body.newAnswer);
 
-    const answer = await answerService.updateAnswer(answerId, editAnswer);
+    const answer = await answerService.updateAnswer(
+      parseInt(answerId),
+      editAnswer
+    );
     res.status(StatusCodes.OK).json(answer);
   } catch (error) {
     console.error(error);
@@ -117,9 +120,9 @@ export async function deleteAnswer(
   next: NextFunction
 ): Promise<void> {
   try {
-    const answerId = parseInt(req.params["answer-id"]);
+    const { answerId } = req.params;
 
-    await answerService.deleteAnswer(answerId);
+    await answerService.deleteAnswer(parseInt(answerId));
     res.status(StatusCodes.NO_CONTENT).json();
   } catch (error) {
     console.error(error);

@@ -19,7 +19,7 @@ const router = Router();
 router.get("/mine", authMiddleware.authenticate, getAnsweredQuestions);
 
 router.get(
-  "/:answer-id",
+  "/:answerId",
   authMiddleware.authenticate,
   validateAnswerId,
   answersMiddleware.checkAnswerOwnership,
@@ -27,7 +27,7 @@ router.get(
 );
 
 router.patch(
-  "/:answer-id",
+  "/:answerId",
   authMiddleware.authenticate,
   validateEditAnswer,
   answersMiddleware.checkAnswerOwnership,
@@ -35,7 +35,7 @@ router.patch(
 );
 
 router.delete(
-  "/:answer-id",
+  "/:answerId",
   authMiddleware.authenticate,
   validateAnswerId,
   answersMiddleware.checkAnswerOwnership,
@@ -43,7 +43,7 @@ router.delete(
 );
 
 router.post(
-  "/:question-id",
+  "/:questionId",
   authMiddleware.authenticate,
   validateRecordAnswer,
   recordAnswer as RequestHandler
