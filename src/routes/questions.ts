@@ -3,12 +3,12 @@ import {
   getQuestionDetail,
   getWeeklyQuestionDetail,
   getAllQuestions,
-} from "../controllers/questionsController";
+} from "../controllers/questionsController.js";
 import {
   validateGetAllQuestionQuery,
   validateGetQuestionDetail,
-} from "../middlewares/questionsValidator";
-import authMiddleware from "../middlewares/authMiddleware";
+} from "../middlewares/questionsValidator.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = Router();
 

@@ -1,13 +1,13 @@
 import { RequestHandler, Router } from "express";
-import authMiddleware from "../middlewares/authMiddleware";
-import { deleteAnswer, editAnswer } from "../controllers/answerController";
+import authMiddleware from "../middlewares/authMiddleware.js";
+import { deleteAnswer, editAnswer } from "../controllers/answerController.js";
 import {
   validateDeleteAnswer,
   validateEditAnswer,
   validateRecordAnswer,
-} from "../middlewares/answerValidator";
-import { recordAnswer } from "../controllers/answerController";
-import answersMiddleware from "../middlewares/answerMiddleware";
+} from "../middlewares/answerValidator.js";
+import { recordAnswer } from "../controllers/answerController.js";
+import answersMiddleware from "../middlewares/answerMiddleware.js";
 
 const router = Router();
 

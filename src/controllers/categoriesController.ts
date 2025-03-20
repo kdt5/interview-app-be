@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { getPositionCategories } from "../services/categoryService";
+import { getPositionCategories } from "../services/categoryService.js";
 import { Position } from "@prisma/client";
 
 interface CategoryQueryParams {

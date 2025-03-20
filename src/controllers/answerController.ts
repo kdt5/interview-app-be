@@ -1,9 +1,9 @@
 import { Prisma } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import answerService from "../services/answerService";
-import { checkQuestionExists } from "../services/questionService";
-import { RequestWithUser } from "../middlewares/authMiddleware";
+import answerService from "../services/answerService.js";
+import { checkQuestionExists } from "../services/questionService.js";
+import { RequestWithUser } from "../middlewares/authMiddleware.js";
 
 interface RecordAnswerRequest extends RequestWithUser {
   params: {

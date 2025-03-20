@@ -4,7 +4,7 @@ import {
   getQuestionById,
   getWeeklyQuestion,
   getAllQuestionsWithCategories,
-} from "../services/questionService";
+} from "../services/questionService.js";
 import { Position } from "@prisma/client";
 
 export async function getQuestionDetail(
