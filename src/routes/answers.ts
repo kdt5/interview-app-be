@@ -1,11 +1,11 @@
 import { RequestHandler, Router } from "express";
-import authMiddleware from "../middlewares/authMiddleware";
+import authMiddleware from "../middlewares/authMiddleware.js";
 import {
   deleteAnswer,
   editAnswer,
   getAnswer,
   getAnsweredQuestions,
-} from "../controllers/answerController";
+} from "../controllers/answerController.js";
 import {
   validateAnswerId,
   validateEditAnswer,
