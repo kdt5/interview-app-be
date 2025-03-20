@@ -18,6 +18,17 @@ export async function getFavoriteQuestions(userId: number){
   });
 }
 
+export async function getFavoriteQuestionStatus(userId: number, questionId: number){
+  return await prisma.favorite.findUniqueOrThrow({
+    where: { 
+      userId_questionId: { 
+        userId, 
+        questionId 
+      } 
+    }
+  });
+}
+
 export const createFavorite = async (
   userId: number,
   questionId: number

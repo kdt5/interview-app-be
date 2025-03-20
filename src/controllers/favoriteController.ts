@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { favoriteService, getFavoriteQuestions } from "../services/favoriteService.js";
+import { favoriteService, getFavoriteQuestions, getFavoriteQuestionStatus } from "../services/favoriteService.js";
 import { UserInfo } from "../services/authService.js";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 const validateFavoriteRequest = (userId: number, questionId: number) => {
   if (!userId || isNaN(questionId)) {
@@ -28,6 +29,36 @@ export async function getFavorites(
     res.status(StatusCodes.OK).json(questions);
 
   } catch(error) {
+    next(error);
+  }
+}
+
+export async function getFavoriteStatus(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try{
+    const userId = (req as Request & { user: UserInfo }).user.userId;
+    const questionId = parseInt(req.params.id);
+
+    validateFavoriteRequest(userId, questionId);
+
+    const status = await getFavoriteQuestionStatus(userId, questionId);
+    
+    if(status){
+      res.status(StatusCodes.OK).json(true);
+    }
+
+  } catch(error) {
+    if (
+      error instanceof PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      res.status(StatusCodes.NOT_FOUND).json(false);
+      return;
+    }
+    
     next(error);
   }
 }
