@@ -74,7 +74,7 @@ export async function getAnswer(
 
     if (!answer) {
       res.status(StatusCodes.NOT_FOUND).json({
-        message: "존재하지 않는 질문입니다.",
+        message: "존재하지 않는 답변입니다.",
       });
       return;
     }
