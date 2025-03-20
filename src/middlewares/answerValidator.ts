@@ -60,7 +60,7 @@ export function validateEditAnswer(
   next();
 }
 
-export function validateDeleteAnswer(
+export const validateAnswerId = (
   req: Request,
   res: Response,
   next: NextFunction
