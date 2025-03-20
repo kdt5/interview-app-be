@@ -43,7 +43,7 @@ export async function getFavoriteStatus(
 ): Promise<void> {
   try {
     const userId = (req as Request & { user: UserInfo }).user.userId;
-    const questionId = parseInt(req.params.id);
+    const questionId = parseInt(req.params["question-id"]);
 
     validateFavoriteRequest(userId, questionId);
 
@@ -71,8 +71,7 @@ export async function addFavorite(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { id } = req.params;
-    const questionId = parseInt(id);
+    const questionId = parseInt(req.params["question-id"]);
     const userId = req.user?.userId;
 
     if (!userId) return;
@@ -102,8 +101,7 @@ export async function removeFavorite(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { id } = req.params;
-    const questionId = parseInt(id);
+    const questionId = parseInt(req.params["question-id"]);
     const userId = req.user?.userId;
 
     if (!userId) return;

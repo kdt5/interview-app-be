@@ -1,11 +1,11 @@
 import { RequestHandler, Router } from "express";
-import authMiddleware from "../middlewares/authMiddleware";
+import authMiddleware from "../middlewares/authMiddleware.js";
 import {
   deleteAnswer,
   editAnswer,
   getAnswer,
   getAnsweredQuestions,
-} from "../controllers/answerController";
+} from "../controllers/answerController.js";
 import {
   validateAnswerId,
   validateEditAnswer,
@@ -19,7 +19,7 @@ const router = Router();
 router.get("/mine", authMiddleware.authenticate, getAnsweredQuestions);
 
 router.get(
-  "/:id",
+  "/:answer-id",
   authMiddleware.authenticate,
   validateAnswerId,
   answersMiddleware.checkAnswerOwnership,
@@ -27,7 +27,7 @@ router.get(
 );
 
 router.patch(
-  "/:id",
+  "/:answer-id",
   authMiddleware.authenticate,
   validateEditAnswer,
   answersMiddleware.checkAnswerOwnership,
@@ -35,7 +35,7 @@ router.patch(
 );
 
 router.delete(
-  "/:id",
+  "/:answer-id",
   authMiddleware.authenticate,
   validateAnswerId,
   answersMiddleware.checkAnswerOwnership,
@@ -43,7 +43,7 @@ router.delete(
 );
 
 router.post(
-  "/:questionId/answers",
+  "/:question-id",
   authMiddleware.authenticate,
   validateRecordAnswer,
   recordAnswer as RequestHandler

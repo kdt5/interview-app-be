@@ -8,7 +8,7 @@ import { UserInfo } from "../services/authService";
 
 interface RecordAnswerRequest extends RequestWithUser {
   params: {
-    questionId: string;
+    "question-id": string;
   };
   body: {
     content: string;
@@ -22,7 +22,7 @@ export async function recordAnswer(
 ): Promise<void> {
   try {
     const { content } = req.body;
-    const questionId = parseInt(req.params.questionId);
+    const questionId = parseInt(req.params["question-id"]);
     const userId = req.user.userId;
 
     const questionExists = await checkQuestionExists(questionId);
@@ -68,7 +68,7 @@ export async function getAnswer(
   next: NextFunction
 ): Promise<void> {
   try {
-    const answerId = parseInt(req.params.id);
+    const answerId = parseInt(req.params["answer-id"]);
 
     const answer = await answerService.getAnswer(answerId);
 
@@ -91,10 +91,10 @@ export async function editAnswer(
   next: NextFunction
 ): Promise<void> {
   try {
-    const id = parseInt(req.params.id);
+    const answerId = parseInt(req.params["answer-id"]);
     const editAnswer = String(req.body.newAnswer);
 
-    const answer = await answerService.updateAnswer(id, editAnswer);
+    const answer = await answerService.updateAnswer(answerId, editAnswer);
     res.status(StatusCodes.OK).json(answer);
   } catch (error) {
     console.error(error);
@@ -117,9 +117,9 @@ export async function deleteAnswer(
   next: NextFunction
 ): Promise<void> {
   try {
-    const id = parseInt(req.params.id);
+    const answerId = parseInt(req.params["answer-id"]);
 
-    await answerService.deleteAnswer(id);
+    await answerService.deleteAnswer(answerId);
     res.status(StatusCodes.NO_CONTENT).json();
   } catch (error) {
     console.error(error);

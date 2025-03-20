@@ -45,9 +45,9 @@ export async function getAnswer(answerId: number) {
   });
 }
 
-export async function updateAnswer(id: number, editAnswer: string) {
+export async function updateAnswer(answerId: number, editAnswer: string) {
   const newAnswer = await prisma.answer.update({
-    where: { id: id },
+    where: { id: answerId },
     data: {
       content: editAnswer,
       updatedAt: dbDayjs(),
@@ -57,9 +57,9 @@ export async function updateAnswer(id: number, editAnswer: string) {
   return newAnswer;
 }
 
-export async function deleteAnswer(id: number) {
+export async function deleteAnswer(answerId: number) {
   const deletedAnswer = await prisma.answer.delete({
-    where: { id: id },
+    where: { id: answerId },
   });
 
   return deletedAnswer;

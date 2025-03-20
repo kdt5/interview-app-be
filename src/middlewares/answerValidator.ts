@@ -60,7 +60,7 @@ export function validateEditAnswer(
   next();
 }
 
-export const validateAnswerId = (
+export function validateAnswerId(
   req: Request,
   res: Response,
   next: NextFunction
