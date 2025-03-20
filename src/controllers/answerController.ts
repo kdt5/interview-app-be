@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { Request, Response, NextFunction, RequestHandler } from "express";
+import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import answerService from "../services/answerService";
 import { checkQuestionExists } from "../services/questionService";
@@ -41,11 +41,11 @@ export async function recordAnswer(
   }
 }
 
-export const editAnswer: RequestHandler = async (
+export async function editAnswer(
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const id = parseInt(req.params.id);
     const editAnswer = String(req.body.newAnswer);
@@ -65,13 +65,13 @@ export const editAnswer: RequestHandler = async (
       next(error);
     }
   }
-};
+}
 
-export const deleteAnswer: RequestHandler = async (
+export async function deleteAnswer(
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const id = parseInt(req.params.id);
 
@@ -90,4 +90,4 @@ export const deleteAnswer: RequestHandler = async (
       next(error);
     }
   }
-};
+}

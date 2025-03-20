@@ -3,18 +3,18 @@ import { StatusCodes } from "http-status-codes";
 import { favoriteService } from "../services/favoriteService.js";
 import { UserInfo } from "../services/authService.js";
 
-const validateFavoriteRequest = (userId: number, questionId: number) => {
+function validateFavoriteRequest(userId: number, questionId: number) {
   if (!userId || isNaN(questionId)) {
     throw new Error("잘못된 요청입니다.");
   }
   return true;
-};
+}
 
-export const addFavorite = async (
+export async function addFavorite(
   req: Request & { user?: UserInfo },
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const { id } = req.params;
     const questionId = parseInt(id);
@@ -39,13 +39,13 @@ export const addFavorite = async (
       next(error);
     }
   }
-};
+}
 
-export const removeFavorite = async (
+export async function removeFavorite(
   req: Request & { user?: UserInfo },
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const { id } = req.params;
     const questionId = parseInt(id);
@@ -69,4 +69,4 @@ export const removeFavorite = async (
       next(error);
     }
   }
-};
+}

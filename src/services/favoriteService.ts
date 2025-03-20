@@ -3,10 +3,10 @@ import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
 import { Favorite } from "@prisma/client";
 
-export const createFavorite = async (
+export async function createFavorite(
   userId: number,
   questionId: number
-): Promise<Favorite> => {
+): Promise<Favorite> {
   try {
     await prisma.favorite.findUniqueOrThrow({
       where: { userId_questionId: { userId, questionId } },
@@ -29,12 +29,12 @@ export const createFavorite = async (
 
     throw error;
   }
-};
+}
 
-export const removeFavorite = async (
+export async function removeFavorite(
   userId: number,
   questionId: number
-): Promise<void> => {
+): Promise<void> {
   try {
     const existingFavorite = await prisma.favorite.findUniqueOrThrow({
       where: { userId_questionId: { userId, questionId } },
@@ -55,7 +55,7 @@ export const removeFavorite = async (
 
     throw error;
   }
-};
+}
 
 export const favoriteService = {
   createFavorite,
