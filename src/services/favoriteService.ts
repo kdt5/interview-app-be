@@ -3,6 +3,32 @@ import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
 import { Favorite } from "@prisma/client";
 
+export async function getFavoriteQuestions(userId: number){
+  return await prisma.favorite.findMany({
+    where: {userId: userId},
+    select: {
+      userId: true,
+      question: {
+        select: {
+          id: true,
+          title: true,
+        }
+      }
+    }
+  });
+}
+
+export async function getFavoriteQuestionStatus(userId: number, questionId: number){
+  return await prisma.favorite.findUniqueOrThrow({
+    where: { 
+      userId_questionId: { 
+        userId, 
+        questionId 
+      } 
+    }
+  });
+}
+
 export const createFavorite = async (
   userId: number,
   questionId: number
