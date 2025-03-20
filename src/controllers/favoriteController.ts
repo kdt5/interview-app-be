@@ -43,11 +43,14 @@ export async function getFavoriteStatus(
 ): Promise<void> {
   try {
     const userId = (req as Request & { user: UserInfo }).user.userId;
-    const questionId = parseInt(req.params["question-id"]);
+    const { questionId } = req.params;
 
-    validateFavoriteRequest(userId, questionId);
+    validateFavoriteRequest(userId, parseInt(questionId));
 
-    const status = await getFavoriteQuestionStatus(userId, questionId);
+    const status = await getFavoriteQuestionStatus(
+      userId,
+      parseInt(questionId)
+    );
 
     if (status) {
       res.status(StatusCodes.OK).json(true);
@@ -71,14 +74,17 @@ export async function addFavorite(
   next: NextFunction
 ): Promise<void> {
   try {
-    const questionId = parseInt(req.params["question-id"]);
+    const { questionId } = req.params;
     const userId = req.user?.userId;
 
     if (!userId) return;
 
-    validateFavoriteRequest(userId, questionId);
+    validateFavoriteRequest(userId, parseInt(questionId));
 
-    const favorite = await favoriteService.createFavorite(userId, questionId);
+    const favorite = await favoriteService.createFavorite(
+      userId,
+      parseInt(questionId)
+    );
 
     res.status(StatusCodes.CREATED).json({
       message: "추가되었습니다.",
@@ -101,14 +107,14 @@ export async function removeFavorite(
   next: NextFunction
 ): Promise<void> {
   try {
-    const questionId = parseInt(req.params["question-id"]);
+    const { questionId } = req.params;
     const userId = req.user?.userId;
 
     if (!userId) return;
 
-    validateFavoriteRequest(userId, questionId);
+    validateFavoriteRequest(userId, parseInt(questionId));
 
-    await favoriteService.removeFavorite(userId, questionId);
+    await favoriteService.removeFavorite(userId, parseInt(questionId));
 
     res.status(StatusCodes.OK).json({
       message: "삭제되었습니다.",
