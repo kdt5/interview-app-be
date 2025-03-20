@@ -78,7 +78,7 @@ export async function getAllQuestionsWithCategories(
         select: {
           category: {
             select: {
-              name: true,
+              id: true,
             },
           },
         },
@@ -89,6 +89,6 @@ export async function getAllQuestionsWithCategories(
   return questions.map((question) => ({
     id: question.id,
     title: question.title,
-    categories: question.categories.map((qc) => qc.category.name),
+    categories: question.categories.map((qc) => qc.category.id),
   }));
 }
