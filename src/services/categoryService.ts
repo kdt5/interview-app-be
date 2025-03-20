@@ -1,16 +1,18 @@
-import { Position, Prisma } from '@prisma/client';
-import prisma from '../lib/prisma';
+import { Position, Prisma } from "@prisma/client";
+import prisma from "../lib/prisma.js";
 
-export const getPositionCategories = async (position? : Position) => {
-    const whereClause: Prisma.CategoryWhereInput = position ? {position: position} : {};
+export async function getPositionCategories(position?: Position) {
+  const whereClause: Prisma.CategoryWhereInput = position
+    ? { position: position }
+    : {};
 
-    const categories = await prisma.category.findMany({
-        where: whereClause,
-        select: {
-            id: true,
-            name: true
-        }
-    });
+  const categories = await prisma.category.findMany({
+    where: whereClause,
+    select: {
+      id: true,
+      name: true,
+    },
+  });
 
-    return categories;
+  return categories;
 }

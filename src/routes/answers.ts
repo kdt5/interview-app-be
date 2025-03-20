@@ -10,9 +10,9 @@ import {
   validateAnswerId,
   validateEditAnswer,
   validateRecordAnswer,
-} from "../middlewares/answerValidator";
-import { recordAnswer } from "../controllers/answerController";
-import answersMiddleware from "../middlewares/answerMiddleware";
+} from "../middlewares/answerValidator.js";
+import { recordAnswer } from "../controllers/answerController.js";
+import answersMiddleware from "../middlewares/answerMiddleware.js";
 
 const router = Router();
 

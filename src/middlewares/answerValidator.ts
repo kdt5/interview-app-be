@@ -35,11 +35,11 @@ export function validateRecordAnswer(
   next();
 }
 
-export const validateEditAnswer = (
+export function validateEditAnswer(
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
+): void {
   const { id } = req.params;
   const { newAnswer } = req.body;
 
@@ -58,13 +58,13 @@ export const validateEditAnswer = (
   }
 
   next();
-};
+}
 
 export const validateAnswerId = (
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
+): void {
   const { id } = req.params;
 
   const answerIdRegex = /^[0-9]+$/;
@@ -77,4 +77,4 @@ export const validateAnswerId = (
   }
 
   next();
-};
+}

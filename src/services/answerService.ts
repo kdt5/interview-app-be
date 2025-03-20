@@ -1,5 +1,5 @@
-import dbDayjs from "../lib/dayjs";
-import prisma from "../lib/prisma";
+import dbDayjs from "../lib/dayjs.js";
+import prisma from "../lib/prisma.js";
 
 const answerService = {
   recordAnswer,
