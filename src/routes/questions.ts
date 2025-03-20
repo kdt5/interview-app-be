@@ -3,12 +3,12 @@ import {
   getQuestionDetail,
   getWeeklyQuestionDetail,
   getAllQuestions,
-} from "../controllers/questionsController";
+} from "../controllers/questionsController.js";
 import {
   validateGetAllQuestionQuery,
   validateGetQuestionDetail,
-} from "../middlewares/questionsValidator";
-import authMiddleware from "../middlewares/authMiddleware";
+} from "../middlewares/questionsValidator.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
@@ -20,7 +20,7 @@ router.get(
 );
 router.get("/weekly", authMiddleware.authenticate, getWeeklyQuestionDetail);
 router.get(
-  "/:id",
+  "/:question-id",
   authMiddleware.authenticate,
   validateGetQuestionDetail,
   getQuestionDetail

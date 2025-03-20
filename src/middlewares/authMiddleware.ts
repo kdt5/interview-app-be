@@ -9,7 +9,7 @@ export interface RequestWithUser extends Request {
   user: UserInfo;
 }
 
-export const ACCESS_TOKEN_EXPIRY = 15; // 15분 (분 단위)
+export const ACCESS_TOKEN_EXPIRY = 60; // 15분 (분 단위)
 export const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60; // 7일 (분 단위)
 
 const authMiddleware = {

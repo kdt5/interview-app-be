@@ -10,8 +10,8 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 const router = Router();
 
 router.get("/mine", authMiddleware.authenticate, getFavorites);
-router.get("/:id", authMiddleware.authenticate, getFavoriteStatus);
-router.post("/:id", authMiddleware.authenticate, addFavorite);
-router.delete("/:id", authMiddleware.authenticate, removeFavorite);
+router.get("/:question-id", authMiddleware.authenticate, getFavoriteStatus);
+router.post("/:question-id", authMiddleware.authenticate, addFavorite);
+router.delete("/:question-id", authMiddleware.authenticate, removeFavorite);
 
 export default router;
