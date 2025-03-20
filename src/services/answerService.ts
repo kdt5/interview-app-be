@@ -1,10 +1,12 @@
-import dbDayjs from "../lib/dayjs";
-import prisma from "../lib/prisma";
+import dbDayjs from "../lib/dayjs.js";
+import prisma from "../lib/prisma.js";
 
 const answerService = {
   recordAnswer,
   updateAnswer,
   deleteAnswer,
+  getAnswer,
+  getAnsweredQuestions,
 };
 export default answerService;
 
@@ -19,6 +21,27 @@ export async function recordAnswer(
       questionId,
       content,
     },
+  });
+}
+
+export async function getAnsweredQuestions(userId: number) {
+  return await prisma.answer.findMany({
+    where: { userId: userId },
+    select: {
+      id: true,
+      question: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+  });
+}
+
+export async function getAnswer(answerId: number) {
+  return await prisma.answer.findUnique({
+    where: { id: answerId },
   });
 }
 

@@ -1,21 +1,19 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
+import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import {
   getQuestionById,
   getWeeklyQuestion,
   getAllQuestionsWithCategories,
-} from "../services/questionService";
+} from "../services/questionService.js";
 import { Position } from "@prisma/client";
 
-export const getQuestionDetail: RequestHandler<{
-  "question-id": string;
-}> = async (
-  req: Request<{ "question-id": string }>,
+export async function getQuestionDetail(
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
-    const questionId = parseInt(req.params["question-id"]);
+    const questionId = parseInt(req.params.id);
     const question = await getQuestionById(questionId);
 
     if (!question) {
@@ -39,13 +37,13 @@ export const getQuestionDetail: RequestHandler<{
     console.error(error);
     next(error);
   }
-};
+}
 
-export const getWeeklyQuestionDetail = async (
+export async function getWeeklyQuestionDetail(
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const question = await getWeeklyQuestion();
 
@@ -70,18 +68,18 @@ export const getWeeklyQuestionDetail = async (
     console.error(error);
     next(error);
   }
-};
+}
 
 interface QuestionQueryParams {
   position?: Position;
   category?: string;
 }
 
-export const getAllQuestions: RequestHandler<QuestionQueryParams> = async (
+export async function getAllQuestions(
   req: Request<QuestionQueryParams>,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const category = req.query.category as string | undefined;
     const position = req.query.position as Position | undefined;
@@ -99,4 +97,4 @@ export const getAllQuestions: RequestHandler<QuestionQueryParams> = async (
     console.error(error);
     next(error);
   }
-};
+}

@@ -1,9 +1,10 @@
 import { Prisma } from "@prisma/client";
-import { Request, Response, NextFunction, RequestHandler } from "express";
+import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import answerService from "../services/answerService";
 import { checkQuestionExists } from "../services/questionService";
 import { RequestWithUser } from "../middlewares/authMiddleware";
+import { UserInfo } from "../services/authService";
 
 interface RecordAnswerRequest extends RequestWithUser {
   params: {
@@ -41,11 +42,54 @@ export async function recordAnswer(
   }
 }
 
-export const editAnswer: RequestHandler = async (
+export async function getAnsweredQuestions(
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
+  try {
+    const userId = (req as Request & { user: UserInfo }).user.userId;
+
+    const questions = await answerService.getAnsweredQuestions(userId);
+    if (!questions) {
+      res.status(StatusCodes.NOT_FOUND);
+      return;
+    }
+
+    res.status(StatusCodes.OK).json(questions);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getAnswer(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const answerId = parseInt(req.params["answer-id"]);
+
+    const answer = await answerService.getAnswer(answerId);
+
+    if (!answer) {
+      res.status(StatusCodes.NOT_FOUND).json({
+        message: "존재하지 않는 답변입니다.",
+      });
+      return;
+    }
+
+    res.status(StatusCodes.OK).json(answer);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function editAnswer(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     const answerId = parseInt(req.params["answer-id"]);
     const editAnswer = String(req.body.newAnswer);
@@ -65,13 +109,13 @@ export const editAnswer: RequestHandler = async (
       next(error);
     }
   }
-};
+}
 
-export const deleteAnswer: RequestHandler = async (
+export async function deleteAnswer(
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const answerId = parseInt(req.params["answer-id"]);
 
@@ -90,4 +134,4 @@ export const deleteAnswer: RequestHandler = async (
       next(error);
     }
   }
-};
+}

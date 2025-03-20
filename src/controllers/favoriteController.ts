@@ -1,20 +1,75 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { favoriteService } from "../services/favoriteService.js";
+import {
+  favoriteService,
+  getFavoriteQuestions,
+  getFavoriteQuestionStatus,
+} from "../services/favoriteService.js";
 import { UserInfo } from "../services/authService.js";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
-const validateFavoriteRequest = (userId: number, questionId: number) => {
+function validateFavoriteRequest(userId: number, questionId: number) {
   if (!userId || isNaN(questionId)) {
     throw new Error("잘못된 요청입니다.");
   }
   return true;
-};
+}
 
-export const addFavorite = async (
+export async function getFavorites(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const userId = (req as Request & { user: UserInfo }).user.userId;
+
+    const questions = await getFavoriteQuestions(userId);
+
+    if (!questions) {
+      res.status(StatusCodes.NOT_FOUND);
+      return;
+    }
+
+    res.status(StatusCodes.OK).json(questions);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getFavoriteStatus(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const userId = (req as Request & { user: UserInfo }).user.userId;
+    const questionId = parseInt(req.params["question-id"]);
+
+    validateFavoriteRequest(userId, questionId);
+
+    const status = await getFavoriteQuestionStatus(userId, questionId);
+
+    if (status) {
+      res.status(StatusCodes.OK).json(true);
+    }
+  } catch (error) {
+    if (
+      error instanceof PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      res.status(StatusCodes.NOT_FOUND).json(false);
+      return;
+    }
+
+    next(error);
+  }
+}
+
+export async function addFavorite(
   req: Request & { user?: UserInfo },
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const questionId = parseInt(req.params["question-id"]);
     const userId = req.user?.userId;
@@ -38,13 +93,13 @@ export const addFavorite = async (
       next(error);
     }
   }
-};
+}
 
-export const removeFavorite = async (
+export async function removeFavorite(
   req: Request & { user?: UserInfo },
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<void> {
   try {
     const questionId = parseInt(req.params["question-id"]);
     const userId = req.user?.userId;
@@ -67,4 +122,4 @@ export const removeFavorite = async (
       next(error);
     }
   }
-};
+}

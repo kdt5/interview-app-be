@@ -1,18 +1,33 @@
 import { RequestHandler, Router } from "express";
 import authMiddleware from "../middlewares/authMiddleware";
-import { deleteAnswer, editAnswer } from "../controllers/answerController";
 import {
-  validateDeleteAnswer,
+  deleteAnswer,
+  editAnswer,
+  getAnswer,
+  getAnsweredQuestions,
+} from "../controllers/answerController";
+import {
+  validateAnswerId,
   validateEditAnswer,
   validateRecordAnswer,
-} from "../middlewares/answerValidator";
-import { recordAnswer } from "../controllers/answerController";
-import answersMiddleware from "../middlewares/answerMiddleware";
+} from "../middlewares/answerValidator.js";
+import { recordAnswer } from "../controllers/answerController.js";
+import answersMiddleware from "../middlewares/answerMiddleware.js";
 
 const router = Router();
 
+router.get("/mine", authMiddleware.authenticate, getAnsweredQuestions);
+
+router.get(
+  "/:answer-id",
+  authMiddleware.authenticate,
+  validateAnswerId,
+  answersMiddleware.checkAnswerOwnership,
+  getAnswer
+);
+
 router.patch(
-  "/:id",
+  "/:answer-id",
   authMiddleware.authenticate,
   validateEditAnswer,
   answersMiddleware.checkAnswerOwnership,
@@ -20,15 +35,15 @@ router.patch(
 );
 
 router.delete(
-  "/:id",
+  "/:answer-id",
   authMiddleware.authenticate,
-  validateDeleteAnswer,
+  validateAnswerId,
   answersMiddleware.checkAnswerOwnership,
   deleteAnswer
 );
 
 router.post(
-  "/:questionId/answers",
+  "/:question-id",
   authMiddleware.authenticate,
   validateRecordAnswer,
   recordAnswer as RequestHandler
