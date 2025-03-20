@@ -7,7 +7,7 @@ export function validateGetQuestionDetail(
   res: Response,
   next: NextFunction
 ): void {
-  const { "question-id": questionId } = req.params;
+  const { questionId } = req.params;
 
   const questionIdRegex = /^[0-9]+$/;
   if (!questionIdRegex.test(questionId)) {

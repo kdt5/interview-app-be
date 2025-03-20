@@ -6,7 +6,7 @@ export function validateRecordAnswer(
   res: Response,
   next: NextFunction
 ): void {
-  const { "question-id": questionId } = req.params;
+  const { questionId } = req.params;
   const { content } = req.body;
 
   const validQuestionId = /^[0-9]+$/.test(questionId);
@@ -40,7 +40,7 @@ export function validateEditAnswer(
   res: Response,
   next: NextFunction
 ): void {
-  const { "answer-id": answerId } = req.params;
+  const { answerId } = req.params;
   const { newAnswer } = req.body;
 
   const answerIdRegex = /^[0-9]+$/;
@@ -65,7 +65,7 @@ export function validateAnswerId(
   res: Response,
   next: NextFunction
 ): void {
-  const { "answer-id": answerId } = req.params;
+  const { answerId } = req.params;
 
   const answerIdRegex = /^[0-9]+$/;
 

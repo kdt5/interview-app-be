@@ -9,13 +9,13 @@ const answersMiddleware = {
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    const answerId = parseInt(req.params.id);
+    const { answerId } = req.params;
     const user = req.user as UserInfo;
     const userId = user.userId;
 
     try {
       const answer = await prisma.answer.findUnique({
-        where: { id: answerId },
+        where: { id: parseInt(answerId) },
         select: { userId: true },
       });
 
