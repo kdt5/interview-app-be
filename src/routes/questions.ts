@@ -20,7 +20,7 @@ router.get(
 );
 router.get("/weekly", authMiddleware.authenticate, getWeeklyQuestionDetail);
 router.get(
-  "/:id",
+  "/:question-id",
   authMiddleware.authenticate,
   validateGetQuestionDetail,
   getQuestionDetail

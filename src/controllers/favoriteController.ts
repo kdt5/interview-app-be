@@ -16,8 +16,7 @@ export const addFavorite = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id } = req.params;
-    const questionId = parseInt(id);
+    const questionId = parseInt(req.params["question-id"]);
     const userId = req.user?.userId;
 
     if (!userId) return;
@@ -47,8 +46,7 @@ export const removeFavorite = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id } = req.params;
-    const questionId = parseInt(id);
+    const questionId = parseInt(req.params["question-id"]);
     const userId = req.user?.userId;
 
     if (!userId) return;
