@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { favoriteService } from "../services/favoriteService.js";
+import { favoriteService, getFavoriteQuestions } from "../services/favoriteService.js";
 import { UserInfo } from "../services/authService.js";
 
 const validateFavoriteRequest = (userId: number, questionId: number) => {
@@ -9,6 +9,28 @@ const validateFavoriteRequest = (userId: number, questionId: number) => {
   }
   return true;
 };
+
+export async function getFavorites(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try{
+    const userId = (req as Request & { user: UserInfo }).user.userId;
+
+    const questions = await getFavoriteQuestions(userId);
+
+    if(!questions){
+      res.status(StatusCodes.NOT_FOUND);
+      return;
+    }
+
+    res.status(StatusCodes.OK).json(questions);
+
+  } catch(error) {
+    next(error);
+  }
+}
 
 export const addFavorite = async (
   req: Request & { user?: UserInfo },
