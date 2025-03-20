@@ -8,12 +8,12 @@ import {
 import { Position } from "@prisma/client";
 
 export async function getQuestionDetail(
-  req: Request<{ id: string }>,
+  req: Request<{ "question-id": string }>,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const questionId = parseInt(req.params.id);
+    const questionId = parseInt(req.params["question-id"]);
     const question = await getQuestionById(questionId);
 
     if (!question) {
