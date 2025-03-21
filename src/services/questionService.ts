@@ -38,16 +38,16 @@ export async function getWeeklyQuestion() {
 
 export async function getAllQuestionsWithCategories(
   position?: Position,
-  category?: string
+  categoryId?: number
 ) {
   const whereClause: Prisma.QuestionWhereInput = {};
 
-  if (position && category) {
+  if (position && categoryId) {
     whereClause.categories = {
       some: {
         category: {
           position: position,
-          name: category,
+          id: categoryId,
         },
       },
     };
@@ -59,11 +59,11 @@ export async function getAllQuestionsWithCategories(
         },
       },
     };
-  } else if (category) {
+  } else if (categoryId) {
     whereClause.categories = {
       some: {
         category: {
-          name: category,
+          id: categoryId,
         },
       },
     };
