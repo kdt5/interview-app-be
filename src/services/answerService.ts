@@ -20,6 +20,7 @@ export async function recordAnswer(
       userId,
       questionId,
       content,
+      createdAt: dbDayjs(),
     },
   });
 }
