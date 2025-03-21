@@ -63,7 +63,6 @@ export async function getFavoriteStatus(
       res.status(StatusCodes.NOT_FOUND).json(false);
       return;
     }
-
     next(error);
   }
 }
