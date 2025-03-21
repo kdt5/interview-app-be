@@ -72,7 +72,7 @@ export async function getWeeklyQuestionDetail(
 
 interface QuestionQueryParams {
   position?: Position;
-  category?: string;
+  categoryId?: string;
 }
 
 export async function getAllQuestions(
@@ -81,10 +81,14 @@ export async function getAllQuestions(
   next: NextFunction
 ): Promise<void> {
   try {
-    const category = req.query.category as string | undefined;
+    const categoryId = req.query.categoryId as string | undefined;
     const position = req.query.position as Position | undefined;
 
-    const questions = await getAllQuestionsWithCategories(position, category);
+    const parsedCategoryId = categoryId ? parseInt(categoryId) : undefined;
+    const questions = await getAllQuestionsWithCategories(
+      position,
+      parsedCategoryId
+    );
     if (questions.length === 0) {
       res
         .status(StatusCodes.NOT_FOUND)
