@@ -34,6 +34,7 @@ export async function getAnsweredQuestions(userId: number) {
         select: {
           id: true,
           title: true,
+          categories: true,
         },
       },
     },
