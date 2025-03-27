@@ -67,8 +67,7 @@ export async function addWeeklyQuestion(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { questionId } = req.params;
-    const { startDate } = req.body;
+    const { startDate, questionId } = req.body;
 
     if (!questionId || !startDate) {
       return;

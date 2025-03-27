@@ -1,6 +1,8 @@
 import { Position } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
+import { body } from "express-validator";
+import dayjs from "dayjs";
 
 export function validateGetQuestionDetail(
   req: Request,
@@ -36,3 +38,18 @@ export function validateGetAllQuestionQuery(
 
   next();
 }
+
+export const validateAddWeeklyQuestion = [
+  body("questionId")
+  .isInt({ min: 1 })
+  .withMessage("질문 아이디는 1 이상의 정수만 가능합니다."),
+
+  body("startDate")
+  .custom((value: string) => {
+    if (!dayjs(value).isValid()) {
+      throw new Error("날짜 형식이 올바르지 않습니다.");
+    }
+    return true;
+  })
+  .withMessage("날짜 형식이 올바르지 않습니다."),
+];
