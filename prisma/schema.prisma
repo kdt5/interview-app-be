@@ -159,7 +159,7 @@ model Position {
   /// 생성일
   createdAt   DateTime   @default(now()) @map("created_at")
   /// 수정일
-  updatedAt   DateTime   @updatedAt @map("updated_at")
+  updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at")
   /// 해당 포지션을 가진 사용자들
   users       User[]
   /// 해당 포지션의 카테고리들

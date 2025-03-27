@@ -41,7 +41,8 @@ export async function checkAvailability(
 export async function createUser(
   password: string,
   email: string,
-  nickname: string
+  nickname: string,
+  positionId: number
 ): Promise<User> {
   const existingEmail = await prisma.user.findUnique({
     where: { email: email },
@@ -66,6 +67,7 @@ export async function createUser(
       password: hashedPassword,
       email: email,
       nickname: nickname,
+      position: { connect: { id: positionId } },
       createdAt: dbDayjs(),
       updatedAt: dbDayjs(),
     },

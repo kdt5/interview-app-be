@@ -26,6 +26,7 @@ interface SignupRequest extends Request {
     password: string;
     email: string;
     nickname: string;
+    positionId: number;
   };
 }
 
@@ -78,7 +79,7 @@ export async function signup(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { password, email, nickname } = req.body;
+    const { password, email, nickname, positionId } = req.body;
 
     const isEmailAvailable = await checkAvailability(email, "email");
     if (!isEmailAvailable) {
@@ -96,11 +97,12 @@ export async function signup(
       return;
     }
 
-    const user = await createUser(password, email, nickname);
+    const user = await createUser(password, email, nickname, positionId);
 
     res.status(StatusCodes.CREATED).json({
       email: user.email,
       nickname: user.nickname,
+      positionId: user.positionId,
     });
   } catch (error) {
     next(error);
@@ -125,6 +127,7 @@ export async function login(
     res.status(StatusCodes.OK).json({
       email: user.email,
       nickname: user.nickname,
+      positionId: user.positionId,
     });
   } catch (error) {
     next(error);
