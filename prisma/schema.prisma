@@ -30,8 +30,9 @@ model User {
   favorites     Favorite[]
   /// 사용자의 리프레시 토큰들
   refreshTokens RefreshToken[]
-  /// 직무
-  position      Position?
+  /// 사용자의 포지션
+  position      Position?      @relation(fields: [positionId], references: [id])
+  positionId    Int?           @map("position_id")
 }
 
 /// 질문 정보를 저장하는 모델
@@ -118,13 +119,14 @@ model Favorite {
 /// 카테고리 정보를 저장하는 모델
 model Category {
   /// 고유 식별자
-  id        Int                @id @default(autoincrement())
+  id         Int                @id @default(autoincrement())
   /// 카테고리 이름
-  name      String
-  /// 카테고리 포지션 (백엔드/프론트엔드)
-  position  Position
+  name       String
+  /// 카테고리의 포지션
+  position   Position           @relation(fields: [positionId], references: [id])
+  positionId Int                @map("position_id")
   /// 카테고리와 연관된 질문들
-  questions QuestionCategory[]
+  questions  QuestionCategory[]
 }
 
 /// 질문과 카테고리의 다대다 관계를 저장하는 모델
@@ -142,36 +144,26 @@ model QuestionCategory {
   @@index([questionId, categoryId])
 }
 
-/// 개발자 포지션을 나타내는 열거형
-enum Position {
-  /// 백엔드 개발자
-  BackendDeveloper
-  /// 프론트엔드 개발자
-  FrontendDeveloper
-  /// 풀스택 개발자
-  FullStackDeveloper
-  /// 디자이너
-  UXUIDesigner
-  /// 데이터 엔지니어
-  DataEngineer
-  /// 데이터 사이언티스트
-  DataScientist
-  /// 모바일 개발자
-  MobileDeveloper
-  /// 게임 개발자
-  GameDeveloper
-  /// 데브옵스 엔지니어
-  DevOpsEngineer
-  /// 보안 엔지니어
-  SecurityEngineer
-  /// 머신 러닝 엔지니어
-  MLEngineer
-  /// 인공지능 연구자
-  AIResearcher
-  /// 임베디드 개발자
-  EmbeddedDeveloper
-  /// 블록체인 개발자
-  BlockchainDeveloper
+/// 포지션 정보를 저장하는 모델
+model Position {
+  /// 고유 식별자
+  id          Int        @id @default(autoincrement())
+  /// 포지션 코드 (예: BACKEND_DEVELOPER)
+  code        String     @unique
+  /// 포지션 이름 (예: 백엔드 개발자)
+  name        String
+  /// 포지션 설명
+  description String?
+  /// 정렬 순서
+  order       Int        @default(0)
+  /// 생성일
+  createdAt   DateTime   @default(now()) @map("created_at")
+  /// 수정일
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  /// 해당 포지션을 가진 사용자들
+  users       User[]
+  /// 해당 포지션의 카테고리들
+  categories  Category[]
 }
 
 model RefreshToken {
