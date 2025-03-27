@@ -53,7 +53,15 @@ export async function getWeeklyQuestion(
       return;
     }
     
-    res.status(StatusCodes.OK).json(question);
+    res.status(StatusCodes.OK).json({
+      questionDetail: {
+        startDate: question.startDate,
+        formattedStartDate: question.formattedStartDate,
+        title: question.question.title,
+        content: question.question.content,
+        categories: question.question.categories.map((qc) => qc.categoryId),
+      }
+    });
 
   } catch (error) {
     console.error(error);

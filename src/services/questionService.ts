@@ -62,11 +62,7 @@ export async function getWeeklyQuestion(): Promise<WeeklyQuestionWithFormattedDa
           id: true,
           title: true,
           content: true,
-          categories: {
-            select: {
-              categoryId: true
-            }
-          }
+          categories: true
         }
       }
      },
