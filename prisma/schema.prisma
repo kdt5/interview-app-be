@@ -52,6 +52,18 @@ model Question {
   categories   QuestionCategory[]
 }
 
+/// 주간 질문을 저장하는 모델
+model WeeklyQuestion {
+  /// 고유 식별자
+  id  Int @id @default(autoincrement())
+  /// 질문 제목
+  title String
+  /// 질문 내용
+  content String  @db.Text
+  /// 질문의 주간 질문 시작일
+  startDate DateTime  @unique
+}
+
 /// 답변 정보를 저장하는 모델
 model Answer {
   /// 고유 식별자
