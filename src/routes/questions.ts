@@ -1,8 +1,9 @@
 import { Router } from "express";
 import {
   getQuestionDetail,
-  getWeeklyQuestionDetail,
   getAllQuestions,
+  getWeeklyQuestion,
+  addWeeklyQuestion,
 } from "../controllers/questionsController.js";
 import {
   validateGetAllQuestionQuery,
@@ -18,12 +19,16 @@ router.get(
   validateGetAllQuestionQuery,
   getAllQuestions
 );
-router.get("/weekly", authMiddleware.authenticate, getWeeklyQuestionDetail);
+router.get("/weekly", authMiddleware.authenticate, getWeeklyQuestion);
+router.post(
+  "/weekly/:questionId",
+  authMiddleware.authenticate,
+  addWeeklyQuestion
+);
 router.get(
   "/:questionId",
   authMiddleware.authenticate,
   validateGetQuestionDetail,
   getQuestionDetail
 );
-
 export default router;
