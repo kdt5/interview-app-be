@@ -50,13 +50,27 @@ export async function getAnsweredQuestions(
   try {
     const userId = (req as Request & { user: UserInfo }).user.userId;
 
-    const questions = await answerService.getAnsweredQuestions(userId);
-    if (!questions) {
+    const answeredQuestions = await answerService.getAnsweredQuestions(userId);
+
+    if (!answeredQuestions) {
       res.status(StatusCodes.NOT_FOUND);
       return;
     }
 
-    res.status(StatusCodes.OK).json(questions);
+    const mappedAnsweredQuestions = answeredQuestions.map((answer) => {
+      return {
+        id: answer.id,
+        question: {
+          id: answer.question.id,
+          title: answer.question.title,
+          categories: answer.question.categories.map(
+            (category) => category.categoryId
+          ),
+        },
+      };
+    });
+
+    res.status(StatusCodes.OK).json(mappedAnsweredQuestions);
   } catch (error) {
     next(error);
   }
