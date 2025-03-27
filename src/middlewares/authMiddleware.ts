@@ -31,6 +31,7 @@ const authMiddleware = {
           userId: user.userId,
           email: user.email,
           nickname: user.nickname,
+          positionId: user.positionId,
         };
         next();
       } catch (error) {
@@ -92,14 +93,19 @@ const authMiddleware = {
 
       const user = await prisma.user.findUnique({
         where: { email: decoded.email },
-        select: { id: true, email: true, nickname: true },
+        select: { id: true, email: true, nickname: true, position: true },
       });
 
       if (!user) {
         throw new AuthError("UNAUTHORIZED");
       }
 
-      return { userId: user.id, email: user.email, nickname: user.nickname };
+      return {
+        userId: user.id,
+        email: user.email,
+        nickname: user.nickname,
+        positionId: user.position?.id ?? 0,
+      };
     } catch (error) {
       if (error instanceof Error && error.name === "TokenExpiredError") {
         throw new AuthError("TOKEN_EXPIRED");
@@ -181,6 +187,7 @@ const authMiddleware = {
           userId: user.userId,
           email: user.email,
           nickname: user.nickname,
+          positionId: user.positionId,
         },
       };
     } catch (error) {

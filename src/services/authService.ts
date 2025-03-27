@@ -15,6 +15,7 @@ export interface UserInfo {
   userId: number;
   email: string;
   nickname: string;
+  positionId: number;
 }
 
 export interface AuthResponse {
@@ -129,6 +130,7 @@ export async function authenticateUser(
       userId: user.id,
       email: user.email,
       nickname: user.nickname,
+      positionId: user.positionId ?? 0,
     },
     accessToken,
     refreshToken,
@@ -201,7 +203,12 @@ export async function getUserByEmail(email: string): Promise<UserInfo> {
     throw new AuthError("UNAUTHORIZED");
   }
 
-  return { userId: user.id, email: user.email, nickname: user.nickname };
+  return {
+    userId: user.id,
+    email: user.email,
+    nickname: user.nickname,
+    positionId: user.positionId ?? 0,
+  };
 }
 
 interface TokenPair {
