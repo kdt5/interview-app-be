@@ -44,7 +44,7 @@ export async function getWeeklyQuestion(
   next: NextFunction
 ): Promise<void> {
   try {
-    const question = await questionService.getWeeklyQuestion(); 
+    const question = await questionService.getWeeklyQuestion();
 
     if (!question) {
       res
@@ -52,7 +52,7 @@ export async function getWeeklyQuestion(
         .json({ message: "주간 질문이 설정되지 않았습니다." });
       return;
     }
-    
+
     res.status(StatusCodes.OK).json({
       questionDetail: {
         startDate: question.startDate,
@@ -60,9 +60,8 @@ export async function getWeeklyQuestion(
         title: question.question.title,
         content: question.question.content,
         categories: question.question.categories.map((qc) => qc.categoryId),
-      }
+      },
     });
-
   } catch (error) {
     next(error);
   }
@@ -76,7 +75,10 @@ export async function addWeeklyQuestion(
   try {
     const { startDate, questionId } = req.body;
 
-    const weeklyQuestion = await questionService.addWeeklyQuestion(parseInt(questionId), startDate);
+    const weeklyQuestion = await questionService.addWeeklyQuestion(
+      parseInt(questionId),
+      startDate
+    );
 
     res.status(StatusCodes.CREATED).json(weeklyQuestion);
   } catch (error) {

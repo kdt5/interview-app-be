@@ -31,7 +31,7 @@ export async function getQuestionById(questionId: number) {
   });
 }
 
-type WeeklyQuestionWithFormattedDate = {
+interface WeeklyQuestionWithFormattedDate {
   startDate: Date;
   formattedStartDate?: string; // Add the new property
   question: {
@@ -42,7 +42,7 @@ type WeeklyQuestionWithFormattedDate = {
       categoryId: number;
     }[];
   };
-};
+}
 
 export async function getWeeklyQuestion(): Promise<WeeklyQuestionWithFormattedDate | null> {
   const weekStart = dayjs()
@@ -50,27 +50,31 @@ export async function getWeeklyQuestion(): Promise<WeeklyQuestionWithFormattedDa
     .startOf("week")
     .add(1, "day")
     .toDate();
-  
+
   const weeklyQuestion = await prisma.weeklyQuestion.findUnique({
     where: {
       startDate: weekStart,
     },
-    select: { 
+    select: {
       startDate: true,
       question: {
         select: {
           id: true,
           title: true,
           content: true,
-          categories: true
-        }
-      }
-     },
+          categories: true,
+        },
+      },
+    },
   });
 
   if (weeklyQuestion && weeklyQuestion.startDate) {
-    const formattedDate = `M-${dayjs(weeklyQuestion.startDate).tz('Asia/Seoul').format('MM')}-W-${dayjs(weeklyQuestion.startDate).tz('Asia/Seoul').week()}`;
-    
+    const formattedDate = `M-${dayjs(weeklyQuestion.startDate)
+      .tz("Asia/Seoul")
+      .format("MM")}-W-${dayjs(weeklyQuestion.startDate)
+      .tz("Asia/Seoul")
+      .week()}`;
+
     return { ...weeklyQuestion, formattedStartDate: formattedDate };
   }
 
@@ -83,7 +87,7 @@ export async function addWeeklyQuestion(questionId: number, startDate: string) {
     .startOf("week")
     .add(1, "day")
     .toDate();
-  
+
   return await prisma.weeklyQuestion.create({
     data: {
       startDate: parsedStartDate,
@@ -155,4 +159,4 @@ export const questionService = {
   getWeeklyQuestion,
   addWeeklyQuestion,
   getAllQuestionsWithCategories,
-}
+};
