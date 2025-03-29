@@ -5,6 +5,7 @@ import {
   authenticateUser,
   checkAvailability,
   deleteRefreshToken,
+  checkPositionAvailability,
 } from "../services/authService.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import { AuthError } from "../constants/errors/authError.js";
@@ -93,6 +94,14 @@ export async function signup(
     if (!isNicknameAvailable) {
       res.status(StatusCodes.CONFLICT).json({
         message: "이미 사용 중인 닉네임입니다.",
+      });
+      return;
+    }
+
+    const isPositionAvailable = await checkPositionAvailability(positionId);
+    if (!isPositionAvailable) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        message: "존재하지 않는 포지션입니다.",
       });
       return;
     }

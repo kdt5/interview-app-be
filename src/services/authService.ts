@@ -38,6 +38,15 @@ export async function checkAvailability(
   return !existingItem;
 }
 
+export async function checkPositionAvailability(
+  positionId: number
+): Promise<boolean> {
+  const existingPosition = await prisma.position.findUnique({
+    where: { id: positionId },
+  });
+  return !!existingPosition;
+}
+
 export async function createUser(
   password: string,
   email: string,
