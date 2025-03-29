@@ -22,12 +22,17 @@ model User {
   createdAt     DateTime       @default(now()) @map("created_at")
   /// 계정 수정일
   updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at")
-  position_id   Int?
-  answers       Answer[]
-  comments      Comment[]
-  favorites     Favorite[]
+  /// 사용자가 작성한 답변들
+  answers   Answer[]
+  /// 사용자가 작성한 댓글들
+  comments  Comment[]
+  /// 사용자가 즐겨찾기한 질문들
+  favorites Favorite[]
+  /// 사용자의 리프레시 토큰들
   refreshTokens RefreshToken[]
+  /// 직무 정보
   Position      Position?      @relation(fields: [position_id], references: [id])
+  position_id   Int?
 
   @@index([position_id], map: "User_position_id_fkey")
 }
@@ -44,19 +49,24 @@ model Question {
   isWeekly       Boolean            @default(false) @map("is_weekly")
   /// 질문 작성일
   createdAt      DateTime           @default(now()) @map("created_at")
+  /// 질문에 달린 답변들
   answers        Answer[]
+  /// 질문을 즐겨찾기한 정보
   favorites      Favorite[]
+  /// 질문과 연관된 카테고리들
   categories     QuestionCategory[]
+  /// 주간 질문과의 관계 (One-to-One)
   weeklyQuestion WeeklyQuestion?
 }
 
 /// 주간 질문을 저장하는 모델
 model WeeklyQuestion {
-  /// 질문의 주간 질문 시작일
-  startDate  DateTime @unique
   /// 고유 식별자
-  questionId Int      @id @map("question_id")
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId  Int @id @map("question_id")
+  /// 질문의 주간 질문 시작일
+  startDate DateTime  @unique
+  /// 관계 설정 (Foreign Key)
+  question  Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
 /// 답변 정보를 저장하는 모델
@@ -68,13 +78,16 @@ model Answer {
   /// 답변 작성일
   createdAt  DateTime  @default(now()) @map("created_at")
   /// 답변 수정일
-  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at")
+  updatedAt  DateTime  @updatedAt @default(now()) @map("updated_at")
+  /// 답변 작성자 정보
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// 답변 작성자 ID
   userId     Int       @map("user_id")
+  /// 답변이 달린 질문 정보
+  question   Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
   /// 질문 ID
   questionId Int       @map("question_id")
-  question   Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// 답변에 달린 댓글들
   comments   Comment[]
 
   @@index([questionId])
@@ -89,12 +102,14 @@ model Comment {
   content   String   @db.Text
   /// 댓글 작성일
   createdAt DateTime @default(now()) @map("created_at")
-  /// 댓글 작성자 ID
+  /// 댓글 작성자 정보
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   userId    Int      @map("user_id")
+  /// 댓글이 달린 답변 정보
+  answer    Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
   /// 답변 ID
   answerId  Int      @map("answer_id")
-  answer    Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([answerId], map: "Comment_answer_id_fkey")
   @@index([userId], map: "Comment_user_id_fkey")
@@ -104,14 +119,16 @@ model Comment {
 model Favorite {
   /// 고유 식별자
   id         Int      @id @default(autoincrement())
+  /// 즐겨찾기한 사용자 정보
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// 사용자 ID
   userId     Int      @map("user_id")
+  /// 즐겨찾기된 질문 정보
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   /// 질문 ID
   questionId Int      @map("question_id")
   /// 즐겨찾기 생성일
   createdAt  DateTime @default(now()) @map("created_at")
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, questionId])
   @@index([userId, questionId])
@@ -124,18 +141,22 @@ model Category {
   id          Int                @id @default(autoincrement())
   /// 카테고리 이름
   name        String
+  /// 카테고리 포지션 ID
   position_id Int
+  /// 카테고리와 연관된 질문들
   questions   QuestionCategory[]
 }
 
 /// 질문과 카테고리의 다대다 관계를 저장하는 모델
 model QuestionCategory {
+  /// 질문 정보
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   /// 질문 ID
   questionId Int      @map("question_id")
+  /// 카테고리 정보
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   /// 카테고리 ID
   categoryId Int      @map("category_id")
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([questionId, categoryId])
   @@index([questionId, categoryId])
@@ -151,23 +172,32 @@ model RefreshToken {
   expiresAt DateTime @map("expires_at")
   /// 토큰 발급일
   createdAt DateTime @default(now()) @map("created_at")
+  /// 토큰 소유자
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// 사용자 ID
   userId    Int      @map("user_id")
   /// 기기 정보 (선택적)
   device    String?  @db.VarChar(255)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([token])
 }
 
 model Position {
+  /// 고유 식별자
   id          Int      @id @default(autoincrement())
+  /// 직무 코드
   code        String   @unique
+  /// 직무 이름
   name        String
+  /// 직무 설명
   description String?
+  /// 직무 순서
   order       Int      @default(0)
+  /// 직무 생성일
   created_at  DateTime @default(now())
+  /// 직무 수정일
   updated_at  DateTime @default(now())
+  /// 사용자 목록
   User        User[]
 }
