@@ -145,7 +145,9 @@ model Category {
   position_id Int
   /// 카테고리와 연관된 질문들
   questions   QuestionCategory[]
-  
+  /// Position과의 관계 설정
+  position    Position           @relation(fields: [position_id], references: [id])
+
   @@index([position_id])
 }
 
@@ -200,6 +202,8 @@ model Position {
   created_at  DateTime @default(now())
   /// 직무 수정일
   updated_at  DateTime @default(now())
+  /// 카테고리 목록
+  categories  Category[]
   /// 사용자 목록
-  User        User[]
+  users       User[]
 }
