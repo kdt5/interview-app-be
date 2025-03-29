@@ -49,3 +49,4 @@ ALTER TABLE `Category` ADD CONSTRAINT `Category_position_id_fkey` FOREIGN KEY (`
 
 -- AddIndex
 CREATE INDEX `Category_position_id_idx` ON `Category`(`position_id`);
+CREATE INDEX `User_position_id_idx` ON `User`(`position_id`);

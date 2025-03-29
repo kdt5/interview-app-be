@@ -93,7 +93,7 @@ const authMiddleware = {
 
       const user = await prisma.user.findUnique({
         where: { email: decoded.email },
-        select: { id: true, email: true, nickname: true, position: true },
+        select: { id: true, email: true, nickname: true, positionId: true },
       });
 
       if (!user) {
@@ -104,7 +104,7 @@ const authMiddleware = {
         userId: user.id,
         email: user.email,
         nickname: user.nickname,
-        positionId: user.position?.id ?? 0,
+        positionId: user.positionId ?? null,
       };
     } catch (error) {
       if (error instanceof Error && error.name === "TokenExpiredError") {

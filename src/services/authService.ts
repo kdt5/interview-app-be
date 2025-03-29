@@ -15,7 +15,7 @@ export interface UserInfo {
   userId: number;
   email: string;
   nickname: string;
-  positionId: number;
+  positionId: number | null;
 }
 
 export interface AuthResponse {
@@ -141,7 +141,7 @@ export async function authenticateUser(
       userId: user.id,
       email: user.email,
       nickname: user.nickname,
-      positionId: user.positionId ?? 0,
+      positionId: user.positionId ?? null,
     },
     accessToken,
     refreshToken,
@@ -218,7 +218,7 @@ export async function getUserByEmail(email: string): Promise<UserInfo> {
     userId: user.id,
     email: user.email,
     nickname: user.nickname,
-    positionId: user.positionId ?? 0,
+    positionId: user.positionId ?? null,
   };
 }
 
