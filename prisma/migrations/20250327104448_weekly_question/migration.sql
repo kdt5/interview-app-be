@@ -1,3 +1,21 @@
+/*
+  Warnings:
+
+  - The primary key for the `WeeklyQuestion` table will be changed. If it partially fails, the table could be left without primary key constraint.
+  - You are about to drop the column `content` on the `WeeklyQuestion` table. All the data in the column will be lost.
+  - You are about to drop the column `id` on the `WeeklyQuestion` table. All the data in the column will be lost.
+  - You are about to drop the column `title` on the `WeeklyQuestion` table. All the data in the column will be lost.
+  - Added the required column `question_id` to the `WeeklyQuestion` table without a default value. This is not possible if the table is not empty.
+
+*/
+-- AlterTable
+ALTER TABLE `WeeklyQuestion` DROP PRIMARY KEY,
+    DROP COLUMN `content`,
+    DROP COLUMN `id`,
+    DROP COLUMN `title`,
+    ADD COLUMN `question_id` INTEGER NOT NULL,
+    ADD PRIMARY KEY (`question_id`);
+
 -- CreateTable
 CREATE TABLE `User` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
@@ -91,6 +109,9 @@ CREATE TABLE `RefreshToken` (
     INDEX `RefreshToken_token_idx`(`token`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `WeeklyQuestion` ADD CONSTRAINT `WeeklyQuestion_question_id_fkey` FOREIGN KEY (`question_id`) REFERENCES `Question`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Answer` ADD CONSTRAINT `Answer_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
