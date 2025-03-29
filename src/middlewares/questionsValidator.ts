@@ -51,7 +51,9 @@ export const validateAddWeeklyQuestion = [
     if (!dayjs(value).isValid()) {
       throw new Error("날짜 형식이 올바르지 않습니다.");
     }
+    if(!dayjs(value).isAfter(dayjs())) {
+      throw new Error("시작일은 현재 날짜 이후여야 합니다.");
+    }
     return true;
   })
-  .withMessage("날짜 형식이 올바르지 않습니다."),
 ];
