@@ -77,10 +77,6 @@ export async function addWeeklyQuestion(
   try {
     const { startDate, questionId } = req.body;
 
-    if (!questionId || !startDate) {
-      return;
-    }
-
     const weeklyQuestion = await questionService.addWeeklyQuestion(parseInt(questionId), startDate);
 
     res.status(StatusCodes.CREATED).json(weeklyQuestion);

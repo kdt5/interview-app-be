@@ -41,10 +41,12 @@ export function validateGetAllQuestionQuery(
 
 export const validateAddWeeklyQuestion = [
   body("questionId")
+  .exists()
   .isInt({ min: 1 })
   .withMessage("질문 아이디는 1 이상의 정수만 가능합니다."),
 
   body("startDate")
+  .exists()
   .custom((value: string) => {
     if (!dayjs(value).isValid()) {
       throw new Error("날짜 형식이 올바르지 않습니다.");
