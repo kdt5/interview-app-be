@@ -15,6 +15,7 @@ export interface UserInfo {
   userId: number;
   email: string;
   nickname: string;
+  positionId: number | null;
 }
 
 export interface AuthResponse {
@@ -37,10 +38,21 @@ export async function checkAvailability(
   return !existingItem;
 }
 
+export async function checkPositionAvailability(
+  positionId: number | undefined
+): Promise<boolean> {
+  if (!positionId) return true;
+  const existingPosition = await prisma.position.findUnique({
+    where: { id: positionId },
+  });
+  return !!existingPosition;
+}
+
 export async function createUser(
   password: string,
   email: string,
-  nickname: string
+  nickname: string,
+  positionId?: number
 ): Promise<User> {
   const existingEmail = await prisma.user.findUnique({
     where: { email: email },
@@ -65,6 +77,7 @@ export async function createUser(
       password: hashedPassword,
       email: email,
       nickname: nickname,
+      ...(positionId && { Position: { connect: { id: positionId } } }),
       createdAt: dbDayjs(),
       updatedAt: dbDayjs(),
     },
@@ -129,6 +142,7 @@ export async function authenticateUser(
       userId: user.id,
       email: user.email,
       nickname: user.nickname,
+      positionId: user.positionId ?? null,
     },
     accessToken,
     refreshToken,
@@ -201,7 +215,12 @@ export async function getUserByEmail(email: string): Promise<UserInfo> {
     throw new AuthError("UNAUTHORIZED");
   }
 
-  return { userId: user.id, email: user.email, nickname: user.nickname };
+  return {
+    userId: user.id,
+    email: user.email,
+    nickname: user.nickname,
+    positionId: user.positionId ?? null,
+  };
 }
 
 interface TokenPair {
@@ -283,3 +302,15 @@ export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
     throw new AuthError("REFRESH_TOKEN_FAILED");
   }
 }
+
+export const authService = {
+  checkAvailability,
+  checkPositionAvailability,
+  createUser,
+  authenticateUser,
+  deleteRefreshToken,
+  changeUserNickname,
+  changeUserPassword,
+  getUserByEmail,
+  refreshTokens,
+};

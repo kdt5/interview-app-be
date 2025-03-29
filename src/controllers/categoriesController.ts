@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { getPositionCategories } from "../services/categoryService.js";
-import { Position } from "@prisma/client";
+import { categoryService } from "../services/categoryService.js";
 
 interface CategoryQueryParams {
-  position?: Position;
+  positionId?: string;
 }
 
 export async function getAllCategories(
@@ -13,17 +12,24 @@ export async function getAllCategories(
   next: NextFunction
 ): Promise<void> {
   try {
-    const position = req.query.position as Position;
+    const positionId = req.query.positionId as string | undefined;
+    if (positionId) {
+      const categories = await categoryService.getPositionCategories(
+        parseInt(positionId)
+      );
+      if (categories.length === 0) {
+        res
+          .status(StatusCodes.NOT_FOUND)
+          .json({ message: "조건에 해당하는 카테고리가 존재하지 않습니다." });
+        return;
+      }
 
-    const categories = await getPositionCategories(position);
-    if (categories.length === 0) {
+      res.status(StatusCodes.OK).json(categories);
+    } else {
       res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ message: "조건에 해당하는 카테고리가 존재하지 않습니다." });
-      return;
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: "positionId 파라미터가 필요합니다." });
     }
-
-    res.status(StatusCodes.OK).json(categories);
   } catch (error) {
     console.error(error);
     next(error);

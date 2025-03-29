@@ -24,6 +24,7 @@ export const VALIDATION_ERROR = {
   INVALID_NICKNAME: "유효하지 않은 닉네임 형식입니다.",
   PASSWORD_REQUIREMENTS:
     "비밀번호는 8-30자의 소문자, 대문자, 숫자, 특수문자를 모두 포함해야 합니다.",
+  INVALID_POSITION_ID: "유효하지 않은 직무 ID입니다.",
 } as const;
 
 export const DUPLICATE_ERROR = {
