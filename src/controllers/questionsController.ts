@@ -30,7 +30,7 @@ export async function getQuestionDetail(
         content: question.content,
         isWeekly: question.isWeekly,
         createdAt: question.createdAt,
-        categories: question.categories.map((qc) => qc.category.name),
+        categories: question.categories.map((qc) => qc.category.id),
       },
     });
   } catch (error) {
@@ -61,7 +61,7 @@ export async function getWeeklyQuestionDetail(
         content: question.content,
         isWeekly: question.isWeekly,
         createdAt: question.createdAt,
-        categories: question.categories.map((qc) => qc.category.name),
+        categories: question.categories.map((qc) => qc.category.id),
       },
     });
   } catch (error) {
