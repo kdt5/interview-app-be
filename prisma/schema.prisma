@@ -145,6 +145,8 @@ model Category {
   position_id Int
   /// 카테고리와 연관된 질문들
   questions   QuestionCategory[]
+  
+  @@index([position_id])
 }
 
 /// 질문과 카테고리의 다대다 관계를 저장하는 모델
