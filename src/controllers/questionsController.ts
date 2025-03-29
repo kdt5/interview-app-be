@@ -64,7 +64,6 @@ export async function getWeeklyQuestion(
     });
 
   } catch (error) {
-    console.error(error);
     next(error);
   }
 }
@@ -81,7 +80,6 @@ export async function addWeeklyQuestion(
 
     res.status(StatusCodes.CREATED).json(weeklyQuestion);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 }
@@ -114,7 +112,6 @@ export async function getAllQuestions(
 
     res.status(StatusCodes.OK).json(questions);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 }
