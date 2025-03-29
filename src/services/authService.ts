@@ -76,7 +76,7 @@ export async function createUser(
       password: hashedPassword,
       email: email,
       nickname: nickname,
-      position: { connect: { id: positionId } },
+      Position: { connect: { id: positionId } },
       createdAt: dbDayjs(),
       updatedAt: dbDayjs(),
     },

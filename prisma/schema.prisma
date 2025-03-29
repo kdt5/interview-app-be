@@ -32,9 +32,9 @@ model User {
   refreshTokens RefreshToken[]
   /// 직무 정보
   Position      Position?      @relation(fields: [positionId], references: [id])
-  positionId    Int?
+  positionId    Int?           @map("position_id")
 
-  @@index([positionId], map: "User_positionId_fkey")
+  @@index([positionId], map: "User_position_id_fkey")
 }
 
 /// 질문 정보를 저장하는 모델
@@ -142,7 +142,7 @@ model Category {
   /// 카테고리 이름
   name       String
   /// 카테고리 포지션 ID
-  positionId Int                @map("positionId")
+  positionId Int                @map("position_id")
   /// 카테고리와 연관된 질문들
   questions  QuestionCategory[]
   /// Position과의 관계 설정
