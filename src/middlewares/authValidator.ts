@@ -25,6 +25,10 @@ const validationRules = {
     test: (value: string) => /^[가-힣a-zA-Z0-9]{2,16}$/.test(value),
     message: VALIDATION_ERROR.INVALID_NICKNAME,
   },
+  positionId: {
+    test: (value: string) => /^\d+$/.test(value),
+    message: VALIDATION_ERROR.INVALID_POSITION_ID,
+  },
 } as const;
 
 const validateField = (
@@ -75,6 +79,7 @@ export const validateSignup = createValidator({
   email: validationRules.email,
   password: validationRules.password,
   nickname: validationRules.nickname,
+  positionId: validationRules.positionId,
 });
 
 export const validateLogin = createValidator({

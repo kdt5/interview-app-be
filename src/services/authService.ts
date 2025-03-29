@@ -39,8 +39,9 @@ export async function checkAvailability(
 }
 
 export async function checkPositionAvailability(
-  positionId: number
+  positionId: number | undefined
 ): Promise<boolean> {
+  if (!positionId) return true;
   const existingPosition = await prisma.position.findUnique({
     where: { id: positionId },
   });
@@ -51,7 +52,7 @@ export async function createUser(
   password: string,
   email: string,
   nickname: string,
-  positionId: number
+  positionId?: number
 ): Promise<User> {
   const existingEmail = await prisma.user.findUnique({
     where: { email: email },
@@ -76,7 +77,7 @@ export async function createUser(
       password: hashedPassword,
       email: email,
       nickname: nickname,
-      Position: { connect: { id: positionId } },
+      ...(positionId && { Position: { connect: { id: positionId } } }),
       createdAt: dbDayjs(),
       updatedAt: dbDayjs(),
     },
