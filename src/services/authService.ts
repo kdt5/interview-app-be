@@ -302,3 +302,15 @@ export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
     throw new AuthError("REFRESH_TOKEN_FAILED");
   }
 }
+
+export const authService = {
+  checkAvailability,
+  checkPositionAvailability,
+  createUser,
+  authenticateUser,
+  deleteRefreshToken,
+  changeUserNickname,
+  changeUserPassword,
+  getUserByEmail,
+  refreshTokens,
+};

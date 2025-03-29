@@ -1,10 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import {
-  getQuestionById,
-  getAllQuestionsWithCategories,
-  questionService,
-} from "../services/questionService.js";
+import { questionService } from "../services/questionService.js";
 import { Position } from "@prisma/client";
 
 export async function getQuestionDetail(
@@ -14,7 +10,9 @@ export async function getQuestionDetail(
 ): Promise<void> {
   try {
     const { questionId } = req.params;
-    const question = await getQuestionById(parseInt(questionId));
+    const question = await questionService.getQuestionById(
+      parseInt(questionId)
+    );
 
     if (!question) {
       res
@@ -101,7 +99,7 @@ export async function getAllQuestions(
     const position = req.query.position as Position | undefined;
 
     const parsedCategoryId = categoryId ? parseInt(categoryId) : undefined;
-    const questions = await getAllQuestionsWithCategories(
+    const questions = await questionService.getAllQuestionsWithCategories(
       position,
       parsedCategoryId
     );

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { getPositionCategories } from "../services/categoryService.js";
+import { categoryService } from "../services/categoryService.js";
 
 interface CategoryQueryParams {
   positionId?: string;
@@ -14,7 +14,9 @@ export async function getAllCategories(
   try {
     const positionId = req.query.positionId as string | undefined;
     if (positionId) {
-      const categories = await getPositionCategories(parseInt(positionId));
+      const categories = await categoryService.getPositionCategories(
+        parseInt(positionId)
+      );
       if (categories.length === 0) {
         res
           .status(StatusCodes.NOT_FOUND)

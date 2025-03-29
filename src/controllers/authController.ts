@@ -1,12 +1,6 @@
 import { Request, NextFunction, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import {
-  createUser,
-  authenticateUser,
-  checkAvailability,
-  deleteRefreshToken,
-  checkPositionAvailability,
-} from "../services/authService.js";
+import { authService } from "../services/authService.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import { AuthError } from "../constants/errors/authError.js";
 
@@ -51,7 +45,7 @@ export async function checkEmailAvailability(
 ): Promise<void> {
   try {
     const { email } = req.body;
-    const isAvailable = await checkAvailability(email, "email");
+    const isAvailable = await authService.checkAvailability(email, "email");
 
     res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).send();
   } catch (error) {
@@ -66,7 +60,10 @@ export async function checkNicknameAvailability(
 ): Promise<void> {
   try {
     const { nickname } = req.body;
-    const isAvailable = await checkAvailability(nickname, "nickname");
+    const isAvailable = await authService.checkAvailability(
+      nickname,
+      "nickname"
+    );
 
     res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).send();
   } catch (error) {
@@ -82,7 +79,10 @@ export async function signup(
   try {
     const { password, email, nickname, positionId } = req.body;
 
-    const isEmailAvailable = await checkAvailability(email, "email");
+    const isEmailAvailable = await authService.checkAvailability(
+      email,
+      "email"
+    );
     if (!isEmailAvailable) {
       res.status(StatusCodes.CONFLICT).json({
         message: "이미 사용 중인 이메일입니다.",
@@ -90,7 +90,10 @@ export async function signup(
       return;
     }
 
-    const isNicknameAvailable = await checkAvailability(nickname, "nickname");
+    const isNicknameAvailable = await authService.checkAvailability(
+      nickname,
+      "nickname"
+    );
     if (!isNicknameAvailable) {
       res.status(StatusCodes.CONFLICT).json({
         message: "이미 사용 중인 닉네임입니다.",
@@ -98,7 +101,9 @@ export async function signup(
       return;
     }
 
-    const isPositionAvailable = await checkPositionAvailability(positionId);
+    const isPositionAvailable = await authService.checkPositionAvailability(
+      positionId
+    );
     if (!isPositionAvailable) {
       res.status(StatusCodes.BAD_REQUEST).json({
         message: "존재하지 않는 포지션입니다.",
@@ -106,7 +111,12 @@ export async function signup(
       return;
     }
 
-    const user = await createUser(password, email, nickname, positionId);
+    const user = await authService.createUser(
+      password,
+      email,
+      nickname,
+      positionId
+    );
 
     res.status(StatusCodes.CREATED).json({
       email: user.email,
@@ -125,10 +135,8 @@ export async function login(
 ): Promise<void> {
   try {
     const { email, password } = req.body;
-    const { user, accessToken, refreshToken } = await authenticateUser(
-      email,
-      password
-    );
+    const { user, accessToken, refreshToken } =
+      await authService.authenticateUser(email, password);
 
     authMiddleware.setAccessTokenCookie(res, accessToken);
     authMiddleware.setRefreshTokenCookie(res, refreshToken);
@@ -151,7 +159,7 @@ export async function logout(
   try {
     const refreshToken = req.cookies.refreshToken;
     if (refreshToken) {
-      await deleteRefreshToken(refreshToken);
+      await authService.deleteRefreshToken(refreshToken);
     }
     authMiddleware.clearAccessTokenCookie(res);
     authMiddleware.clearRefreshTokenCookie(res);

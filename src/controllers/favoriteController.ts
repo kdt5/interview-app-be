@@ -1,10 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import {
-  favoriteService,
-  getFavoriteQuestions,
-  getFavoriteQuestionStatus,
-} from "../services/favoriteService.js";
+import { favoriteService } from "../services/favoriteService.js";
 import { UserInfo } from "../services/authService.js";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
@@ -23,7 +19,7 @@ export async function getFavorites(
   try {
     const userId = (req as Request & { user: UserInfo }).user.userId;
 
-    const questions = await getFavoriteQuestions(userId);
+    const questions = await favoriteService.getFavoriteQuestions(userId);
 
     if (!questions) {
       res.status(StatusCodes.NOT_FOUND);
@@ -47,7 +43,7 @@ export async function getFavoriteStatus(
 
     validateFavoriteRequest(userId, parseInt(questionId));
 
-    const status = await getFavoriteQuestionStatus(
+    const status = await favoriteService.getFavoriteQuestionStatus(
       userId,
       parseInt(questionId)
     );
