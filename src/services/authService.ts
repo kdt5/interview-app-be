@@ -9,6 +9,7 @@ import {
 } from "../middlewares/authMiddleware.js";
 import dbDayjs from "../lib/dayjs.js";
 import { emailService } from "./emailService.js";
+import crypto from "crypto";
 
 const HASH_ROUNDS = 10; // 10 rounds → 약 10ms, 12 rounds → 약 100ms
 
@@ -184,18 +185,27 @@ export async function recoverUserPassword(email: string): Promise<void> {
   });
 
   if (!user) {
-    throw new AuthError("UNAUTHORIZED");
+    throw new AuthError("NOT_FOUND_USER");
   }
 
   // 비밀번호 재설정 토큰 생성
-  const resetToken = jwt.sign(
-    { userId: user.id },
-    process.env.JWT_SECRET || "default_secret",
-    { expiresIn: "1h" }
-  );
+  // Generate a random token
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  // Hash the token for secure storage
+  const hashedResetToken = await hash(resetToken, HASH_ROUNDS);
+
+  // Save the hashed token to the database with an expiry timestamp
+  await prisma.passwordResetToken.create({
+    data: {
+      hashedToken: hashedResetToken,
+      userId: user.id,
+      expiresAt: dbDayjs({ minutes: 60 }), // Token expires in 1 hour
+    },
+  });
 
   // 비밀번호 재설정 링크 생성
-  const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  const resetLink = `${process.env.PASSWORD_RESET_FRONTEND_URL}/reset-password?token=${resetToken}`;
 
   // 이메일 전송
   await emailService.sendPasswordResetEmail(user.email, resetLink);
@@ -222,6 +232,11 @@ export async function resetPassword(
         password: hashedPassword,
         updatedAt: dbDayjs(),
       },
+    });
+
+    // 사용된 토큰 삭제
+    await prisma.passwordResetToken.deleteMany({
+      where: { userId: decoded.userId },
     });
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {

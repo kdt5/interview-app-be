@@ -1,6 +1,8 @@
 import { StatusCodes } from "http-status-codes";
 import { BaseError } from "./commonError.js";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export const AUTH_ERROR = {
   UNAUTHORIZED: "인증이 필요합니다.",
   INVALID_TOKEN: "인증에 실패했습니다.",
@@ -18,8 +20,12 @@ export const AUTH_ERROR = {
   NOT_FOUND_USER: "입력하신 정보를 다시 확인해주세요.",
   INVALID_PASSWORD: "입력하신 정보를 다시 확인해주세요.",
   PASSWORD_MISMATCH: "입력하신 정보를 다시 확인해주세요.",
-  RESET_TOKEN_EXPIRED: "만료된 토큰입니다.",
-  INVALID_RESET_TOKEN: "유효하지 않은 토큰입니다.",
+  RESET_TOKEN_EXPIRED: isProduction
+    ? "인증 오류가 발생했습니다."
+    : "만료된 토큰입니다.",
+  INVALID_RESET_TOKEN: isProduction
+    ? "인증 오류가 발생했습니다."
+    : "유효하지 않은 토큰입니다.",
   PASSWORD_RESET_FAILED: "비밀번호 재설정에 실패했습니다.",
   EMAIL_SEND_FAILED: "이메일 전송에 실패했습니다.",
 } as const;

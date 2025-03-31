@@ -11,17 +11,17 @@ datasource db {
 /// 사용자 정보를 저장하는 모델
 model User {
   /// 고유 식별자
-  id            Int            @id @default(autoincrement())
+  id            Int                  @id @default(autoincrement())
   /// 사용자 닉네임
-  nickname      String         @unique @db.VarChar(50)
+  nickname      String               @unique @db.VarChar(50)
   /// 사용자 이메일
-  email         String         @unique @db.VarChar(254)
+  email         String               @unique @db.VarChar(254)
   /// 사용자 비밀번호
-  password      String         @db.VarChar(60)
+  password      String               @db.VarChar(60)
   /// 계정 생성일
-  createdAt     DateTime       @default(now()) @map("created_at")
+  createdAt     DateTime             @default(now()) @map("created_at")
   /// 계정 수정일
-  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at")
+  updatedAt     DateTime             @default(now()) @updatedAt @map("updated_at")
   /// 사용자가 작성한 답변들
   answers       Answer[]
   /// 사용자가 작성한 댓글들
@@ -30,9 +30,11 @@ model User {
   favorites     Favorite[]
   /// 사용자의 리프레시 토큰들
   refreshTokens RefreshToken[]
+  /// 사용자의 비밀번호 재설정 토큰들
+  resetTokens   PasswordResetToken[]
   /// 직무 정보
-  Position      Position?      @relation(fields: [positionId], references: [id])
-  positionId    Int?           @map("position_id")
+  Position      Position?            @relation(fields: [positionId], references: [id])
+  positionId    Int?                 @map("position_id")
 
   @@index([positionId], map: "User_position_id_fkey")
 }
@@ -206,4 +208,22 @@ model Position {
   categories  Category[]
   /// 사용자 목록
   users       User[]
+}
+
+model PasswordResetToken {
+  /// 고유 식별자
+  id          Int      @id @default(autoincrement())
+  /// 해시된 토큰
+  hashedToken String   @unique
+  /// 만료일
+  expiresAt   DateTime @map("expires_at")
+  /// 생성일
+  createdAt   DateTime @default(now()) @map("created_at")
+  /// 사용자 정보
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// 사용자 ID
+  userId      Int      @map("user_id")
+
+  @@index([userId])
+  @@index([hashedToken])
 }
