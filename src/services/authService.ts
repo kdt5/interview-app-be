@@ -216,11 +216,13 @@ export async function resetPassword(
   newPassword: string
 ): Promise<void> {
   try {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new AuthError("SECRET_KEY_NOT_FOUND");
+    }
+
     // 토큰 검증
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "default_secret"
-    ) as { userId: number };
+    const decoded = jwt.verify(token, jwtSecret) as { userId: number };
 
     // 비밀번호 해시화
     const hashedPassword = await hash(newPassword, HASH_ROUNDS);
