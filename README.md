@@ -10,13 +10,7 @@ npm install
 
 2. 환경변수 설정:
 
-```bash
-# .env 파일 생성 후 다음 내용 추가
-DATABASE_URL="mysql://username:password@localhost:3306/database_name"
-SHADOW_DATABASE_URL="mysql://username:password@localhost:3306/shadow_database_name"
-PORT=3000
-JWT_SECRET="your-secret-key"
-```
+.env.example 참고하여 .env 파일 생성
 
 3. Prisma 설정:
 

@@ -8,6 +8,7 @@ import {
   ACCESS_TOKEN_EXPIRY,
 } from "../middlewares/authMiddleware.js";
 import dbDayjs from "../lib/dayjs.js";
+import { emailService } from "./emailService.js";
 
 const HASH_ROUNDS = 10; // 10 rounds → 약 10ms, 12 rounds → 약 100ms
 
@@ -177,6 +178,62 @@ export async function changeUserNickname(
   });
 }
 
+export async function recoverUserPassword(email: string): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { email: email },
+  });
+
+  if (!user) {
+    throw new AuthError("UNAUTHORIZED");
+  }
+
+  // 비밀번호 재설정 토큰 생성
+  const resetToken = jwt.sign(
+    { userId: user.id },
+    process.env.JWT_SECRET || "default_secret",
+    { expiresIn: "1h" }
+  );
+
+  // 비밀번호 재설정 링크 생성
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+  // 이메일 전송
+  await emailService.sendPasswordResetEmail(user.email, resetLink);
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string
+): Promise<void> {
+  try {
+    // 토큰 검증
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "default_secret"
+    ) as { userId: number };
+
+    // 비밀번호 해시화
+    const hashedPassword = await hash(newPassword, HASH_ROUNDS);
+
+    // 사용자 비밀번호 업데이트
+    await prisma.user.update({
+      where: { id: decoded.userId },
+      data: {
+        password: hashedPassword,
+        updatedAt: dbDayjs(),
+      },
+    });
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new AuthError("RESET_TOKEN_EXPIRED");
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new AuthError("INVALID_RESET_TOKEN");
+    }
+    throw new AuthError("PASSWORD_RESET_FAILED");
+  }
+}
+
 export async function changeUserPassword(
   email: string | undefined,
   oldPassword: string,
@@ -311,6 +368,8 @@ export const authService = {
   deleteRefreshToken,
   changeUserNickname,
   changeUserPassword,
+  recoverUserPassword,
+  resetPassword,
   getUserByEmail,
   refreshTokens,
 };

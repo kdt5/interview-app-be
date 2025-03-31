@@ -29,6 +29,10 @@ const validationRules = {
     test: (value: string) => /^\d+$/.test(value),
     message: VALIDATION_ERROR.INVALID_POSITION_ID,
   },
+  token: {
+    test: (value: string) => /^[a-zA-Z0-9_-]+$/.test(value),
+    message: VALIDATION_ERROR.INVALID_TOKEN,
+  },
 } as const;
 
 const validateField = (
@@ -85,4 +89,9 @@ export const validateSignup = createValidator({
 export const validateLogin = createValidator({
   email: validationRules.email,
   password: undefined, // 로그인 시에는 패스워드 형식 검사 불필요
+});
+
+export const validateResetPassword = createValidator({
+  token: validationRules.token,
+  newPassword: validationRules.password,
 });
