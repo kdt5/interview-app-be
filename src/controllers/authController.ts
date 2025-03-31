@@ -190,3 +190,26 @@ export async function refresh(
     next(error);
   }
 }
+
+// 비밀번호 재설정
+interface ResetPasswordRequest extends Request {
+  body: {
+    token: string;
+    newPassword: string;
+  };
+}
+
+export async function resetPassword(
+  req: ResetPasswordRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { token, newPassword } = req.body;
+    await authService.resetPassword(token, newPassword);
+
+    res.status(StatusCodes.OK).send();
+  } catch (error) {
+    next(error);
+  }
+}

@@ -1,4 +1,4 @@
-import { NextFunction, Response } from "express";
+import { NextFunction, Response, Request } from "express";
 import { StatusCodes } from "http-status-codes";
 import { authService } from "../services/authService.js";
 import { RequestWithUser } from "../middlewares/authMiddleware.js";
@@ -60,6 +60,28 @@ export async function changePassword(
       oldPassword,
       newPassword
     );
+
+    res.status(StatusCodes.OK).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+interface RecoverPasswordRequest extends Request {
+  body: {
+    email: string;
+  };
+}
+
+// 비밀번호 찾기
+export async function recoverPassword(
+  req: RecoverPasswordRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { email } = req.body;
+    await authService.recoverUserPassword(email);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
