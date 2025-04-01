@@ -115,3 +115,25 @@ export async function getAllQuestions(
     next(error);
   }
 }
+
+export async function getAllAnswers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { questionId } = req.params;
+
+    const answers = await questionService.getAllAnswers(parseInt(questionId));
+    if (answers.length === 0) {
+      res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "조건에 해당하는 질문 또는 답변이 존재하지 않습니다." });
+      return;
+    }
+
+    res.status(StatusCodes.OK).json(answers);
+  } catch (error) {
+    next(error);
+  }
+}

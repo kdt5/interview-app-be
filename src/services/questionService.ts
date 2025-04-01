@@ -153,10 +153,29 @@ export async function getAllQuestionsWithCategories(
   }));
 }
 
+export async function getAllAnswers(questionId: number) {
+  return await prisma.answer.findMany({
+    where: { questionId },
+    select: {
+      id: true,
+      content: true,
+      createdAt: true,
+      updatedAt: true,
+      user: {
+        select: {
+          id: true,
+          nickname: true,
+        }
+      }
+    }
+  });
+}
+
 export const questionService = {
   checkQuestionExists,
   getQuestionById,
   getWeeklyQuestion,
   addWeeklyQuestion,
   getAllQuestionsWithCategories,
+  getAllAnswers,
 };

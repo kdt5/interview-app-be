@@ -35,4 +35,10 @@ router.get(
   validateGetQuestionDetail,
   getQuestionDetail
 );
+router.get(
+  "/:questionId/answers",
+  authMiddleware.authenticate,
+  validateGetQuestionDetail,
+  getQuestionDetail
+);
 export default router;
