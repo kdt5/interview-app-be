@@ -165,9 +165,9 @@ export async function getAllAnswers(questionId: number) {
         select: {
           id: true,
           nickname: true,
-        }
-      }
-    }
+        },
+      },
+    },
   });
 }
 

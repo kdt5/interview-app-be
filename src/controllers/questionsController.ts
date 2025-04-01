@@ -128,7 +128,9 @@ export async function getAllAnswers(
     if (answers.length === 0) {
       res
         .status(StatusCodes.NOT_FOUND)
-        .json({ message: "조건에 해당하는 질문 또는 답변이 존재하지 않습니다." });
+        .json({
+          message: "조건에 해당하는 질문 또는 답변이 존재하지 않습니다.",
+        });
       return;
     }
 
