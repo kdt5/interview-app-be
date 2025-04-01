@@ -3,53 +3,60 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 /// 사용자 정보를 저장하는 모델
 model User {
   /// 고유 식별자
-  id        Int        @id @default(autoincrement())
+  id            Int                  @id @default(autoincrement())
   /// 사용자 닉네임
-  nickname  String     @unique @db.VarChar(50)
+  nickname      String               @unique @db.VarChar(50)
   /// 사용자 이메일
-  email     String     @unique @db.VarChar(254)
+  email         String               @unique @db.VarChar(254)
   /// 사용자 비밀번호
-  password  String     @db.VarChar(60)
+  password      String               @db.VarChar(60)
   /// 계정 생성일
-  createdAt DateTime   @default(now()) @map("created_at")
+  createdAt     DateTime             @default(now()) @map("created_at")
   /// 계정 수정일
-  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at")
+  updatedAt     DateTime             @default(now()) @updatedAt @map("updated_at")
   /// 사용자가 작성한 답변들
-  answers   Answer[]
+  answers       Answer[]
   /// 사용자가 작성한 댓글들
-  comments  Comment[]
+  comments      Comment[]
   /// 사용자가 즐겨찾기한 질문들
-  favorites Favorite[]
+  favorites     Favorite[]
   /// 사용자의 리프레시 토큰들
   refreshTokens RefreshToken[]
+  /// 사용자의 비밀번호 재설정 토큰들
+  resetTokens   PasswordResetToken[]
+  /// 직무 정보
+  Position      Position?            @relation(fields: [positionId], references: [id])
+  positionId    Int?                 @map("position_id")
+
+  @@index([positionId], map: "User_position_id_fkey")
 }
 
 /// 질문 정보를 저장하는 모델
 model Question {
   /// 고유 식별자
-  id           Int                 @id @default(autoincrement())
+  id             Int                @id @default(autoincrement())
   /// 질문 제목
-  title        String
+  title          String
   /// 질문 내용
-  content      String              @db.Text
+  content        String             @db.Text
   /// 주간 질문 여부
-  isWeekly     Boolean            @default(false) @map("is_weekly")
+  isWeekly       Boolean            @default(false) @map("is_weekly")
   /// 질문 작성일
-  createdAt    DateTime           @default(now()) @map("created_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
   /// 질문에 달린 답변들
-  answers      Answer[]
+  answers        Answer[]
   /// 질문을 즐겨찾기한 정보
-  favorites    Favorite[]
+  favorites      Favorite[]
   /// 질문과 연관된 카테고리들
-  categories   QuestionCategory[]
+  categories     QuestionCategory[]
   /// 주간 질문과의 관계 (One-to-One)
   weeklyQuestion WeeklyQuestion?
 }
@@ -57,11 +64,11 @@ model Question {
 /// 주간 질문을 저장하는 모델
 model WeeklyQuestion {
   /// 고유 식별자
-  questionId  Int @id @map("question_id")
+  questionId Int      @id @map("question_id")
   /// 질문의 주간 질문 시작일
-  startDate DateTime  @unique
+  startDate  DateTime @unique
   /// 관계 설정 (Foreign Key)
-  question  Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
 /// 답변 정보를 저장하는 모델
@@ -73,7 +80,7 @@ model Answer {
   /// 답변 작성일
   createdAt  DateTime  @default(now()) @map("created_at")
   /// 답변 수정일
-  updatedAt  DateTime  @updatedAt @default(now()) @map("updated_at")
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at")
   /// 답변 작성자 정보
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// 답변 작성자 ID
@@ -86,6 +93,7 @@ model Answer {
   comments   Comment[]
 
   @@index([questionId])
+  @@index([userId], map: "Answer_user_id_fkey")
 }
 
 /// 댓글 정보를 저장하는 모델
@@ -98,12 +106,15 @@ model Comment {
   createdAt DateTime @default(now()) @map("created_at")
   /// 댓글 작성자 정보
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  /// 댓글 작성자 ID
-  userId    Int      @map("user_id")
+
+  userId   Int    @map("user_id")
   /// 댓글이 달린 답변 정보
-  answer    Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  answer   Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
   /// 답변 ID
-  answerId  Int      @map("answer_id")
+  answerId Int    @map("answer_id")
+
+  @@index([answerId], map: "Comment_answer_id_fkey")
+  @@index([userId], map: "Comment_user_id_fkey")
 }
 
 /// 즐겨찾기 정보를 저장하는 모델
@@ -123,18 +134,23 @@ model Favorite {
 
   @@unique([userId, questionId])
   @@index([userId, questionId])
+  @@index([questionId], map: "Favorite_question_id_fkey")
 }
 
 /// 카테고리 정보를 저장하는 모델
 model Category {
   /// 고유 식별자
-  id        Int                @id @default(autoincrement())
+  id         Int                @id @default(autoincrement())
   /// 카테고리 이름
-  name      String
-  /// 카테고리 포지션 (백엔드/프론트엔드)
-  position  Position
+  name       String
+  /// 카테고리 포지션 ID
+  positionId Int                @map("position_id")
   /// 카테고리와 연관된 질문들
-  questions QuestionCategory[]
+  questions  QuestionCategory[]
+  /// Position과의 관계 설정
+  position   Position           @relation(fields: [positionId], references: [id])
+
+  @@index([positionId])
 }
 
 /// 질문과 카테고리의 다대다 관계를 저장하는 모델
@@ -150,14 +166,7 @@ model QuestionCategory {
 
   @@unique([questionId, categoryId])
   @@index([questionId, categoryId])
-}
-
-/// 개발자 포지션을 나타내는 열거형
-enum Position {
-  /// 백엔드 개발자
-  backend
-  /// 프론트엔드 개발자
-  frontend
+  @@index([categoryId], map: "QuestionCategory_category_id_fkey")
 }
 
 model RefreshToken {
@@ -178,4 +187,43 @@ model RefreshToken {
 
   @@index([userId])
   @@index([token])
-} 
+}
+
+model Position {
+  /// 고유 식별자
+  id          Int        @id @default(autoincrement())
+  /// 직무 코드
+  code        String     @unique
+  /// 직무 이름
+  name        String
+  /// 직무 설명
+  description String?
+  /// 직무 순서
+  order       Int        @default(0)
+  /// 직무 생성일
+  created_at  DateTime   @default(now())
+  /// 직무 수정일
+  updated_at  DateTime   @default(now())
+  /// 카테고리 목록
+  categories  Category[]
+  /// 사용자 목록
+  users       User[]
+}
+
+model PasswordResetToken {
+  /// 고유 식별자
+  id          Int      @id @default(autoincrement())
+  /// 해시된 토큰
+  hashedToken String   @unique
+  /// 만료일
+  expiresAt   DateTime @map("expires_at")
+  /// 생성일
+  createdAt   DateTime @default(now()) @map("created_at")
+  /// 사용자 정보
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// 사용자 ID
+  userId      Int      @map("user_id")
+
+  @@index([userId])
+  @@index([hashedToken])
+}

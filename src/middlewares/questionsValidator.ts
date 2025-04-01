@@ -1,8 +1,8 @@
-import { Position } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { body } from "express-validator";
 import dayjs from "dayjs";
+import prisma from "../lib/prisma.js";
 
 export function validateGetQuestionDetail(
   req: Request,
@@ -22,18 +22,32 @@ export function validateGetQuestionDetail(
   next();
 }
 
-export function validateGetAllQuestionQuery(
+export async function validateGetAllQuestionQuery(
   req: Request,
   res: Response,
   next: NextFunction
-): void {
-  const position = req.query.position as string | undefined;
+): Promise<void> {
+  const positionId = req.query.positionId as string | undefined;
 
-  if (position && !Object.values(Position).includes(position as Position)) {
-    res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "직무는 frontend 또는 backend만 가능합니다." });
-    return;
+  if (positionId) {
+    const positionIdNum = parseInt(positionId);
+    if (isNaN(positionIdNum)) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: "직무 ID는 숫자만 가능합니다." });
+      return;
+    }
+
+    const position = await prisma.position.findUnique({
+      where: { id: positionIdNum },
+    });
+
+    if (!position) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: "유효하지 않은 직무입니다." });
+      return;
+    }
   }
 
   next();

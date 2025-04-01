@@ -8,6 +8,8 @@ import {
   ACCESS_TOKEN_EXPIRY,
 } from "../middlewares/authMiddleware.js";
 import dbDayjs from "../lib/dayjs.js";
+import { emailService } from "./emailService.js";
+import crypto from "crypto";
 
 const HASH_ROUNDS = 10; // 10 rounds → 약 10ms, 12 rounds → 약 100ms
 
@@ -15,6 +17,7 @@ export interface UserInfo {
   userId: number;
   email: string;
   nickname: string;
+  positionId: number | null;
 }
 
 export interface AuthResponse {
@@ -37,10 +40,21 @@ export async function checkAvailability(
   return !existingItem;
 }
 
+export async function checkPositionAvailability(
+  positionId: number | undefined
+): Promise<boolean> {
+  if (!positionId) return true;
+  const existingPosition = await prisma.position.findUnique({
+    where: { id: positionId },
+  });
+  return !!existingPosition;
+}
+
 export async function createUser(
   password: string,
   email: string,
-  nickname: string
+  nickname: string,
+  positionId?: number
 ): Promise<User> {
   const existingEmail = await prisma.user.findUnique({
     where: { email: email },
@@ -65,6 +79,7 @@ export async function createUser(
       password: hashedPassword,
       email: email,
       nickname: nickname,
+      ...(positionId && { Position: { connect: { id: positionId } } }),
       createdAt: dbDayjs(),
       updatedAt: dbDayjs(),
     },
@@ -129,6 +144,7 @@ export async function authenticateUser(
       userId: user.id,
       email: user.email,
       nickname: user.nickname,
+      positionId: user.positionId ?? null,
     },
     accessToken,
     refreshToken,
@@ -161,6 +177,78 @@ export async function changeUserNickname(
     where: { email: email },
     data: { nickname: nickname, updatedAt: dbDayjs() },
   });
+}
+
+export async function recoverUserPassword(email: string): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { email: email },
+  });
+
+  if (!user) {
+    throw new AuthError("NOT_FOUND_USER");
+  }
+
+  // 비밀번호 재설정 토큰 생성
+  // Generate a random token
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  // Hash the token for secure storage
+  const hashedResetToken = await hash(resetToken, HASH_ROUNDS);
+
+  // Save the hashed token to the database with an expiry timestamp
+  await prisma.passwordResetToken.create({
+    data: {
+      hashedToken: hashedResetToken,
+      userId: user.id,
+      expiresAt: dbDayjs({ minutes: 60 }), // Token expires in 1 hour
+    },
+  });
+
+  // 비밀번호 재설정 링크 생성
+  const resetLink = `${process.env.PASSWORD_RESET_FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+  // 이메일 전송
+  await emailService.sendPasswordResetEmail(user.email, resetLink);
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string
+): Promise<void> {
+  try {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new AuthError("SECRET_KEY_NOT_FOUND");
+    }
+
+    // 토큰 검증
+    const decoded = jwt.verify(token, jwtSecret) as { userId: number };
+
+    // 비밀번호 해시화
+    const hashedPassword = await hash(newPassword, HASH_ROUNDS);
+
+    // 사용자 비밀번호 업데이트
+    await prisma.user.update({
+      where: { id: decoded.userId },
+      data: {
+        password: hashedPassword,
+        updatedAt: dbDayjs(),
+      },
+    });
+
+    // 사용된 토큰 삭제
+    await prisma.passwordResetToken.deleteMany({
+      where: { userId: decoded.userId },
+    });
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new AuthError("RESET_TOKEN_EXPIRED");
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new AuthError("INVALID_RESET_TOKEN");
+    }
+    throw new AuthError("PASSWORD_RESET_FAILED");
+  }
 }
 
 export async function changeUserPassword(
@@ -201,7 +289,12 @@ export async function getUserByEmail(email: string): Promise<UserInfo> {
     throw new AuthError("UNAUTHORIZED");
   }
 
-  return { userId: user.id, email: user.email, nickname: user.nickname };
+  return {
+    userId: user.id,
+    email: user.email,
+    nickname: user.nickname,
+    positionId: user.positionId ?? null,
+  };
 }
 
 interface TokenPair {
@@ -283,3 +376,17 @@ export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
     throw new AuthError("REFRESH_TOKEN_FAILED");
   }
 }
+
+export const authService = {
+  checkAvailability,
+  checkPositionAvailability,
+  createUser,
+  authenticateUser,
+  deleteRefreshToken,
+  changeUserNickname,
+  changeUserPassword,
+  recoverUserPassword,
+  resetPassword,
+  getUserByEmail,
+  refreshTokens,
+};

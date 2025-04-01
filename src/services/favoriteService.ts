@@ -87,6 +87,8 @@ export async function removeFavorite(
 }
 
 export const favoriteService = {
+  getFavoriteQuestions,
+  getFavoriteQuestionStatus,
   createFavorite,
   removeFavorite,
 };

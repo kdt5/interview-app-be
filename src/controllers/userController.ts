@@ -1,10 +1,6 @@
-import { NextFunction, Response } from "express";
+import { NextFunction, Response, Request } from "express";
 import { StatusCodes } from "http-status-codes";
-import {
-  changeUserNickname,
-  changeUserPassword,
-  getUserByEmail,
-} from "../services/authService.js";
+import { authService } from "../services/authService.js";
 import { RequestWithUser } from "../middlewares/authMiddleware.js";
 
 interface ChangeNicknameRequest extends RequestWithUser {
@@ -26,7 +22,7 @@ export async function getMe(
   next: NextFunction
 ): Promise<void> {
   try {
-    const user = await getUserByEmail(req.user.email);
+    const user = await authService.getUserByEmail(req.user.email);
 
     res.status(StatusCodes.OK).json({
       email: user.email,
@@ -44,7 +40,7 @@ export async function changeNickname(
 ): Promise<void> {
   try {
     const { nickname } = req.body;
-    await changeUserNickname(req.user.email, nickname);
+    await authService.changeUserNickname(req.user.email, nickname);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
@@ -59,7 +55,33 @@ export async function changePassword(
 ): Promise<void> {
   try {
     const { oldPassword, newPassword } = req.body;
-    await changeUserPassword(req.user.email, oldPassword, newPassword);
+    await authService.changeUserPassword(
+      req.user.email,
+      oldPassword,
+      newPassword
+    );
+
+    res.status(StatusCodes.OK).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+interface RecoverPasswordRequest extends Request {
+  body: {
+    email: string;
+  };
+}
+
+// 비밀번호 찾기
+export async function recoverPassword(
+  req: RecoverPasswordRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { email } = req.body;
+    await authService.recoverUserPassword(email);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {

@@ -25,6 +25,14 @@ const validationRules = {
     test: (value: string) => /^[가-힣a-zA-Z0-9]{2,16}$/.test(value),
     message: VALIDATION_ERROR.INVALID_NICKNAME,
   },
+  positionId: {
+    test: (value: string) => /^\d+$/.test(value),
+    message: VALIDATION_ERROR.INVALID_POSITION_ID,
+  },
+  token: {
+    test: (value: string) => /^[a-zA-Z0-9_-]+$/.test(value),
+    message: VALIDATION_ERROR.INVALID_TOKEN,
+  },
 } as const;
 
 const validateField = (
@@ -75,9 +83,15 @@ export const validateSignup = createValidator({
   email: validationRules.email,
   password: validationRules.password,
   nickname: validationRules.nickname,
+  positionId: validationRules.positionId,
 });
 
 export const validateLogin = createValidator({
   email: validationRules.email,
   password: undefined, // 로그인 시에는 패스워드 형식 검사 불필요
+});
+
+export const validateResetPassword = createValidator({
+  token: validationRules.token,
+  newPassword: validationRules.password,
 });
