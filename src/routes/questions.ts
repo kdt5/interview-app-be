@@ -4,11 +4,12 @@ import {
   getAllQuestions,
   getWeeklyQuestion,
   addWeeklyQuestion,
+  getAllAnswers,
 } from "../controllers/questionsController.js";
 import {
   validateAddWeeklyQuestion,
   validateGetAllQuestionQuery,
-  validateGetQuestionDetail,
+  validateQuestionId,
 } from "../middlewares/questionsValidator.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import { validationErrorMiddleware } from "../middlewares/validationErrorMiddleware.js";
@@ -32,7 +33,15 @@ router.post(
 router.get(
   "/:questionId",
   authMiddleware.authenticate,
-  validateGetQuestionDetail,
+  validateQuestionId,
+  validationErrorMiddleware,
   getQuestionDetail
+);
+router.get(
+  "/:questionId/answers",
+  authMiddleware.authenticate,
+  validateQuestionId,
+  validationErrorMiddleware,
+  getAllAnswers
 );
 export default router;
