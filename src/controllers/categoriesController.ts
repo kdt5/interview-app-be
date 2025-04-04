@@ -2,17 +2,20 @@ import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { categoryService } from "../services/categoryService.js";
 
-interface CategoryQueryParams {
-  positionId?: string;
+export interface CategoryQueryRequest extends Request {
+  query: {
+    positionId?: string;
+  };
 }
 
 export async function getAllCategories(
-  req: Request<CategoryQueryParams>,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const positionId = req.query.positionId as string | undefined;
+    const request = req as CategoryQueryRequest;
+    const positionId = request.query.positionId;
     if (positionId) {
       const categories = await categoryService.getPositionCategories(
         parseInt(positionId)

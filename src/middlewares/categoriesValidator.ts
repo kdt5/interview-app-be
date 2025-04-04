@@ -1,12 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
+import { CategoryQueryRequest } from "../controllers/categoriesController";
 
 export function validateGetAllCategoriesQuery(
   req: Request,
   res: Response,
   next: NextFunction
 ): void {
-  const positionId = req.query.positionId as string | undefined;
+  const request = req as CategoryQueryRequest;
+  const positionId = request.query.positionId;
 
   if (positionId && isNaN(parseInt(positionId))) {
     res

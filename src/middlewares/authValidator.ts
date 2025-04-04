@@ -54,7 +54,9 @@ function createValidator(fields: {
 }): RequestHandler {
   return (req: Request, res: Response, next: NextFunction): void => {
     for (const [fieldName, rule] of Object.entries(fields)) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const value = req.body[fieldName];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const error = validateField(value, fieldName, rule);
 
       if (error) {

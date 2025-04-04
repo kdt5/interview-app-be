@@ -1,14 +1,14 @@
 import { Router } from "express";
 import {
   getQuestionDetail,
-  getAllQuestions,
+  getQuestions,
   getWeeklyQuestion,
   addWeeklyQuestion,
-  getAllAnswers,
+  getAnswers,
 } from "../controllers/questionsController.js";
 import {
   validateAddWeeklyQuestion,
-  validateGetAllQuestionQuery,
+  validateGetAllQuestion,
   validateQuestionId,
 } from "../middlewares/questionsValidator.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
@@ -19,8 +19,9 @@ const router = Router();
 router.get(
   "/",
   authMiddleware.authenticate,
-  validateGetAllQuestionQuery,
-  getAllQuestions
+  validateGetAllQuestion,
+  validationErrorMiddleware,
+  getQuestions
 );
 router.get("/weekly", authMiddleware.authenticate, getWeeklyQuestion);
 router.post(
@@ -42,6 +43,6 @@ router.get(
   authMiddleware.authenticate,
   validateQuestionId,
   validationErrorMiddleware,
-  getAllAnswers
+  getAnswers
 );
 export default router;

@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { createTransport, Transporter } from "nodemailer";
 import { AuthError } from "../constants/errors/authError.js";
 
 interface EmailOptions {
@@ -8,10 +8,10 @@ interface EmailOptions {
 }
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
+  private transporter: Transporter;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
+    this.transporter = createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
       secure: process.env.SMTP_SECURE === "true",
