@@ -1,26 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 import dayjs from "dayjs";
 import prisma from "../lib/prisma.js";
 
-export function validateGetQuestionDetail(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  const { questionId } = req.params;
-
-  const questionIdRegex = /^[0-9]+$/;
-  if (!questionIdRegex.test(questionId)) {
-    res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "질문 아이디는 숫자만 가능합니다." });
-    return;
-  }
-
-  next();
-}
+export const validateQuestionId = [
+  param("questionId")
+    .exists()
+    .isInt({ min: 1 })
+    .withMessage("질문 아이디는 1 이상의 정수만 가능합니다."),
+]
 
 export async function validateGetAllQuestionQuery(
   req: Request,
