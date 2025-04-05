@@ -129,9 +129,10 @@ export async function authenticateUser(
   });
 
   // 새 리프레시 토큰 저장
+  const hashedRefreshToken = await hash(refreshToken, HASH_ROUNDS);
   await prisma.refreshToken.create({
     data: {
-      token: refreshToken,
+      hashedToken: hashedRefreshToken,
       expiresAt: dbDayjs({ minutes: REFRESH_TOKEN_EXPIRY }),
       userId: user.id,
       device: null, // 필요시 기기 정보 추가
@@ -153,7 +154,7 @@ export async function authenticateUser(
 
 export async function deleteRefreshToken(refreshToken: string): Promise<void> {
   await prisma.refreshToken.deleteMany({
-    where: { token: refreshToken },
+    where: { hashedToken: refreshToken },
   });
 }
 
@@ -194,7 +195,6 @@ export async function recoverUserPassword(email: string): Promise<void> {
 
   // Hash the token for secure storage
   const hashedResetToken = await hash(resetToken, HASH_ROUNDS);
-
   // Save the hashed token to the database with an expiry timestamp
   await prisma.passwordResetToken.create({
     data: {
@@ -318,8 +318,9 @@ export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
     jwt.verify(refreshToken, refreshTokenSecret) as JwtPayload;
 
     // DB에서 Refresh Token 조회
+    const hashedRefreshToken = await hash(refreshToken, HASH_ROUNDS);
     const tokenData = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
+      where: { hashedToken: hashedRefreshToken },
       include: { user: true },
     });
 
@@ -352,9 +353,10 @@ export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
       where: { id: tokenData.id },
     });
 
+    const hashedNewRefreshToken = await hash(newRefreshToken, HASH_ROUNDS);
     await prisma.refreshToken.create({
       data: {
-        token: newRefreshToken,
+        hashedToken: hashedNewRefreshToken,
         expiresAt: dbDayjs({ minutes: REFRESH_TOKEN_EXPIRY }),
         userId: tokenData.userId,
         device: tokenData.device,

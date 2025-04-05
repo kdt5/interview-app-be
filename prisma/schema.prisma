@@ -171,22 +171,22 @@ model QuestionCategory {
 
 model RefreshToken {
   /// 고유 식별자
-  id        Int      @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   /// 토큰 값
-  token     String   @unique
+  hashedToken String   @unique
   /// 토큰 만료일
-  expiresAt DateTime @map("expires_at")
+  expiresAt   DateTime @map("expires_at")
   /// 토큰 발급일
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt   DateTime @default(now()) @map("created_at")
   /// 토큰 소유자
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// 사용자 ID
-  userId    Int      @map("user_id")
+  userId      Int      @map("user_id")
   /// 기기 정보 (선택적)
-  device    String?  @db.VarChar(255)
+  device      String?  @db.VarChar(255)
 
   @@index([userId])
-  @@index([token])
+  @@index([hashedToken])
 }
 
 model Position {
