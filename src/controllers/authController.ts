@@ -1,7 +1,7 @@
 import { Request, NextFunction, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { authService } from "../services/authService.js";
-import authMiddleware from "../middlewares/authMiddleware.js";
+import authMiddleware, { AuthRequest } from "../middlewares/authMiddleware.js";
 import { AuthError } from "../constants/errors/authError.js";
 
 interface CheckEmailAvailabilityRequest extends Request {
@@ -10,41 +10,14 @@ interface CheckEmailAvailabilityRequest extends Request {
   };
 }
 
-interface CheckNicknameAvailabilityRequest extends Request {
-  body: {
-    nickname: string;
-  };
-}
-
-interface SignupRequest extends Request {
-  body: {
-    password: string;
-    email: string;
-    nickname: string;
-    positionId: number;
-  };
-}
-
-interface LoginRequest extends Request {
-  body: {
-    email: string;
-    password: string;
-  };
-}
-
-interface RefreshRequest extends Request {
-  cookies: {
-    refreshToken: string;
-  };
-}
-
 export async function checkEmailAvailability(
-  req: CheckEmailAvailabilityRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { email } = req.body;
+    const request = req as CheckEmailAvailabilityRequest;
+    const { email } = request.body;
     const isAvailable = await authService.checkAvailability(email, "email");
 
     res.status(isAvailable ? StatusCodes.OK : StatusCodes.CONFLICT).send();
@@ -53,13 +26,20 @@ export async function checkEmailAvailability(
   }
 }
 
+interface CheckNicknameAvailabilityRequest extends Request {
+  body: {
+    nickname: string;
+  };
+}
+
 export async function checkNicknameAvailability(
-  req: CheckNicknameAvailabilityRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { nickname } = req.body;
+    const request = req as CheckNicknameAvailabilityRequest;
+    const { nickname } = request.body;
     const isAvailable = await authService.checkAvailability(
       nickname,
       "nickname"
@@ -71,13 +51,23 @@ export async function checkNicknameAvailability(
   }
 }
 
+interface SignupRequest extends Request {
+  body: {
+    password: string;
+    email: string;
+    nickname: string;
+    positionId: number;
+  };
+}
+
 export async function signup(
-  req: SignupRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { password, email, nickname, positionId } = req.body;
+    const request = req as SignupRequest;
+    const { password, email, nickname, positionId } = request.body;
 
     const isEmailAvailable = await authService.checkAvailability(
       email,
@@ -128,13 +118,21 @@ export async function signup(
   }
 }
 
+interface LoginRequest extends Request {
+  body: {
+    email: string;
+    password: string;
+  };
+}
+
 export async function login(
-  req: LoginRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { email, password } = req.body;
+    const request = req as LoginRequest;
+    const { email, password } = request.body;
     const { user, accessToken, refreshToken } =
       await authService.authenticateUser(email, password);
 
@@ -157,7 +155,8 @@ export async function logout(
   next: NextFunction
 ): Promise<void> {
   try {
-    const refreshToken = req.cookies.refreshToken;
+    const request = req as AuthRequest;
+    const refreshToken = request.cookies.refreshToken;
     if (refreshToken) {
       await authService.deleteRefreshToken(refreshToken);
     }
@@ -170,13 +169,20 @@ export async function logout(
   }
 }
 
+interface RefreshRequest extends Request {
+  cookies: {
+    refreshToken: string;
+  };
+}
+
 export async function refresh(
-  req: RefreshRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    await authMiddleware.rotateTokens(req.cookies.refreshToken, res);
+    const request = req as RefreshRequest;
+    await authMiddleware.rotateTokens(request.cookies.refreshToken, res);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
@@ -191,7 +197,6 @@ export async function refresh(
   }
 }
 
-// 비밀번호 재설정
 interface ResetPasswordRequest extends Request {
   body: {
     token: string;
@@ -200,12 +205,13 @@ interface ResetPasswordRequest extends Request {
 }
 
 export async function resetPassword(
-  req: ResetPasswordRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { token, newPassword } = req.body;
+    const request = req as ResetPasswordRequest;
+    const { token, newPassword } = request.body;
     await authService.resetPassword(token, newPassword);
 
     res.status(StatusCodes.OK).send();

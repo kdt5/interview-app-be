@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import {
   AuthError,
   ValidationError,
@@ -8,12 +8,7 @@ import { CommonError } from "../constants/errors/commonError.js";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { StatusCodes } from "http-status-codes";
 
-export function errorHandler(
-  error: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
+export function errorHandler(error: Error, req: Request, res: Response): void {
   let statusCode: StatusCodes;
 
   // 커스텀 에러 처리

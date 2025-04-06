@@ -1,53 +1,30 @@
-import { Request, Response, NextFunction } from "express";
-import { StatusCodes } from "http-status-codes";
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 import dayjs from "dayjs";
-import prisma from "../lib/prisma.js";
 
 export const validateQuestionId = [
   param("questionId")
     .exists()
+    .withMessage("질문 아이디는 필수입니다.")
     .isInt({ min: 1 })
     .withMessage("질문 아이디는 1 이상의 정수만 가능합니다."),
-]
+];
 
-export async function validateGetAllQuestionQuery(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  const positionId = req.query.positionId as string | undefined;
-
-  if (positionId) {
-    const positionIdNum = parseInt(positionId);
-    if (isNaN(positionIdNum)) {
-      res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ message: "직무 ID는 숫자만 가능합니다." });
-      return;
-    }
-
-    const position = await prisma.position.findUnique({
-      where: { id: positionIdNum },
-    });
-
-    if (!position) {
-      res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ message: "유효하지 않은 직무입니다." });
-      return;
-    }
-  }
-
-  next();
-}
+export const validateGetAllQuestion = [
+  query("positionId")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("포지션 아이디는 1 이상의 정수만 가능합니다."),
+  query("categoryId")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("카테고리 아이디는 1 이상의 정수만 가능합니다."),
+];
 
 export const validateAddWeeklyQuestion = [
   body("questionId")
     .exists()
     .isInt({ min: 1 })
     .withMessage("질문 아이디는 1 이상의 정수만 가능합니다."),
-
   body("startDate")
     .exists()
     .custom((value: string) => {

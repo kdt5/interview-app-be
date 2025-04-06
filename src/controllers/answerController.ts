@@ -3,10 +3,9 @@ import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import answerService from "../services/answerService.js";
 import { checkQuestionExists } from "../services/questionService.js";
-import { RequestWithUser } from "../middlewares/authMiddleware.js";
-import { UserInfo } from "../services/authService.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
 
-interface RecordAnswerRequest extends RequestWithUser {
+export interface RecordAnswerRequest extends AuthRequest {
   params: {
     questionId: string;
   };
@@ -16,14 +15,15 @@ interface RecordAnswerRequest extends RequestWithUser {
 }
 
 export async function recordAnswer(
-  req: RecordAnswerRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { content } = req.body;
-    const { questionId } = req.params;
-    const userId = req.user.userId;
+    const request = req as RecordAnswerRequest;
+    const { content } = request.body;
+    const { questionId } = request.params;
+    const userId = request.user.userId;
 
     const questionExists = await checkQuestionExists(parseInt(questionId));
 
@@ -34,7 +34,7 @@ export async function recordAnswer(
       return;
     }
 
-    answerService.recordAnswer(userId, parseInt(questionId), content);
+    await answerService.recordAnswer(userId, parseInt(questionId), content);
 
     res.status(StatusCodes.CREATED).end();
   } catch (error) {
@@ -48,7 +48,8 @@ export async function getAnsweredQuestions(
   next: NextFunction
 ): Promise<void> {
   try {
-    const userId = (req as Request & { user: UserInfo }).user.userId;
+    const request = req as AuthRequest;
+    const userId = request.user.userId;
 
     const answeredQuestions = await answerService.getAnsweredQuestions(userId);
 
@@ -99,14 +100,23 @@ export async function getAnswer(
   }
 }
 
+export interface EditAnswerRequest extends Request {
+  params: {
+    answerId: string;
+  };
+  body: {
+    newAnswer: string;
+  };
+}
+
 export async function editAnswer(
-  req: Request,
+  req: EditAnswerRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
     const { answerId } = req.params;
-    const editAnswer = String(req.body.newAnswer);
+    const editAnswer = req.body.newAnswer;
 
     const answer = await answerService.updateAnswer(
       parseInt(answerId),
@@ -128,8 +138,14 @@ export async function editAnswer(
   }
 }
 
+export interface DeleteAnswerRequest extends Request {
+  params: {
+    answerId: string;
+  };
+}
+
 export async function deleteAnswer(
-  req: Request,
+  req: DeleteAnswerRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
