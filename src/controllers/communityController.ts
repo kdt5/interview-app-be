@@ -88,6 +88,7 @@ export async function updatePost(
     );
 
     res.status(StatusCodes.OK).json(updatedPost);
+    
   } catch (error) {
     next(error);
   }
