@@ -30,6 +30,13 @@ export async function createPost(
 export async function getPostDetail(postId: number) {
   return await prisma.communityPost.findUnique({
     where: { id: postId },
+    include: {
+      user: {
+        select: {
+          nickname: true,
+        },
+      },
+    },
   });
 }
 
@@ -39,7 +46,6 @@ export async function getPosts() {
     include: {
       user: {
         select: {
-          id: true,
           nickname: true,
         },
       },

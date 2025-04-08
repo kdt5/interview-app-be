@@ -65,7 +65,8 @@ export async function deletePost(
 
     await communityService.deletePost(parseInt(postId));
 
-    res.status(StatusCodes.NO_CONTENT);
+    res.status(StatusCodes.NO_CONTENT).send();
+
   } catch (error) {
     next(error);
   }

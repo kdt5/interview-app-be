@@ -9,7 +9,7 @@ const postMiddleware = {
 
 export default postMiddleware;
 
-async function checkPostOwnership (
+export async function checkPostOwnership (
     req: Request & { user?: UserInfo },
     res: Response,
     next: NextFunction
@@ -33,6 +33,8 @@ async function checkPostOwnership (
             res.status(StatusCodes.FORBIDDEN).json({ message: "다른 사용자의 게시물은 접근 불가합니다." });
             return;
         }
+
+        next();
     } catch (error) {
         next(error);
     }
