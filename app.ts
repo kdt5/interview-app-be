@@ -29,7 +29,7 @@ app.use("/api/favorites", favoriteRouter);
 app.use("/api/questions", questionsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/answers", answersRouter);
-app.use("/api/community", communityRouter);
+app.use("/api/posts", communityRouter);
 
 app.use(errorHandler);
 
