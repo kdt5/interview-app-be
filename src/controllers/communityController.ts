@@ -9,7 +9,7 @@ export async function createPost(
     next: NextFunction,
 ): Promise<void> {
     try {
-        const { title, content } = req.body;
+        const { title, content } = req.body as { title: string; content: string };
         const userId = (req as Request & { user: UserInfo }).user.userId;
 
         const newPost = await communityService.createPost(userId, title, content);
@@ -52,7 +52,7 @@ export async function getPosts(
         const posts = await communityService.getPosts();
 
         res.status(StatusCodes.OK).json(posts);
-        
+
     } catch (error) {
         next(error);
     }
