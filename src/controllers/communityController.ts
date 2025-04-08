@@ -57,3 +57,37 @@ export async function getPosts(
         next(error);
     }
 }
+
+export async function deletePost(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<void> {
+    try {
+        const { postId } = req.params;
+
+        await communityService.deletePost(parseInt(postId));
+
+        res.status(StatusCodes.NO_CONTENT);
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function updatePost(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<void> {
+    try {
+        const postId = req.params.postId;
+        const { title, content } = req.body as { title: string; content: string };
+
+        const updatedPost = await communityService.updatePost(parseInt(postId), title, content);
+
+        res.status(StatusCodes.CREATED).json(updatedPost);
+
+    } catch(error) {
+        next(error);
+    }
+}

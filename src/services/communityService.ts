@@ -5,6 +5,8 @@ const communityService = {
     createPost,
     getPostDetail,
     getPosts,
+    deletePost,
+    updatePost,
 };
 
 export default communityService;
@@ -41,6 +43,27 @@ export async function getPosts() {
                     nickname: true,
                 }
             }
+        }
+    });
+}
+
+export async function deletePost(postId: number) {
+    return await prisma.communityPost.delete({
+        where: {id: postId}
+    });
+}
+
+export async function updatePost(
+    postId: number,
+    title: string,
+    content: string,
+) {
+    return await prisma.communityPost.update({
+        where: {id: postId},
+        data: {
+            title,
+            content,
+            updatedAt: dbDayjs(),
         }
     });
 }
