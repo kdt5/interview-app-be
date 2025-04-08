@@ -3,6 +3,8 @@ import prisma from "../lib/prisma.js";
 
 const communityService = {
     createPost,
+    getPostDetail,
+    getPosts,
 };
 
 export default communityService;
@@ -19,6 +21,26 @@ export async function createPost(
             content,
             createdAt: dbDayjs(),
             updatedAt: dbDayjs(),
+        }
+    });
+}
+
+export async function getPostDetail(postId: number) {
+    return await prisma.communityPost.findUnique({
+        where: {id: postId}
+    });
+}
+
+export async function getPosts() {
+    return await prisma.communityPost.findMany({
+        orderBy: {createdAt: "desc"},
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    nickname: true,
+                }
+            }
         }
     });
 }
