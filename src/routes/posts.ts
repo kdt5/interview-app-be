@@ -6,7 +6,7 @@ import {
   getPostDetail,
   getPosts,
   updatePost,
-} from "../controllers/communityController";
+} from "../controllers/postController";
 import postMiddleware from "../middlewares/postMiddleware";
 import { validatePostBody, validatePostId } from "../middlewares/postValidator";
 import { validationErrorMiddleware } from "../middlewares/validationErrorMiddleware";

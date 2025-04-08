@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { Request, Response, NextFunction } from "express";
 import { UserInfo } from "../services/authService";
-import communityService from "../services/communityService";
+import communityService from "../services/postService";
 
 export async function createPost(
   req: Request,
