@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { favoriteService } from "../services/favoriteService.js";
-import { UserInfo } from "../services/authService.js";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
 
 function validateFavoriteRequest(userId: number, questionId: number) {
   if (!userId || isNaN(questionId)) {
@@ -17,7 +17,8 @@ export async function getFavorites(
   next: NextFunction
 ): Promise<void> {
   try {
-    const userId = (req as Request & { user: UserInfo }).user.userId;
+    const request = req as AuthRequest;
+    const userId = request.user.userId;
 
     const questions = await favoriteService.getFavoriteQuestions(userId);
 
@@ -38,7 +39,8 @@ export async function getFavoriteStatus(
   next: NextFunction
 ): Promise<void> {
   try {
-    const userId = (req as Request & { user: UserInfo }).user.userId;
+    const request = req as AuthRequest;
+    const userId = request.user.userId;
     const { questionId } = req.params;
 
     validateFavoriteRequest(userId, parseInt(questionId));
@@ -64,13 +66,14 @@ export async function getFavoriteStatus(
 }
 
 export async function addFavorite(
-  req: Request & { user?: UserInfo },
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { questionId } = req.params;
-    const userId = req.user?.userId;
+    const request = req as AuthRequest;
+    const { questionId } = request.params;
+    const userId = request.user?.userId;
 
     if (!userId) return;
 
@@ -97,13 +100,14 @@ export async function addFavorite(
 }
 
 export async function removeFavorite(
-  req: Request & { user?: UserInfo },
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { questionId } = req.params;
-    const userId = req.user?.userId;
+    const request = req as AuthRequest;
+    const { questionId } = request.params;
+    const userId = request.user?.userId;
 
     if (!userId) return;
 

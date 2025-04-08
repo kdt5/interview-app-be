@@ -1,13 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
+import {
+  EditAnswerRequest,
+  RecordAnswerRequest,
+} from "../controllers/answerController";
 
 export function validateRecordAnswer(
   req: Request,
   res: Response,
   next: NextFunction
 ): void {
-  const { questionId } = req.params;
-  const { content } = req.body;
+  const request = req as RecordAnswerRequest;
+  const { questionId } = request.params;
+  const { content } = request.body;
 
   const validQuestionId = /^[0-9]+$/.test(questionId);
   const validContent = /^.{1,500}$/.test(content);
@@ -40,8 +45,9 @@ export function validateEditAnswer(
   res: Response,
   next: NextFunction
 ): void {
-  const { answerId } = req.params;
-  const { newAnswer } = req.body;
+  const request = req as EditAnswerRequest;
+  const { answerId } = request.params;
+  const { newAnswer } = request.body;
 
   const answerIdRegex = /^[0-9]+$/;
 
@@ -60,12 +66,19 @@ export function validateEditAnswer(
   next();
 }
 
+interface AnswerIdRequest extends Request {
+  params: {
+    answerId: string;
+  };
+}
+
 export function validateAnswerId(
   req: Request,
   res: Response,
   next: NextFunction
 ): void {
-  const { answerId } = req.params;
+  const request = req as AnswerIdRequest;
+  const { answerId } = request.params;
 
   const answerIdRegex = /^[0-9]+$/;
 

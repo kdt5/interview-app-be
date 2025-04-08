@@ -1,15 +1,21 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { questionService } from "../services/questionService.js";
-import { Position } from "@prisma/client";
+
+export interface GetQuestionDetailRequest extends Request {
+  params: {
+    questionId: string;
+  };
+}
 
 export async function getQuestionDetail(
-  req: Request<{ questionId: string }>,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { questionId } = req.params;
+    const request = req as GetQuestionDetailRequest;
+    const { questionId } = request.params;
     const question = await questionService.getQuestionById(
       parseInt(questionId)
     );
@@ -65,8 +71,15 @@ export async function getWeeklyQuestion(
   }
 }
 
+export interface AddWeeklyQuestionRequest extends Request {
+  body: {
+    startDate: string;
+    questionId: string;
+  };
+}
+
 export async function addWeeklyQuestion(
-  req: Request,
+  req: AddWeeklyQuestionRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
@@ -84,24 +97,32 @@ export async function addWeeklyQuestion(
   }
 }
 
-interface QuestionQueryParams {
-  position?: Position;
-  categoryId?: string;
+export interface GetAllQuestionRequest extends Request {
+  query: {
+    positionId?: string;
+    categoryId?: string;
+  };
 }
 
-export async function getAllQuestions(
-  req: Request<QuestionQueryParams>,
+export async function getQuestions(
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const categoryId = req.query.categoryId as string | undefined;
-    const position = req.query.position as Position | undefined;
+    const request = req as GetAllQuestionRequest;
+    const positionId =
+      request.query.positionId === undefined
+        ? undefined
+        : parseInt(request.query.positionId);
+    const categoryId =
+      request.query.categoryId === undefined
+        ? undefined
+        : parseInt(request.query.categoryId);
 
-    const parsedCategoryId = categoryId ? parseInt(categoryId) : undefined;
-    const questions = await questionService.getAllQuestionsWithCategories(
-      position,
-      parsedCategoryId
+    const questions = await questionService.getQuestions(
+      positionId,
+      categoryId
     );
     if (questions.length === 0) {
       res
@@ -116,21 +137,26 @@ export async function getAllQuestions(
   }
 }
 
-export async function getAllAnswers(
+export interface GetAllAnswersRequest extends Request {
+  params: {
+    questionId: string;
+  };
+}
+
+export async function getAnswers(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { questionId } = req.params;
+    const request = req as GetAllAnswersRequest;
+    const { questionId } = request.params;
 
-    const answers = await questionService.getAllAnswers(parseInt(questionId));
+    const answers = await questionService.getAnswers(parseInt(questionId));
     if (answers.length === 0) {
-      res
-        .status(StatusCodes.NOT_FOUND)
-        .json({
-          message: "조건에 해당하는 질문 또는 답변이 존재하지 않습니다.",
-        });
+      res.status(StatusCodes.NOT_FOUND).json({
+        message: "조건에 해당하는 질문 또는 답변이 존재하지 않습니다.",
+      });
       return;
     }
 

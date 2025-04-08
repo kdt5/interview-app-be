@@ -5,21 +5,26 @@ import { Request, Response, NextFunction } from "express";
 import { UserInfo, refreshTokens } from "../services/authService.js";
 import { AuthError } from "../constants/errors/authError.js";
 
-export interface RequestWithUser extends Request {
-  user: UserInfo;
-}
-
 export const ACCESS_TOKEN_EXPIRY = 60; // 15분 (분 단위)
 export const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60; // 7일 (분 단위)
 
+export interface AuthRequest extends Request {
+  user: UserInfo;
+  cookies: {
+    accessToken?: string;
+    refreshToken?: string;
+  };
+}
+
 const authMiddleware = {
   authenticate: async (
-    req: Request & { user?: UserInfo },
+    req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const token = authMiddleware.extractTokenFromCookie(req);
+      const request = req as AuthRequest;
+      const token = authMiddleware.extractTokenFromCookie(request);
       const secret = authMiddleware.getJwtSecret();
 
       try {
@@ -27,7 +32,7 @@ const authMiddleware = {
           token,
           secret
         );
-        req.user = {
+        request.user = {
           userId: user.userId,
           email: user.email,
           nickname: user.nickname,
@@ -37,7 +42,7 @@ const authMiddleware = {
       } catch (error) {
         // 액세스 토큰이 만료된 경우에만 리프레시 토큰 시도
         if (error instanceof AuthError && error.errorType === "TOKEN_EXPIRED") {
-          const refreshToken = req.cookies?.refreshToken;
+          const refreshToken = request.cookies?.refreshToken;
 
           if (!refreshToken) {
             throw new AuthError("REFRESH_TOKEN_REQUIRED");
@@ -49,7 +54,7 @@ const authMiddleware = {
               refreshToken,
               res
             );
-            req.user = user;
+            request.user = user;
             next();
           } catch (refreshError) {
             // 리프레시 토큰 갱신 실패
@@ -65,7 +70,7 @@ const authMiddleware = {
     }
   },
 
-  extractTokenFromCookie(req: Request): string {
+  extractTokenFromCookie(req: AuthRequest): string {
     const token = req.cookies.accessToken;
     if (!token) {
       throw new AuthError("UNAUTHORIZED");
