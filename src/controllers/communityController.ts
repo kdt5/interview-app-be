@@ -87,7 +87,7 @@ export async function updatePost(
       content
     );
 
-    res.status(StatusCodes.CREATED).json(updatedPost);
+    res.status(StatusCodes.OK).json(updatedPost);
   } catch (error) {
     next(error);
   }
