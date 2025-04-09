@@ -100,19 +100,12 @@ model Answer {
 
 /// 커뮤니티 게시글을 저장하는 모델
 model CommunityPost {
-  /// 고유 식별자
   id  Int @id @default(autoincrement())
-  /// 게시글 제목
   title String
-  /// 게시글 내용
   content String  @db.Text
-  /// 게시글 작성일
   createdAt DateTime  @default(now()) @map("created_at")
-  /// 게시글 수정일
   updatedAt DateTime  @default(now()) @map("updated_at")
-  /// 게시글 작성자 아이디
   userId  Int @map("user_id")
-  /// 게시글 작성자
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "CommunityPost_user_id_fkey")
