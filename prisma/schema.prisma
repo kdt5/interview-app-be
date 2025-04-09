@@ -37,6 +37,8 @@ model User {
   positionId    Int?                 @map("position_id")
   /// 사용자의 커뮤니티 게시글
   communityPosts  CommunityPost[]
+  /// 사용자의 신고
+  reports Report[]
 
   @@index([positionId], map: "User_position_id_fkey")
 }
@@ -130,6 +132,35 @@ model Comment {
 
   @@index([answerId], map: "Comment_answer_id_fkey")
   @@index([userId], map: "Comment_user_id_fkey")
+}
+
+/// 신고된 게시글 및 댓글을 저장하는 모델
+model Report {
+  id  Int @id @default(autoincrement())
+  reporter  User  @relation(fields: [reporterId], references: [id])
+  reporterId Int @map("user_id")
+  targetType  ReportTargetType  @map("target_type")
+  targetId  Int @map("target_id")
+  reason  String
+  status  ReportStatus  @default(PENDING)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([reporterId])
+  @@index([targetType, targetId])
+  @@index([status])
+}
+
+/// 신고된 대상의 종류
+enum ReportTargetType {
+  POST
+  COMMENT
+}
+
+/// 신고된 대상의 처리 상태
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
 }
 
 /// 즐겨찾기 정보를 저장하는 모델
