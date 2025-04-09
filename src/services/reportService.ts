@@ -1,5 +1,6 @@
 import { ReportStatus, ReportTargetType } from "@prisma/client";
 import prisma from "../lib/prisma";
+import { GetReportRequest } from "../controllers/reportController";
 
 const reportService = {
     getReports,
@@ -11,8 +12,17 @@ const reportService = {
 
 export default reportService;
 
-async function getReports() {
-    return prisma.report.findMany();
+async function getReports(filters: GetReportRequest["query"]) {
+    const { targetType, status, targetId, reporterId } = filters;
+
+    return prisma.report.findMany({
+        where: {
+            ...(targetType && { targetType }),
+            ...(status && { status }),
+            ...(targetId && { targetId }),
+            ...(reporterId && { reporterId })
+        }
+    });
 }
 
 async function getReportDetail(reportId: number) {

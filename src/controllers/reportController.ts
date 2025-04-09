@@ -4,13 +4,24 @@ import reportService from "../services/reportService";
 import { ReportStatus, ReportTargetType } from "@prisma/client";
 import { UserInfo } from "../services/authService";
 
+export interface GetReportRequest {
+    query: {
+        targetType?: ReportTargetType;
+        status?: ReportStatus;
+        targetId?: number;
+        reporterId?: number;
+    }
+}
+
 export async function getReports(
     req: Request, 
     res: Response, 
     next:NextFunction
 ): Promise<void> {
     try {
-        const reports = await reportService.getReports();
+        const filters = req.query as GetReportRequest["query"];
+
+        const reports = await reportService.getReports(filters);
 
         res.status(StatusCodes.OK).json(reports);
     } catch(error) {
@@ -101,7 +112,7 @@ export async function updateReport(
         const updatedReport = await reportService.updateReport(parseInt(reportId), status);
 
         res.status(StatusCodes.OK).json(updatedReport);
-        
+
     } catch(error) {
         next(error);
     }
