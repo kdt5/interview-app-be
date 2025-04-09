@@ -19,8 +19,8 @@ async function getReports(filters: GetReportRequest["query"]) {
         where: {
             ...(targetType && { targetType }),
             ...(status && { status }),
-            ...(targetId && { targetId }),
-            ...(reporterId && { reporterId })
+            ...(targetId && { targetId: Number(targetId) }),
+            ...(reporterId && { reporterId: Number(reporterId) })
         }
     });
 }
