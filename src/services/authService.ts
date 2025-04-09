@@ -153,8 +153,9 @@ export async function authenticateUser(
 }
 
 export async function deleteRefreshToken(refreshToken: string): Promise<void> {
+  const hashedRefreshToken = await hash(refreshToken, HASH_ROUNDS);
   await prisma.refreshToken.deleteMany({
-    where: { hashedToken: refreshToken },
+    where: { hashedToken: hashedRefreshToken },
   });
 }
 
