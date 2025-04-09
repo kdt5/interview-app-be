@@ -15,7 +15,7 @@ export interface AuthRequest extends Request {
 }
 
 const authMiddleware = {
-  async authenticate(req: Request, res: Response, next: NextFunction) {
+  authenticate: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const request = req as AuthRequest;
       const accessToken = await authMiddleware.extractTokenFromCookie(request);
