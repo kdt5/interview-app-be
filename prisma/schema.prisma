@@ -10,33 +10,20 @@ datasource db {
 
 /// 사용자 정보를 저장하는 모델
 model User {
-  /// 고유 식별자
-  id            Int                  @id @default(autoincrement())
-  /// 사용자 닉네임
-  nickname      String               @unique @db.VarChar(50)
-  /// 사용자 이메일
-  email         String               @unique @db.VarChar(254)
-  /// 사용자 비밀번호
-  password      String               @db.VarChar(60)
-  /// 계정 생성일
-  createdAt     DateTime             @default(now()) @map("created_at")
-  /// 계정 수정일
-  updatedAt     DateTime             @default(now()) @updatedAt @map("updated_at")
-  /// 사용자가 작성한 답변들
-  answers       Answer[]
-  /// 사용자가 작성한 댓글들
-  comments      Comment[]
-  /// 사용자가 즐겨찾기한 질문들
-  favorites     Favorite[]
-  /// 사용자의 리프레시 토큰들
-  refreshTokens RefreshToken[]
-  /// 사용자의 비밀번호 재설정 토큰들
-  resetTokens   PasswordResetToken[]
-  /// 직무 정보
-  Position      Position?            @relation(fields: [positionId], references: [id])
-  positionId    Int?                 @map("position_id")
-  /// 사용자의 커뮤니티 게시글
-  communityPosts  CommunityPost[]
+  id             Int                  @id @default(autoincrement())
+  nickname       String               @unique @db.VarChar(50)
+  email          String               @unique @db.VarChar(254)
+  password       String               @db.VarChar(60)
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @default(now()) @updatedAt @map("updated_at")
+  answers        Answer[]
+  comments       Comment[]
+  favorites      Favorite[]
+  refreshTokens  RefreshToken[]
+  resetTokens    PasswordResetToken[]
+  Position       Position?            @relation(fields: [positionId], references: [id])
+  positionId     Int?                 @map("position_id")
+  communityPosts CommunityPost[]
 
   @@index([positionId], map: "User_position_id_fkey")
 }
@@ -89,7 +76,6 @@ model Answer {
   userId     Int       @map("user_id")
   /// 답변이 달린 질문 정보
   question   Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  /// 질문 ID
   questionId Int       @map("question_id")
   /// 답변에 달린 댓글들
   comments   Comment[]
@@ -100,12 +86,12 @@ model Answer {
 
 /// 커뮤니티 게시글을 저장하는 모델
 model CommunityPost {
-  id  Int @id @default(autoincrement())
-  title String
-  content String  @db.Text
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @default(now()) @map("updated_at")
-  userId  Int @map("user_id")
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  userId    Int      @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "CommunityPost_user_id_fkey")
@@ -184,59 +170,40 @@ model QuestionCategory {
   @@index([categoryId], map: "QuestionCategory_category_id_fkey")
 }
 
+/// 리프레시 토큰 정보를 저장하는 모델
 model RefreshToken {
-  /// 고유 식별자
-  id        Int      @id @default(autoincrement())
-  /// 토큰 값
-  token     String   @unique
-  /// 토큰 만료일
-  expiresAt DateTime @map("expires_at")
-  /// 토큰 발급일
-  createdAt DateTime @default(now()) @map("created_at")
-  /// 토큰 소유자
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  /// 사용자 ID
-  userId    Int      @map("user_id")
-  /// 기기 정보 (선택적)
-  device    String?  @db.VarChar(255)
+  id          Int      @id @default(autoincrement())
+  hashedToken String   @unique
+  expiresAt   DateTime @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int      @map("user_id")
+  device      String?  @db.VarChar(255)
 
   @@index([userId])
-  @@index([token])
+  @@index([hashedToken])
 }
 
+/// 직무 정보를 저장하는 모델
 model Position {
-  /// 고유 식별자
   id          Int        @id @default(autoincrement())
-  /// 직무 코드
   code        String     @unique
-  /// 직무 이름
   name        String
-  /// 직무 설명
   description String?
-  /// 직무 순서
   order       Int        @default(0)
-  /// 직무 생성일
   created_at  DateTime   @default(now())
-  /// 직무 수정일
   updated_at  DateTime   @default(now())
-  /// 카테고리 목록
   categories  Category[]
-  /// 사용자 목록
   users       User[]
 }
 
+/// 비밀번호 재설정 토큰 정보를 저장하는 모델
 model PasswordResetToken {
-  /// 고유 식별자
   id          Int      @id @default(autoincrement())
-  /// 해시된 토큰
   hashedToken String   @unique
-  /// 만료일
   expiresAt   DateTime @map("expires_at")
-  /// 생성일
   createdAt   DateTime @default(now()) @map("created_at")
-  /// 사용자 정보
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  /// 사용자 ID
   userId      Int      @map("user_id")
 
   @@index([userId])
