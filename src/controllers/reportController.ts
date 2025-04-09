@@ -40,7 +40,7 @@ export async function getReportDetail(
         const report = await reportService.getReportDetail(parseInt(reportId));
 
         if (!report) {
-            res.status(StatusCodes.NOT_FOUND).json({ message: "Report not found" });
+            res.status(StatusCodes.NOT_FOUND).json({ message: "존재하지 않는 신고입니다." });
             return;
         }
 
