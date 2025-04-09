@@ -72,14 +72,25 @@ export async function deletePost(
   }
 }
 
+export interface PostUpdateRequest extends Request {
+  params: {
+    postId: string;
+  }
+  
+  body: {
+    title: string;
+    content: string;
+  };
+}
+
 export async function updatePost(
-  req: Request,
+  req: PostUpdateRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
     const postId = req.params.postId;
-    const { title, content } = req.body as { title: string; content: string };
+    const { title, content } = req.body;
 
     const updatedPost = await communityService.updatePost(
       parseInt(postId),
