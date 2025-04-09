@@ -13,6 +13,7 @@ import { validationErrorMiddleware } from "../middlewares/validationErrorMiddlew
 
 const router = Router();
 
+router.get("/", authMiddleware.authenticate, getPosts);
 router.post(
   "/",
   authMiddleware.authenticate,
@@ -44,6 +45,5 @@ router.get(
   validationErrorMiddleware,
   getPostDetail
 );
-router.get("/", authMiddleware.authenticate, getPosts);
 
 export default router;
