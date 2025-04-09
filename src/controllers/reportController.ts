@@ -112,7 +112,6 @@ export async function updateReport(
         const updatedReport = await reportService.updateReport(parseInt(reportId), status);
 
         res.status(StatusCodes.OK).json(updatedReport);
-
     } catch(error) {
         next(error);
     }
