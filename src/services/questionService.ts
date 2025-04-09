@@ -1,9 +1,9 @@
-import { Position, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import prisma from "../lib/prisma.js";
 import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
-import weekOfYear from "dayjs/plugin/weekOfYear";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+import weekOfYear from "dayjs/plugin/weekOfYear.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -96,26 +96,27 @@ export async function addWeeklyQuestion(questionId: number, startDate: string) {
   });
 }
 
-export async function getAllQuestionsWithCategories(
-  position?: Position,
-  categoryId?: number
-) {
+export async function getQuestions(positionId?: number, categoryId?: number) {
   const whereClause: Prisma.QuestionWhereInput = {};
 
-  if (position && categoryId) {
+  if (positionId && categoryId) {
     whereClause.categories = {
       some: {
         category: {
-          position: position,
+          position: {
+            id: positionId,
+          },
           id: categoryId,
         },
       },
     };
-  } else if (position) {
+  } else if (positionId) {
     whereClause.categories = {
       some: {
         category: {
-          position: position,
+          position: {
+            id: positionId,
+          },
         },
       },
     };
@@ -153,10 +154,29 @@ export async function getAllQuestionsWithCategories(
   }));
 }
 
+export async function getAnswers(questionId: number) {
+  return await prisma.answer.findMany({
+    where: { questionId },
+    select: {
+      id: true,
+      content: true,
+      createdAt: true,
+      updatedAt: true,
+      user: {
+        select: {
+          id: true,
+          nickname: true,
+        },
+      },
+    },
+  });
+}
+
 export const questionService = {
   checkQuestionExists,
   getQuestionById,
   getWeeklyQuestion,
   addWeeklyQuestion,
-  getAllQuestionsWithCategories,
+  getQuestions,
+  getAnswers,
 };

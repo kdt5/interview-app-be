@@ -1,4 +1,4 @@
-import { RequestHandler, Router } from "express";
+import { Router } from "express";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import {
   deleteAnswer,
@@ -46,7 +46,7 @@ router.post(
   "/:questionId",
   authMiddleware.authenticate,
   validateRecordAnswer,
-  recordAnswer as RequestHandler
+  recordAnswer
 );
 
 export default router;

@@ -1,28 +1,16 @@
 import { NextFunction, Response, Request } from "express";
 import { StatusCodes } from "http-status-codes";
 import { authService } from "../services/authService.js";
-import { RequestWithUser } from "../middlewares/authMiddleware.js";
-
-interface ChangeNicknameRequest extends RequestWithUser {
-  body: {
-    nickname: string;
-  };
-}
-
-interface ChangePasswordRequest extends RequestWithUser {
-  body: {
-    oldPassword: string;
-    newPassword: string;
-  };
-}
+import { AuthRequest } from "../middlewares/authMiddleware.js";
 
 export async function getMe(
-  req: RequestWithUser,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const user = await authService.getUserByEmail(req.user.email);
+    const request = req as AuthRequest;
+    const user = await authService.getUserByEmail(request.user.email);
 
     res.status(StatusCodes.OK).json({
       email: user.email,
@@ -33,14 +21,21 @@ export async function getMe(
   }
 }
 
+interface ChangeNicknameRequest extends AuthRequest {
+  body: {
+    nickname: string;
+  };
+}
+
 export async function changeNickname(
-  req: ChangeNicknameRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { nickname } = req.body;
-    await authService.changeUserNickname(req.user.email, nickname);
+    const request = req as ChangeNicknameRequest;
+    const { nickname } = request.body;
+    await authService.changeUserNickname(request.user.email, nickname);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
@@ -48,15 +43,23 @@ export async function changeNickname(
   }
 }
 
+interface ChangePasswordRequest extends AuthRequest {
+  body: {
+    oldPassword: string;
+    newPassword: string;
+  };
+}
+
 export async function changePassword(
-  req: ChangePasswordRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { oldPassword, newPassword } = req.body;
+    const request = req as ChangePasswordRequest;
+    const { oldPassword, newPassword } = request.body;
     await authService.changeUserPassword(
-      req.user.email,
+      request.user.email,
       oldPassword,
       newPassword
     );
@@ -73,14 +76,14 @@ interface RecoverPasswordRequest extends Request {
   };
 }
 
-// 비밀번호 찾기
 export async function recoverPassword(
-  req: RecoverPasswordRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { email } = req.body;
+    const request = req as RecoverPasswordRequest;
+    const { email } = request.body;
     await authService.recoverUserPassword(email);
 
     res.status(StatusCodes.OK).send();

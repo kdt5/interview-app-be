@@ -1,4 +1,4 @@
-import { RequestHandler, Router } from "express";
+import { Router } from "express";
 import {
   validateNickname,
   validatePassword,
@@ -13,15 +13,14 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
-// 내 정보 조회
-router.get("/me", authMiddleware.authenticate, getMe as RequestHandler);
+router.get("/me", authMiddleware.authenticate, getMe);
 
 // 닉네임 변경
 router.patch(
   "/change-nickname",
   authMiddleware.authenticate,
   validateNickname,
-  changeNickname as RequestHandler
+  changeNickname
 );
 
 // 비밀번호 변경
@@ -29,10 +28,10 @@ router.patch(
   "/change-password",
   authMiddleware.authenticate,
   validatePassword,
-  changePassword as RequestHandler
+  changePassword
 );
 
 // 비밀번호 찾기
-router.post("/recover-password", recoverPassword as RequestHandler);
+router.post("/recover-password", recoverPassword);
 
 export default router;
