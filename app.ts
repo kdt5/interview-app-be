@@ -36,4 +36,5 @@ app.use("/api/reports", reportsRouter);
 app.use(errorHandler);
 
 app.listen(process.env.PORT);
+console.log(`서버가 ${process.env.PORT} 포트에서 실행 중입니다.`);
 export default app;

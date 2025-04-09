@@ -103,12 +103,12 @@ export async function authenticateUser(
     throw new AuthError("INVALID_PASSWORD");
   }
 
-  const secret = process.env.JWT_SECRET;
+  const secret = process.env.JWT_ACCESS_SECRET;
   if (!secret) {
     throw new AuthError("SECRET_KEY_NOT_FOUND");
   }
 
-  const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+  const refreshTokenSecret = process.env.JWT_REFRESH_SECRET;
   if (!refreshTokenSecret) {
     throw new AuthError("SECRET_KEY_NOT_FOUND");
   }
@@ -129,9 +129,10 @@ export async function authenticateUser(
   });
 
   // 새 리프레시 토큰 저장
+  const hashedRefreshToken = await hash(refreshToken, HASH_ROUNDS);
   await prisma.refreshToken.create({
     data: {
-      token: refreshToken,
+      hashedToken: hashedRefreshToken,
       expiresAt: dbDayjs({ minutes: REFRESH_TOKEN_EXPIRY }),
       userId: user.id,
       device: null, // 필요시 기기 정보 추가
@@ -152,8 +153,9 @@ export async function authenticateUser(
 }
 
 export async function deleteRefreshToken(refreshToken: string): Promise<void> {
+  const hashedRefreshToken = await hash(refreshToken, HASH_ROUNDS);
   await prisma.refreshToken.deleteMany({
-    where: { token: refreshToken },
+    where: { hashedToken: hashedRefreshToken },
   });
 }
 
@@ -194,7 +196,6 @@ export async function recoverUserPassword(email: string): Promise<void> {
 
   // Hash the token for secure storage
   const hashedResetToken = await hash(resetToken, HASH_ROUNDS);
-
   // Save the hashed token to the database with an expiry timestamp
   await prisma.passwordResetToken.create({
     data: {
@@ -216,7 +217,7 @@ export async function resetPassword(
   newPassword: string
 ): Promise<void> {
   try {
-    const jwtSecret = process.env.JWT_SECRET;
+    const jwtSecret = process.env.JWT_ACCESS_SECRET;
     if (!jwtSecret) {
       throw new AuthError("SECRET_KEY_NOT_FOUND");
     }
@@ -304,12 +305,12 @@ interface TokenPair {
 
 export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
   try {
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.JWT_ACCESS_SECRET;
     if (!secret) {
       throw new AuthError("SECRET_KEY_NOT_FOUND");
     }
 
-    const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+    const refreshTokenSecret = process.env.JWT_REFRESH_SECRET;
     if (!refreshTokenSecret) {
       throw new AuthError("SECRET_KEY_NOT_FOUND");
     }
@@ -318,8 +319,9 @@ export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
     jwt.verify(refreshToken, refreshTokenSecret) as JwtPayload;
 
     // DB에서 Refresh Token 조회
+    const hashedRefreshToken = await hash(refreshToken, HASH_ROUNDS);
     const tokenData = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
+      where: { hashedToken: hashedRefreshToken },
       include: { user: true },
     });
 
@@ -352,9 +354,10 @@ export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
       where: { id: tokenData.id },
     });
 
+    const hashedNewRefreshToken = await hash(newRefreshToken, HASH_ROUNDS);
     await prisma.refreshToken.create({
       data: {
-        token: newRefreshToken,
+        hashedToken: hashedNewRefreshToken,
         expiresAt: dbDayjs({ minutes: REFRESH_TOKEN_EXPIRY }),
         userId: tokenData.userId,
         device: tokenData.device,

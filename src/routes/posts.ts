@@ -1,15 +1,18 @@
 import { Router } from "express";
-import authMiddleware from "../middlewares/authMiddleware";
+import authMiddleware from "../middlewares/authMiddleware.js";
 import {
   createPost,
   deletePost,
   getPostDetail,
   getPosts,
   updatePost,
-} from "../controllers/postController";
-import postMiddleware from "../middlewares/postMiddleware";
-import { validatePostBody, validatePostId } from "../middlewares/postValidator";
-import { validationErrorMiddleware } from "../middlewares/validationErrorMiddleware";
+} from "../controllers/postController.js";
+import postMiddleware from "../middlewares/postMiddleware.js";
+import {
+  validatePostBody,
+  validatePostId,
+} from "../middlewares/postValidator.js";
+import { validationErrorMiddleware } from "../middlewares/validationErrorMiddleware.js";
 
 const router = Router();
 
