@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { authService } from "../services/authService.js";
 import authMiddleware, { AuthRequest } from "../middlewares/authMiddleware.js";
 import { AuthError } from "../constants/errors/authError.js";
-
+import tokenService from "../services/tokenService.js";
 interface CheckEmailAvailabilityRequest extends Request {
   body: {
     email: string;
@@ -136,8 +136,7 @@ export async function login(
     const { user, accessToken, refreshToken } =
       await authService.authenticateUser(email, password);
 
-    authMiddleware.setAccessTokenCookie(res, accessToken);
-    authMiddleware.setRefreshTokenCookie(res, refreshToken);
+    authMiddleware.setTokenCookies(res, { accessToken, refreshToken });
 
     res.status(StatusCodes.OK).json({
       email: user.email,
@@ -160,8 +159,7 @@ export async function logout(
     if (refreshToken) {
       await authService.deleteRefreshToken(refreshToken);
     }
-    authMiddleware.clearAccessTokenCookie(res);
-    authMiddleware.clearRefreshTokenCookie(res);
+    authMiddleware.clearTokenCookies(res);
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
@@ -182,13 +180,22 @@ export async function refresh(
 ): Promise<void> {
   try {
     const request = req as RefreshRequest;
-    await authMiddleware.rotateTokens(request.cookies.refreshToken, res);
+    const oldRefreshToken = request.cookies.refreshToken;
+
+    if (!oldRefreshToken) {
+      throw new AuthError("REFRESH_TOKEN_REQUIRED");
+    }
+
+    const { accessToken, refreshToken } = await tokenService.refreshTokens(
+      oldRefreshToken
+    );
+
+    authMiddleware.setTokenCookies(res, { accessToken, refreshToken });
 
     res.status(StatusCodes.OK).send();
   } catch (error) {
     if (error instanceof AuthError) {
-      authMiddleware.clearAccessTokenCookie(res);
-      authMiddleware.clearRefreshTokenCookie(res);
+      authMiddleware.clearTokenCookies(res);
 
       res.status(StatusCodes.UNAUTHORIZED).send();
       return;

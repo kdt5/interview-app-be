@@ -104,6 +104,7 @@ const tokenService = {
     });
   },
 
+  // 리프레시 토큰으로 새로운 토큰 발급
   async refreshTokens(refreshToken: string): Promise<TokenPair> {
     try {
       const refreshTokenSecret = process.env.JWT_REFRESH_SECRET;
