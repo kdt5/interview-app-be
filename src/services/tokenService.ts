@@ -49,7 +49,7 @@ const tokenService = {
       const decoded = jwt.verify(
         accessToken,
         process.env.JWT_ACCESS_SECRET!
-      ) as JwtPayload;
+      ) as JwtPayload & { email: string };
       if (!decoded?.email) throw new AuthError("INVALID_TOKEN");
 
       const user = await authService.getUserByEmail(decoded.email);
@@ -113,7 +113,7 @@ const tokenService = {
       const decoded = jwt.verify(
         refreshToken,
         refreshTokenSecret
-      ) as JwtPayload;
+      ) as JwtPayload & { email: string };
       if (!decoded?.email) throw new AuthError("INVALID_TOKEN");
 
       // 사용자 및 토큰 조회
@@ -166,10 +166,9 @@ const tokenService = {
     }
   },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mapUser(user: any): UserInfo {
+  mapUser(user: UserInfo): UserInfo {
     return {
-      userId: user.id,
+      userId: user.userId,
       email: user.email,
       nickname: user.nickname,
       positionId: user.positionId,
