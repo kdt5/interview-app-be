@@ -108,7 +108,9 @@ const tokenService = {
   async refreshTokens(refreshToken: string): Promise<TokenPair> {
     try {
       const refreshTokenSecret = process.env.JWT_REFRESH_SECRET;
-      if (!refreshTokenSecret) throw new AuthError("SECRET_KEY_NOT_FOUND");
+      if (!refreshTokenSecret) {
+        throw new AuthError("SECRET_KEY_NOT_FOUND");
+      }
 
       // 리프레시 토큰 검증
       const decoded = jwt.verify(

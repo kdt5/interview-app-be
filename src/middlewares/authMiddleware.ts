@@ -18,7 +18,7 @@ const authMiddleware = {
   async authenticate(req: Request, res: Response, next: NextFunction) {
     try {
       const request = req as AuthRequest;
-      const accessToken = await this.extractTokenFromCookie(request);
+      const accessToken = await authMiddleware.extractTokenFromCookie(request);
       request.user = await tokenService.getUserFromToken(accessToken);
       next();
     } catch (error) {

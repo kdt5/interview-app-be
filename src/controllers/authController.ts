@@ -4,6 +4,7 @@ import { authService } from "../services/authService.js";
 import authMiddleware, { AuthRequest } from "../middlewares/authMiddleware.js";
 import { AuthError } from "../constants/errors/authError.js";
 import tokenService from "../services/tokenService.js";
+
 interface CheckEmailAvailabilityRequest extends Request {
   body: {
     email: string;
@@ -169,7 +170,7 @@ export async function logout(
 
 interface RefreshRequest extends Request {
   cookies: {
-    refreshToken: string;
+    refreshToken?: string;
   };
 }
 
@@ -196,7 +197,6 @@ export async function refresh(
   } catch (error) {
     if (error instanceof AuthError) {
       authMiddleware.clearTokenCookies(res);
-
       res.status(StatusCodes.UNAUTHORIZED).send();
       return;
     }
