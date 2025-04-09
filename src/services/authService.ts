@@ -103,12 +103,12 @@ export async function authenticateUser(
     throw new AuthError("INVALID_PASSWORD");
   }
 
-  const secret = process.env.JWT_SECRET;
+  const secret = process.env.JWT_ACCESS_SECRET;
   if (!secret) {
     throw new AuthError("SECRET_KEY_NOT_FOUND");
   }
 
-  const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+  const refreshTokenSecret = process.env.JWT_REFRESH_SECRET;
   if (!refreshTokenSecret) {
     throw new AuthError("SECRET_KEY_NOT_FOUND");
   }
@@ -216,7 +216,7 @@ export async function resetPassword(
   newPassword: string
 ): Promise<void> {
   try {
-    const jwtSecret = process.env.JWT_SECRET;
+    const jwtSecret = process.env.JWT_ACCESS_SECRET;
     if (!jwtSecret) {
       throw new AuthError("SECRET_KEY_NOT_FOUND");
     }
@@ -304,12 +304,12 @@ interface TokenPair {
 
 export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
   try {
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.JWT_ACCESS_SECRET;
     if (!secret) {
       throw new AuthError("SECRET_KEY_NOT_FOUND");
     }
 
-    const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+    const refreshTokenSecret = process.env.JWT_REFRESH_SECRET;
     if (!refreshTokenSecret) {
       throw new AuthError("SECRET_KEY_NOT_FOUND");
     }

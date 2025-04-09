@@ -79,7 +79,7 @@ const authMiddleware = {
   },
 
   getJwtSecret(): string {
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.JWT_ACCESS_SECRET;
     if (!secret) {
       throw new AuthError("SECRET_KEY_NOT_FOUND");
     }
@@ -212,7 +212,7 @@ const authMiddleware = {
   // 리프레시 토큰으로부터 사용자 ID를 추출하여 모든 토큰 무효화
   async revokeAllUserTokens(refreshToken: string): Promise<void> {
     try {
-      const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+      const refreshTokenSecret = process.env.JWT_REFRESH_SECRET;
       if (!refreshTokenSecret) {
         throw new AuthError("SECRET_KEY_NOT_FOUND");
       }
