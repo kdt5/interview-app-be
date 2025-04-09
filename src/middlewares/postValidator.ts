@@ -10,12 +10,12 @@ export const validatePostId = [
 
 export const validatePostBody = [
   body("title")
-    .exists()
+    .notEmpty()
     .withMessage("제목은 필수입니다.")
     .isString()
     .withMessage("제목은 문자열이어야 합니다."),
   body("content")
-    .exists()
+    .notEmpty()
     .withMessage("내용은 필수입니다.")
     .isString()
     .withMessage("내용은 문자열이어야 합니다."),
