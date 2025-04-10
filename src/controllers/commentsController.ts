@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import commentService from "../services/commentService";
 import { AuthRequest } from "../middlewares/authMiddleware";
-import { DELETED_USER_ID } from "../constants/user";
 
 interface GetCommentsRequest extends Request {
   params: {
@@ -35,14 +34,9 @@ export async function getComments(
       return;
     }
 
-    comments.map((comment) => {
-      if (comment.isDeleted) {
-        comment.userId = DELETED_USER_ID;
-        comment.content = "삭제된 댓글입니다.";
-      }
-    });
+    const sanitizedComments = commentService.sanitizeDeletedComments(comments);
 
-    res.status(StatusCodes.OK).json(comments);
+    res.status(StatusCodes.OK).json(sanitizedComments);
   } catch (error) {
     next(error);
   }
@@ -83,11 +77,6 @@ export async function addComment(
       content,
       parentId ? parseInt(parentId) : undefined
     );
-
-    if (comment === null) {
-      res.status(StatusCodes.NOT_FOUND);
-      return;
-    }
 
     res.status(StatusCodes.CREATED).json(comment);
   } catch (error) {
@@ -145,15 +134,7 @@ export async function updateComment(
     const { commentId } = request.params;
     const { content } = request.body;
 
-    const updatedComment = await commentService.updateComment(
-      parseInt(commentId),
-      content
-    );
-
-    if (updatedComment === null) {
-      res.status(StatusCodes.NOT_FOUND);
-      return;
-    }
+    await commentService.updateComment(parseInt(commentId), content);
   } catch (error) {
     next(error);
   }
@@ -173,12 +154,7 @@ export async function deleteComment(
   try {
     const request = req as DeleteCommentRequest;
     const { commentId } = request.params;
-    const result = await commentService.deleteComment(parseInt(commentId));
-
-    if (result === null) {
-      res.status(StatusCodes.NOT_FOUND);
-      return;
-    }
+    await commentService.deleteComment(parseInt(commentId));
   } catch (error) {
     next(error);
   }

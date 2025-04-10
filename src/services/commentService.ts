@@ -1,3 +1,4 @@
+import { DELETED_USER_ID } from "../constants/user";
 import dbDayjs from "../lib/dayjs";
 import prisma from "../lib/prisma";
 
@@ -8,6 +9,7 @@ const commentService = {
   updateComment,
   deleteComment,
   getCategoryId,
+  sanitizeDeletedComments,
 };
 
 export default commentService;
@@ -90,4 +92,27 @@ async function getCategoryId(categoryName: string) {
   }
 
   return category?.id;
+}
+
+interface ResponseCommentType {
+  content: string;
+  parentId: number | null;
+  id: number;
+  createdAt: Date;
+  userId: number;
+  categoryId: number | null;
+  isDeleted: boolean;
+}
+
+function sanitizeDeletedComments(
+  comments: ResponseCommentType[]
+): ResponseCommentType[] {
+  return { ...comments }.map((comment) => {
+    if (comment.isDeleted) {
+      comment.userId = DELETED_USER_ID;
+      comment.content = "삭제된 댓글입니다.";
+    }
+
+    return comment;
+  });
 }

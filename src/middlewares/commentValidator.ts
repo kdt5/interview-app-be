@@ -27,7 +27,7 @@ const validateCategoryName = query("categoryName")
     const validCategories = Object.values(CommentCategory) as string[];
     if (!validCategories.includes(value as string)) {
       throw new Error(
-        `댓글 카테고리 이름은 ${validCategories.toString()}만 가능합니다.`
+        `댓글 카테고리 이름은 ${validCategories.join(", ")}만 가능합니다.`
       );
     }
     return true;

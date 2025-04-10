@@ -17,7 +17,7 @@ import {
 const router = Router();
 
 router
-  .route("comments")
+  .route("/comments")
   .all(authMiddleware.authenticate)
   .post(validateAddComment, addComment)
   .get(validateGetComments, getComments)
