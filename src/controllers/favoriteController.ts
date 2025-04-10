@@ -1,15 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { favoriteService } from "../services/favoriteService.js";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
-
-function validateFavoriteRequest(userId: number, questionId: number) {
-  if (!userId || isNaN(questionId)) {
-    throw new Error("잘못된 요청입니다.");
-  }
-  return true;
-}
+import { FavoriteTargetType } from "@prisma/client";
 
 export async function getFavorites(
   req: Request,
@@ -19,15 +14,16 @@ export async function getFavorites(
   try {
     const request = req as AuthRequest;
     const userId = request.user.userId;
+    const targetType = req.params.targetType.toUpperCase() as FavoriteTargetType;
 
-    const questions = await favoriteService.getFavoriteQuestions(userId);
+    const results = await favoriteService.getFavorites(userId, targetType);
 
-    if (!questions) {
+    if (!results) {
       res.status(StatusCodes.NOT_FOUND);
       return;
     }
 
-    res.status(StatusCodes.OK).json(questions);
+    res.status(StatusCodes.OK).json(results);
   } catch (error) {
     next(error);
   }
@@ -41,14 +37,10 @@ export async function getFavoriteStatus(
   try {
     const request = req as AuthRequest;
     const userId = request.user.userId;
-    const { questionId } = req.params;
+    const targetType = req.params.targetType.toUpperCase() as FavoriteTargetType;
+    const targetId = parseInt(req.params.targetId);
 
-    validateFavoriteRequest(userId, parseInt(questionId));
-
-    const status = await favoriteService.getFavoriteQuestionStatus(
-      userId,
-      parseInt(questionId)
-    );
+    const status = await favoriteService.getFavoriteStatus(userId, targetType, targetId);
 
     if (status) {
       res.status(StatusCodes.OK).json(true);
@@ -72,16 +64,16 @@ export async function addFavorite(
 ): Promise<void> {
   try {
     const request = req as AuthRequest;
-    const { questionId } = request.params;
     const userId = request.user?.userId;
+    const targetType = req.params.targetType.toUpperCase() as FavoriteTargetType;
+    const targetId = parseInt(req.params.targetId);
 
     if (!userId) return;
 
-    validateFavoriteRequest(userId, parseInt(questionId));
-
     const favorite = await favoriteService.createFavorite(
       userId,
-      parseInt(questionId)
+      targetType,
+      targetId
     );
 
     res.status(StatusCodes.CREATED).json({
@@ -106,18 +98,15 @@ export async function removeFavorite(
 ): Promise<void> {
   try {
     const request = req as AuthRequest;
-    const { questionId } = request.params;
     const userId = request.user?.userId;
+    const targetType = req.params.targetType.toUpperCase() as FavoriteTargetType;
+    const targetId = parseInt(req.params.targetId);
 
     if (!userId) return;
 
-    validateFavoriteRequest(userId, parseInt(questionId));
+    await favoriteService.removeFavorite(userId, targetType, targetId);
 
-    await favoriteService.removeFavorite(userId, parseInt(questionId));
-
-    res.status(StatusCodes.OK).json({
-      message: "삭제되었습니다.",
-    });
+    res.status(StatusCodes.NO_CONTENT).send();
   } catch (error) {
     if (error instanceof Error && error.message === "잘못된 요청입니다.") {
       res.status(StatusCodes.BAD_REQUEST).json({
