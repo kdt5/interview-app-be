@@ -43,8 +43,6 @@ model Question {
   createdAt      DateTime           @default(now()) @map("created_at")
   /// 질문에 달린 답변들
   answers        Answer[]
-  /// 질문을 즐겨찾기한 정보
-  favorites      Favorite[]
   /// 질문과 연관된 카테고리들
   categories     QuestionCategory[]
   /// 주간 질문과의 관계 (One-to-One)
@@ -156,8 +154,6 @@ model Favorite {
   user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int                @map("user_id")
   createdAt  DateTime           @default(now()) @map("created_at")
-  Question   Question?          @relation(fields: [questionId], references: [id])
-  questionId Int?
 
   @@unique([targetType, targetId, userId])
   @@index([userId])
