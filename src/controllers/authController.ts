@@ -156,10 +156,7 @@ export async function logout(
 ): Promise<void> {
   try {
     const request = req as AuthRequest;
-    const refreshToken = request.cookies.refreshToken;
-    if (refreshToken) {
-      await authService.deleteRefreshToken(refreshToken);
-    }
+    await tokenService.deleteRefreshToken(Number(request.user.userId));
     authMiddleware.clearTokenCookies(res);
 
     res.status(StatusCodes.OK).send();
