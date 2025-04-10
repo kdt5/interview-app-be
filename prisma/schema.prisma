@@ -41,6 +41,8 @@ model Question {
   isWeekly       Boolean            @default(false) @map("is_weekly")
   /// 질문 작성일
   createdAt      DateTime           @default(now()) @map("created_at")
+  /// 질문 즐겨찾기 수
+  favoriteCount  Int                @default(0) @map("favorite_count")
   /// 질문에 달린 답변들
   answers        Answer[]
   /// 질문과 연관된 카테고리들
@@ -76,6 +78,7 @@ model Answer {
   /// 답변이 달린 질문 정보
   question   Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionId Int       @map("question_id")
+  favoriteCount Int @default(0) @map("favorite_count")
   /// 답변에 달린 댓글들
   comments   Comment[]
 
@@ -92,6 +95,7 @@ model CommunityPost {
   updatedAt DateTime @default(now()) @map("updated_at")
   userId    Int      @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favoriteCount Int @default(0) @map("favorite_count")
 
   @@index([userId], map: "CommunityPost_user_id_fkey")
 }
@@ -112,6 +116,7 @@ model Comment {
   answer   Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
   /// 답변 ID
   answerId Int    @map("answer_id")
+  favoriteCount Int @default(0) @map("favorite_count")
 
   @@index([answerId], map: "Comment_answer_id_fkey")
   @@index([userId], map: "Comment_user_id_fkey")
@@ -164,6 +169,7 @@ model Favorite {
 enum FavoriteTargetType {
   QUESTION
   POST
+  ANSWER
   COMMENT
 }
 
