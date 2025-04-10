@@ -6,7 +6,10 @@ import { DELETED_USER_ID } from "../constants/user";
 
 interface GetCommentsRequest extends Request {
   params: {
-    postId: string;
+    targetId: string;
+  };
+  query: {
+    categoryName: string;
   };
 }
 
@@ -17,9 +20,15 @@ export async function getComments(
 ): Promise<void> {
   try {
     const request = req as GetCommentsRequest;
-    const { postId } = request.params;
+    const { targetId } = request.params;
+    const { categoryName } = request.query;
 
-    const comments = await commentService.getComments(parseInt(postId));
+    const categoryId = await commentService.getCategoryId(categoryName);
+
+    const comments = await commentService.getComments(
+      parseInt(targetId),
+      categoryId
+    );
 
     if (!comments) {
       res.status(StatusCodes.NOT_FOUND);
@@ -41,12 +50,13 @@ export async function getComments(
 
 interface AddCommentRequest extends AuthRequest {
   params: {
-    postId: string;
+    targetId: string;
   };
   body: {
     content: string;
   };
   query: {
+    categoryName: string;
     parentId?: string;
   };
 }
@@ -58,17 +68,17 @@ export async function addComment(
 ): Promise<void> {
   try {
     const request = req as AddCommentRequest;
-    const { postId } = request.params;
+    const { targetId } = request.params;
     const { content } = request.body;
     const { parentId } = request.query;
 
-    if (!content) {
-      res.status(StatusCodes.BAD_REQUEST);
-      return;
-    }
+    const categoryId = await commentService.getCategoryId(
+      request.query.categoryName
+    );
 
     const comment = await commentService.addComment(
-      parseInt(postId),
+      parseInt(targetId),
+      categoryId,
       request.user.userId,
       content,
       parentId ? parseInt(parentId) : undefined
@@ -85,9 +95,40 @@ export async function addComment(
   }
 }
 
-interface UpdateCommentRequest extends Request {
+interface CheckCommentPermissionRequest extends AuthRequest {
   params: {
-    postId: string;
+    commentId: string;
+  };
+}
+
+export async function checkCommentPermission(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const request = req as CheckCommentPermissionRequest;
+
+    const hasPermission = await commentService.checkCommentPermission(
+      parseInt(request.params.commentId),
+      request.user.userId
+    );
+
+    if (!hasPermission) {
+      res
+        .status(StatusCodes.FORBIDDEN)
+        .json({ message: "댓글 수정 권한이 없습니다." });
+      return;
+    }
+  } catch (error) {
+    next(error);
+    return;
+  }
+}
+
+export interface UpdateCommentRequest extends AuthRequest {
+  params: {
+    commentId: string;
   };
   body: {
     content: string;
@@ -101,11 +142,11 @@ export async function updateComment(
 ): Promise<void> {
   try {
     const request = req as UpdateCommentRequest;
-    const { postId } = request.params;
+    const { commentId } = request.params;
     const { content } = request.body;
 
     const updatedComment = await commentService.updateComment(
-      parseInt(postId),
+      parseInt(commentId),
       content
     );
 
@@ -118,9 +159,9 @@ export async function updateComment(
   }
 }
 
-interface DeleteCommentRequest extends Request {
+interface DeleteCommentRequest extends AuthRequest {
   params: {
-    postId: string;
+    commentId: string;
   };
 }
 
@@ -131,8 +172,8 @@ export async function deleteComment(
 ): Promise<void> {
   try {
     const request = req as DeleteCommentRequest;
-    const { postId } = request.params;
-    const result = await commentService.deleteComment(parseInt(postId));
+    const { commentId } = request.params;
+    const result = await commentService.deleteComment(parseInt(commentId));
 
     if (result === null) {
       res.status(StatusCodes.NOT_FOUND);

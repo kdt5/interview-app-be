@@ -17,14 +17,14 @@ model User {
   createdAt      DateTime             @default(now()) @map("created_at")
   updatedAt      DateTime             @default(now()) @updatedAt @map("updated_at")
   answers        Answer[]
-  comments       CommunityComment[]
+  comments       Comment[]
   favorites      Favorite[]
   refreshTokens  RefreshToken[]
   resetTokens    PasswordResetToken[]
   Position       Position?            @relation(fields: [positionId], references: [id])
   positionId     Int?                 @map("position_id")
   communityPosts CommunityPost[]
-  reports Report[]
+  reports        Report[]
 
   @@index([positionId], map: "User_position_id_fkey")
 }
@@ -85,47 +85,55 @@ model Answer {
 
 /// 커뮤니티 게시글을 저장하는 모델
 model CommunityPost {
-  id        Int                @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   title     String
-  content   String             @db.Text
-  createdAt DateTime           @default(now()) @map("created_at")
-  updatedAt DateTime           @default(now()) @map("updated_at")
-  userId    Int                @map("user_id")
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  comments  CommunityComment[]
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "CommunityPost_user_id_fkey")
 }
 
-model CommunityComment {
-  id        Int                @id @default(autoincrement())
-  content   String             @db.Text
-  createdAt DateTime           @default(now()) @map("created_at")
-  updatedAt DateTime           @default(now()) @updatedAt @map("updated_at")
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int                @map("user_id")
-  post      CommunityPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    Int                @map("post_id")
-  parent    CommunityComment?  @relation("Parent", fields: [parentId], references: [id])
-  parentId  Int?               @map("parent_id")
-  children  CommunityComment[] @relation("Parent")
-  isDeleted Boolean            @default(false) @map("is_deleted")
+model Comment {
+  id         Int              @id @default(autoincrement())
+  content    String           @db.Text
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @default(now()) @updatedAt @map("updated_at")
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int              @map("user_id")
+  category   CommentCategory? @relation(fields: [categoryId], references: [id])
+  categoryId Int?             @map("category_id")
+  targetId   Int              @map("post_id")
+  parent     Comment?         @relation("Parent", fields: [parentId], references: [id])
+  parentId   Int?             @map("parent_id")
+  children   Comment[]        @relation("Parent")
+  isDeleted  Boolean          @default(false) @map("is_deleted")
+  deletedAt  DateTime?        @map("deleted_at")
 
-  @@index([postId], map: "Comment_post_id_fkey")
   @@index([userId], map: "Comment_user_id_fkey")
+  @@index([parentId], map: "Comment_parent_id_fkey")
+  @@index([categoryId], map: "Comment_category_id_fkey")
   @@map("Comment")
+}
+
+model CommentCategory {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique @db.VarChar(50)
+  comments Comment[]
 }
 
 /// 신고된 게시글 및 댓글을 저장하는 모델
 model Report {
-  id  Int @id @default(autoincrement())
-  reporter  User  @relation(fields: [reporterId], references: [id])
-  reporterId Int @map("user_id")
-  targetType  ReportTargetType  @map("target_type")
-  targetId  Int @map("target_id")
-  reason  String
-  status  ReportStatus  @default(PENDING)
-  createdAt DateTime  @default(now()) @map("created_at")
+  id         Int              @id @default(autoincrement())
+  reporter   User             @relation(fields: [reporterId], references: [id])
+  reporterId Int              @map("user_id")
+  targetType ReportTargetType @map("target_type")
+  targetId   Int              @map("target_id")
+  reason     String
+  status     ReportStatus     @default(PENDING)
+  createdAt  DateTime         @default(now()) @map("created_at")
 
   @@index([reporterId])
   @@index([targetType, targetId])

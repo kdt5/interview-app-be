@@ -5,6 +5,7 @@ import {
   getComments,
   updateComment,
   deleteComment,
+  checkCommentPermission,
 } from "../controllers/commentsController";
 import {
   validateAddComment,
@@ -16,8 +17,9 @@ import {
 const router = Router();
 
 router
-  .route("/:postId")
-  .post(authMiddleware.authenticate, validateAddComment, addComment)
-  .get(authMiddleware.authenticate, validateGetComments, getComments)
-  .patch(authMiddleware.authenticate, validateUpdateComment, updateComment)
-  .delete(authMiddleware.authenticate, validateDeleteComment, deleteComment);
+  .route("comments")
+  .all(authMiddleware.authenticate)
+  .post(validateAddComment, addComment)
+  .get(validateGetComments, getComments)
+  .patch(validateUpdateComment, checkCommentPermission, updateComment)
+  .delete(validateDeleteComment, checkCommentPermission, deleteComment);
