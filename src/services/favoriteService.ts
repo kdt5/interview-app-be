@@ -3,20 +3,24 @@ import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
 import { Favorite, FavoriteTargetType } from "@prisma/client";
 
-export async function getFavorites(userId: number, targetType: FavoriteTargetType) {
-  const favoriteTargetIds: {targetId: number}[] = await prisma.favorite.findMany({
-    where: {
-      userId,
-      targetType,
-    },
-    select: {
-      targetId: true,
-    }
-  });
+export async function getFavorites(
+  userId: number,
+  targetType: FavoriteTargetType
+) {
+  const favoriteTargetIds: { targetId: number }[] =
+    await prisma.favorite.findMany({
+      where: {
+        userId,
+        targetType,
+      },
+      select: {
+        targetId: true,
+      },
+    });
 
   const targetIds = favoriteTargetIds.map((favorite) => favorite.targetId);
 
-  if(targetIds.length === 0) {
+  if (targetIds.length === 0) {
     return [];
   }
 
@@ -32,7 +36,7 @@ export async function getFavorites(userId: number, targetType: FavoriteTargetTyp
         title: true,
         content: true,
         favoriteCount: true,
-      }
+      },
     });
   }
 
@@ -52,9 +56,9 @@ export async function getFavorites(userId: number, targetType: FavoriteTargetTyp
           select: {
             id: true,
             nickname: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
   }
 
@@ -73,15 +77,15 @@ export async function getFavorites(userId: number, targetType: FavoriteTargetTyp
           select: {
             id: true,
             title: true,
-          }
+          },
         },
         user: {
           select: {
             id: true,
             nickname: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
   }
 
@@ -100,12 +104,11 @@ export async function getFavorites(userId: number, targetType: FavoriteTargetTyp
           select: {
             id: true,
             nickname: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
   }
-
 }
 
 export async function getFavoriteStatus(
@@ -119,7 +122,7 @@ export async function getFavoriteStatus(
         targetType,
         targetId,
         userId,
-      }
+      },
     },
   });
 }
@@ -135,7 +138,7 @@ export async function createFavorite(
       targetType,
       targetId,
       createdAt: dbDayjs(),
-    }
+    },
   });
 }
 
@@ -150,9 +153,9 @@ export async function removeFavorite(
         targetType,
         targetId,
         userId,
-      }
-    }
-  })
+      },
+    },
+  });
 }
 
 export const favoriteService = {

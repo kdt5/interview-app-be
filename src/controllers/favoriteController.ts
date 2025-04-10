@@ -14,7 +14,8 @@ export async function getFavorites(
   try {
     const request = req as AuthRequest;
     const userId = request.user.userId;
-    const targetType = req.params.targetType.toUpperCase() as FavoriteTargetType;
+    const targetType =
+      req.params.targetType.toUpperCase() as FavoriteTargetType;
 
     const results = await favoriteService.getFavorites(userId, targetType);
 
@@ -37,10 +38,15 @@ export async function getFavoriteStatus(
   try {
     const request = req as AuthRequest;
     const userId = request.user.userId;
-    const targetType = req.params.targetType.toUpperCase() as FavoriteTargetType;
+    const targetType =
+      req.params.targetType.toUpperCase() as FavoriteTargetType;
     const targetId = parseInt(req.params.targetId);
 
-    const status = await favoriteService.getFavoriteStatus(userId, targetType, targetId);
+    const status = await favoriteService.getFavoriteStatus(
+      userId,
+      targetType,
+      targetId
+    );
 
     if (status) {
       res.status(StatusCodes.OK).json(true);
@@ -65,7 +71,8 @@ export async function addFavorite(
   try {
     const request = req as AuthRequest;
     const userId = request.user?.userId;
-    const targetType = req.params.targetType.toUpperCase() as FavoriteTargetType;
+    const targetType =
+      req.params.targetType.toUpperCase() as FavoriteTargetType;
     const targetId = parseInt(req.params.targetId);
 
     if (!userId) return;
@@ -99,7 +106,8 @@ export async function removeFavorite(
   try {
     const request = req as AuthRequest;
     const userId = request.user?.userId;
-    const targetType = req.params.targetType.toUpperCase() as FavoriteTargetType;
+    const targetType =
+      req.params.targetType.toUpperCase() as FavoriteTargetType;
     const targetId = parseInt(req.params.targetId);
 
     if (!userId) return;
