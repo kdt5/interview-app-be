@@ -11,6 +11,7 @@ import questionsRouter from "./src/routes/questions.js";
 import categoriesRouter from "./src/routes/categories.js";
 import answersRouter from "./src/routes/answers.js";
 import communityRouter from "./src/routes/posts.js";
+import reportsRouter from "./src/routes/reports.js";
 import rankingsRouter from "./src/routes/rankings.js";
 
 const app = express();
@@ -31,6 +32,7 @@ app.use("/api/questions", questionsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/answers", answersRouter);
 app.use("/api/posts", communityRouter);
+app.use("/api/reports", reportsRouter);
 app.use("/api/rank", rankingsRouter);
 
 app.use(errorHandler);
