@@ -33,7 +33,7 @@ app.use("/api/categories", categoriesRouter);
 app.use("/api/answers", answersRouter);
 app.use("/api/posts", communityRouter);
 app.use("/api/reports", reportsRouter);
-app.use("/api/rank", rankingsRouter);
+app.use("/api/rankings", rankingsRouter);
 
 app.use(errorHandler);
 
