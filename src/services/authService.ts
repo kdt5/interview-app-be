@@ -3,13 +3,10 @@ import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
 import { User, Prisma } from "@prisma/client";
 import { DuplicateError, AuthError } from "../constants/errors/authError.js";
-import {
-  REFRESH_TOKEN_EXPIRY,
-  ACCESS_TOKEN_EXPIRY,
-} from "../middlewares/authMiddleware.js";
 import dbDayjs from "../lib/dayjs.js";
 import { emailService } from "./emailService.js";
 import crypto from "crypto";
+import tokenService from "./tokenService.js";
 
 const HASH_ROUNDS = 10; // 10 rounds → 약 10ms, 12 rounds → 약 100ms
 
@@ -91,54 +88,28 @@ export async function authenticateUser(
   password: string
 ): Promise<AuthResponse> {
   const user = await prisma.user.findUnique({
-    where: { email: email },
+    where: { email },
+    include: { refreshTokens: true },
   });
 
-  if (!user) {
-    throw new AuthError("NOT_FOUND_USER");
-  }
+  if (!user) throw new AuthError("UNAUTHORIZED");
 
   const isValidPassword = await compare(password, user.password);
-  if (!isValidPassword) {
-    throw new AuthError("INVALID_PASSWORD");
-  }
+  if (!isValidPassword) throw new AuthError("INVALID_PASSWORD");
 
-  const secret = process.env.JWT_ACCESS_SECRET;
-  if (!secret) {
-    throw new AuthError("SECRET_KEY_NOT_FOUND");
-  }
+  // 토큰 생성
+  const accessToken = tokenService.generateAccessToken(email);
+  const refreshToken = tokenService.generateRefreshToken(email);
 
-  const refreshTokenSecret = process.env.JWT_REFRESH_SECRET;
-  if (!refreshTokenSecret) {
-    throw new AuthError("SECRET_KEY_NOT_FOUND");
-  }
-
-  // 액세스 토큰 생성 (짧은 유효기간)
-  const accessToken = jwt.sign({ email: user.email }, secret, {
-    expiresIn: `${ACCESS_TOKEN_EXPIRY}m`,
-  });
-
-  // 리프레시 토큰 생성 (긴 유효기간)
-  const refreshToken = jwt.sign({ email: user.email }, refreshTokenSecret, {
-    expiresIn: `${REFRESH_TOKEN_EXPIRY}m`,
-  });
-
-  // 기존 리프레시 토큰 삭제 (선택적)
+  // 이전 리프레시 토큰 정리
   await prisma.refreshToken.deleteMany({
-    where: { userId: user.id },
+    where: {
+      userId: user.id,
+    },
   });
 
   // 새 리프레시 토큰 저장
-  const hashedRefreshToken = await hash(refreshToken, HASH_ROUNDS);
-  await prisma.refreshToken.create({
-    data: {
-      hashedToken: hashedRefreshToken,
-      expiresAt: dbDayjs({ minutes: REFRESH_TOKEN_EXPIRY }),
-      userId: user.id,
-      device: null, // 필요시 기기 정보 추가
-      createdAt: dbDayjs(),
-    },
-  });
+  await tokenService.saveRefreshToken(user.id, refreshToken);
 
   return {
     user: {
