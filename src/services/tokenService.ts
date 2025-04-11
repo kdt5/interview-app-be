@@ -139,15 +139,12 @@ async function refreshTokens(refreshToken: string): Promise<TokenPair> {
     if (!user) throw new AuthError("INVALID_TOKEN");
 
     // 토큰 유효성 검증
-    const isValidToken = await tokenService.validateRefreshToken(
-      refreshToken,
-      user.email
-    );
+    const isValidToken = await validateRefreshToken(refreshToken, user.email);
     if (!isValidToken) throw new AuthError("INVALID_REFRESH_TOKEN");
 
     // 새 토큰 발급
-    const newAccessToken = tokenService.generateAccessToken(user.email);
-    const newRefreshToken = tokenService.generateRefreshToken(user.email);
+    const newAccessToken = generateAccessToken(user.email);
+    const newRefreshToken = generateRefreshToken(user.email);
 
     // 이전 토큰 삭제 및 새 토큰 저장
     await prisma.$transaction([
