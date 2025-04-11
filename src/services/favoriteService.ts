@@ -1,32 +1,127 @@
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library.js";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
-import { Favorite } from "@prisma/client";
+import { Favorite, FavoriteTargetType } from "@prisma/client";
 
-export async function getFavoriteQuestions(userId: number) {
-  return await prisma.favorite.findMany({
-    where: { userId: userId },
-    select: {
-      userId: true,
-      question: {
-        select: {
-          id: true,
-          title: true,
+export async function getFavorites(
+  userId: number,
+  targetType: FavoriteTargetType
+) {
+  const favoriteTargetIds: { targetId: number }[] =
+    await prisma.favorite.findMany({
+      where: {
+        userId,
+        targetType,
+      },
+      select: {
+        targetId: true,
+      },
+    });
+
+  const targetIds = favoriteTargetIds.map((favorite) => favorite.targetId);
+
+  if (targetIds.length === 0) {
+    return [];
+  }
+
+  if (targetType === "QUESTION") {
+    return await prisma.question.findMany({
+      where: {
+        id: {
+          in: targetIds,
         },
       },
-    },
-  });
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        favoriteCount: true,
+      },
+    });
+  }
+
+  if (targetType === "POST") {
+    return await prisma.communityPost.findMany({
+      where: {
+        id: {
+          in: targetIds,
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        favoriteCount: true,
+        user: {
+          select: {
+            id: true,
+            nickname: true,
+          },
+        },
+      },
+    });
+  }
+
+  if (targetType === "ANSWER") {
+    return await prisma.answer.findMany({
+      where: {
+        id: {
+          in: targetIds,
+        },
+      },
+      select: {
+        id: true,
+        content: true,
+        favoriteCount: true,
+        question: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            nickname: true,
+          },
+        },
+      },
+    });
+  }
+
+  if (targetType === "COMMENT") {
+    return await prisma.comment.findMany({
+      where: {
+        id: {
+          in: targetIds,
+        },
+      },
+      select: {
+        id: true,
+        content: true,
+        favoriteCount: true,
+        user: {
+          select: {
+            id: true,
+            nickname: true,
+          },
+        },
+      },
+    });
+  }
 }
 
-export async function getFavoriteQuestionStatus(
+export async function getFavoriteStatus(
   userId: number,
-  questionId: number
+  targetType: FavoriteTargetType,
+  targetId: number
 ) {
   return await prisma.favorite.findUniqueOrThrow({
     where: {
-      userId_questionId: {
+      targetType_targetId_userId: {
+        targetType,
+        targetId,
         userId,
-        questionId,
       },
     },
   });
@@ -34,61 +129,38 @@ export async function getFavoriteQuestionStatus(
 
 export async function createFavorite(
   userId: number,
-  questionId: number
+  targetType: FavoriteTargetType,
+  targetId: number
 ): Promise<Favorite> {
-  try {
-    await prisma.favorite.findUniqueOrThrow({
-      where: { userId_questionId: { userId, questionId } },
-    });
-
-    throw new Error("이미 즐겨찾기에 추가된 질문입니다.");
-  } catch (error) {
-    if (
-      error instanceof PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return prisma.favorite.create({
-        data: {
-          userId: userId,
-          questionId: questionId,
-          createdAt: dbDayjs(),
-        },
-      });
-    }
-
-    throw error;
-  }
+  return await prisma.favorite.create({
+    data: {
+      userId,
+      targetType,
+      targetId,
+      createdAt: dbDayjs(),
+    },
+  });
 }
 
 export async function removeFavorite(
   userId: number,
-  questionId: number
-): Promise<void> {
-  try {
-    const existingFavorite = await prisma.favorite.findUniqueOrThrow({
-      where: { userId_questionId: { userId, questionId } },
-    });
-
-    await prisma.favorite.delete({
-      where: {
-        id: existingFavorite.id,
+  targetType: FavoriteTargetType,
+  targetId: number
+): Promise<Favorite> {
+  return await prisma.favorite.delete({
+    where: {
+      targetType_targetId_userId: {
+        targetType,
+        targetId,
+        userId,
       },
-    });
-  } catch (error) {
-    if (
-      error instanceof PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      throw new Error("즐겨찾기가 존재하지 않습니다.");
-    }
-
-    throw error;
-  }
+    },
+  });
 }
 
 export const favoriteService = {
-  getFavoriteQuestions,
-  getFavoriteQuestionStatus,
+  getFavorites,
+  getFavoriteStatus,
   createFavorite,
   removeFavorite,
 };

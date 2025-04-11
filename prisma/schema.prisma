@@ -10,24 +10,21 @@ datasource db {
 
 /// 사용자 정보를 저장하는 모델
 model User {
-  id                 Int                  @id @default(autoincrement())
-  nickname           String               @unique @db.VarChar(50)
-  email              String               @unique @db.VarChar(254)
-  password           String               @db.VarChar(60)
-  createdAt          DateTime             @default(now()) @map("created_at")
-  updatedAt          DateTime             @default(now()) @updatedAt @map("updated_at")
-  answers            Answer[]
-  comments           Comment[]
-  favorites          Favorite[]
-  answerLikes        AnswerLike[]
-  communityPostLikes CommunityPostLike[]
-  commentLikes       CommentLike[]
-  refreshTokens      RefreshToken[]
-  resetTokens        PasswordResetToken[]
-  Position           Position?            @relation(fields: [positionId], references: [id])
-  positionId         Int?                 @map("position_id")
-  communityPosts     CommunityPost[]
-  reports            Report[]
+  id             Int                  @id @default(autoincrement())
+  nickname       String               @unique @db.VarChar(50)
+  email          String               @unique @db.VarChar(254)
+  password       String               @db.VarChar(60)
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @default(now()) @updatedAt @map("updated_at")
+  answers        Answer[]
+  comments       Comment[]
+  favorites      Favorite[]
+  refreshTokens  RefreshToken[]
+  resetTokens    PasswordResetToken[]
+  Position       Position?            @relation(fields: [positionId], references: [id])
+  positionId     Int?                 @map("position_id")
+  communityPosts CommunityPost[]
+  reports        Report[]
 
   @@index([positionId], map: "User_position_id_fkey")
 }
@@ -44,10 +41,10 @@ model Question {
   isWeekly       Boolean            @default(false) @map("is_weekly")
   /// 질문 작성일
   createdAt      DateTime           @default(now()) @map("created_at")
+  /// 질문 즐겨찾기 수
+  favoriteCount  Int                @default(0) @map("favorite_count")
   /// 질문에 달린 답변들
   answers        Answer[]
-  /// 질문을 즐겨찾기한 정보
-  favorites      Favorite[]
   /// 질문과 연관된 카테고리들
   categories     QuestionCategory[]
   /// 주간 질문과의 관계 (One-to-One)
@@ -66,16 +63,15 @@ model WeeklyQuestion {
 
 /// 답변 정보를 저장하는 모델
 model Answer {
-  id              Int          @id @default(autoincrement())
-  content         String       @db.Text
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @default(now()) @updatedAt @map("updated_at")
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          Int          @map("user_id")
-  question        Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  questionId      Int          @map("question_id")
-  answerLikes     AnswerLike[]
-  answerLikeCount Int          @default(0) @map("answer_like_count")
+  id            Int       @id @default(autoincrement())
+  content       String    @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int       @map("user_id")
+  question      Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId    Int       @map("question_id")
+  favoriteCount Int       @default(0) @map("favorite_count")
 
   @@index([questionId])
   @@index([userId], map: "Answer_user_id_fkey")
@@ -83,15 +79,14 @@ model Answer {
 
 /// 커뮤니티 게시글을 저장하는 모델
 model CommunityPost {
-  id                     Int                 @id @default(autoincrement())
-  title                  String
-  content                String              @db.Text
-  createdAt              DateTime            @default(now()) @map("created_at")
-  updatedAt              DateTime            @default(now()) @map("updated_at")
-  userId                 Int                 @map("user_id")
-  user                   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  communityPostLikes     CommunityPostLike[]
-  communityPostLikeCount Int                 @default(0) @map("community_post_like_count")
+  id            Int      @id @default(autoincrement())
+  title         String
+  content       String   @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+  userId        Int      @map("user_id")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favoriteCount Int      @default(0) @map("favorite_count")
 
   @@index([userId], map: "CommunityPost_user_id_fkey")
 }
@@ -111,58 +106,12 @@ model Comment {
   children         Comment[]        @relation("Parent")
   isDeleted        Boolean          @default(false) @map("is_deleted")
   deletedAt        DateTime?        @map("deleted_at")
-  commentLikes     CommentLike[]
-  commentLikeCount Int              @default(0) @map("comment_like_count")
+  favoriteCount Int    @default(0) @map("favorite_count")
 
   @@index([userId], map: "Comment_user_id_fkey")
   @@index([parentId], map: "Comment_parent_id_fkey")
   @@index([categoryId], map: "Comment_category_id_fkey")
   @@map("Comment")
-}
-
-/// 좋아요한 답변 저장하는 모델
-model AnswerLike {
-  id        Int      @id @default(autoincrement())
-  answer    Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
-  answerId  Int      @map("answer_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int      @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@unique([userId, answerId])
-  @@index([userId, answerId])
-  @@index([answerId], map: "AnswerLike_answer_id_fkey")
-  @@index([userId], map: "AnswerLike_user_id_fkey")
-}
-
-/// 좋아요한 커뮤니티 게시글 저장하는 모델
-model CommunityPostLike {
-  id        Int           @id @default(autoincrement())
-  postId    Int           @map("post_id")
-  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  userId    Int           @map("user_id")
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime      @default(now()) @map("created_at")
-
-  @@unique([userId, postId])
-  @@index([userId, postId])
-  @@index([postId], map: "CommunityPostLike_post_id_fkey")
-  @@index([userId], map: "CommunityPostLike_user_id_fkey")
-}
-
-/// 좋아요한 댓글 저장하는 모델
-model CommentLike {
-  id        Int      @id @default(autoincrement())
-  commentId Int      @map("comment_id")
-  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  userId    Int      @map("user_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@unique([userId, commentId])
-  @@index([userId, commentId])
-  @@index([commentId], map: "CommentLike_comment_id_fkey")
-  @@index([userId], map: "CommentLike_user_id_fkey")
 }
 
 model CommentCategory {
@@ -202,22 +151,24 @@ enum ReportStatus {
 
 /// 즐겨찾기 정보를 저장하는 모델
 model Favorite {
-  /// 고유 식별자
-  id         Int      @id @default(autoincrement())
-  /// 즐겨찾기한 사용자 정보
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  /// 사용자 ID
-  userId     Int      @map("user_id")
-  /// 즐겨찾기된 질문 정보
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  /// 질문 ID
-  questionId Int      @map("question_id")
-  /// 즐겨찾기 생성일
-  createdAt  DateTime @default(now()) @map("created_at")
+  id         Int                @id @default(autoincrement())
+  targetType FavoriteTargetType @map("target_type")
+  targetId   Int                @map("target_id")
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int                @map("user_id")
+  createdAt  DateTime           @default(now()) @map("created_at")
 
-  @@unique([userId, questionId])
-  @@index([userId, questionId])
-  @@index([questionId], map: "Favorite_question_id_fkey")
+  @@unique([targetType, targetId, userId])
+  @@index([userId])
+  @@index([targetType, targetId])
+}
+
+/// 즐겨찾기된 대상의 종류
+enum FavoriteTargetType {
+  QUESTION
+  POST
+  ANSWER
+  COMMENT
 }
 
 /// 카테고리 정보를 저장하는 모델
