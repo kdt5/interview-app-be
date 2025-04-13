@@ -39,10 +39,16 @@ async function getComments(targetId: number, categoryId: number) {
       id: true,
       content: true,
       createdAt: true,
-      userId: true,
+      updatedAt: true,
+      user: {
+        select: {
+          id: true,
+          nickname: true,
+        },
+      },
       parentId: true,
       isDeleted: true,
-      categoryId: true,
+      favoriteCount: true,
     },
   });
 }
@@ -56,13 +62,13 @@ async function addComment(
 ) {
   return await prisma.comment.create({
     data: {
-      targetId,
-      categoryId,
-      userId,
       content,
-      parentId,
       createdAt: dbDayjs(),
       updatedAt: dbDayjs(),
+      userId,
+      categoryId,
+      targetId,
+      parentId,
     },
   });
 }
@@ -95,13 +101,16 @@ async function getCategoryId(categoryName: string) {
 }
 
 interface ResponseCommentType {
-  content: string;
-  parentId: number | null;
   id: number;
+  content: string;
   createdAt: Date;
-  userId: number;
-  categoryId: number | null;
+  user: {
+    id: number;
+    nickname: string;
+  };
+  parentId: number | null;
   isDeleted: boolean;
+  favoriteCount: number;
 }
 
 function sanitizeDeletedComments(
@@ -109,8 +118,12 @@ function sanitizeDeletedComments(
 ): ResponseCommentType[] {
   return { ...comments }.map((comment) => {
     if (comment.isDeleted) {
-      comment.userId = DELETED_USER_ID;
-      comment.content = "삭제된 댓글입니다.";
+      comment.content = "";
+      comment.user = {
+        id: DELETED_USER_ID,
+        nickname: "",
+      };
+      comment.favoriteCount = 0;
     }
 
     return comment;
