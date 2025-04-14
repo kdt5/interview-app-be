@@ -1,32 +1,37 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Favorite } from "@prisma/client";
 import rankingService, { FavoriteTargetType } from "../services/rankingService";
 
-const prisma = new PrismaClient().$extends({
+const basePrisma = new PrismaClient();
+const prisma = basePrisma.$extends({
   name: "favoriteExtension",
   query: {
     favorite: {
       async create({ args, query }) {
-        const result = await query(args);
-        await rankingService.incrementFavoriteCount(
-          result.targetType as FavoriteTargetType,
-          result.targetId as number
-        );
-        return result;
+        return basePrisma.$transaction(async (tx) => {
+          const result = (await query({ ...args, tx })) as Favorite;
+          await rankingService.incrementFavoriteCount(
+            result.targetType as FavoriteTargetType,
+            Number(result.targetId),
+            tx
+          );
+          return result;
+        });
       },
       async delete({ args, query }) {
-        const favorite = await prisma.favorite.findUnique({
-          where: args.where,
+        return basePrisma.$transaction(async (tx) => {
+          const favorite = await tx.favorite.findUnique({
+            where: args.where,
+          });
+          const result = await query({ ...args, tx });
+          if (favorite) {
+            await rankingService.decrementFavoriteCount(
+              favorite.targetType as FavoriteTargetType,
+              Number(favorite.targetId),
+              tx
+            );
+          }
+          return result;
         });
-
-        const result = await query(args);
-
-        if (favorite) {
-          await rankingService.decrementFavoriteCount(
-            favorite.targetType as FavoriteTargetType,
-            favorite.targetId as number
-          );
-        }
-        return result;
       },
     },
   },

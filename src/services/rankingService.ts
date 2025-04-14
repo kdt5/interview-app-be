@@ -1,5 +1,12 @@
 import prisma from "../lib/prisma.js";
-import { User } from "@prisma/client";
+import {
+  User,
+  Question,
+  Answer,
+  Comment,
+  CommunityPost,
+  Prisma,
+} from "@prisma/client";
 
 export enum FavoriteTargetType {
   QUESTION = "QUESTION",
@@ -29,46 +36,21 @@ async function getLikesCountRankings(limit: number = 100) {
     select: {
       id: true,
       nickname: true,
-      answers: {
-        select: {
-          favoriteCount: true,
-        },
-      },
-      communityPosts: {
-        select: {
-          favoriteCount: true,
-        },
-      },
-      comments: {
-        select: {
-          favoriteCount: true,
-        },
-      },
+      answers: { select: { favoriteCount: true } },
+      communityPosts: { select: { favoriteCount: true } },
+      comments: { select: { favoriteCount: true } },
     },
   })) as UserWithLikes[];
 
   const usersRankedByLikes = usersWithLikes
-    .map((user) => {
-      const answerLikes = user.answers.reduce(
-        (sum, answer) => sum + answer.favoriteCount,
-        0
-      );
-      const postLikes = user.communityPosts.reduce(
-        (sum, post) => sum + post.favoriteCount,
-        0
-      );
-      const commentLikes = user.comments.reduce(
-        (sum, comment) => sum + comment.favoriteCount,
-        0
-      );
-      const totalFavoriteCount = answerLikes + postLikes + commentLikes;
-
-      return {
-        id: user.id,
-        nickname: user.nickname,
-        totalFavoriteCount,
-      };
-    })
+    .map((user) => ({
+      id: user.id,
+      nickname: user.nickname,
+      totalFavoriteCount:
+        user.answers.reduce((sum, answer) => sum + answer.favoriteCount, 0) +
+        user.communityPosts.reduce((sum, post) => sum + post.favoriteCount, 0) +
+        user.comments.reduce((sum, comment) => sum + comment.favoriteCount, 0),
+    }))
     .sort((a, b) => b.totalFavoriteCount - a.totalFavoriteCount)
     .slice(0, limit);
 
@@ -80,33 +62,20 @@ async function getAnswerCountRankings(limit: number = 100) {
     select: {
       id: true,
       nickname: true,
-      answers: {
-        select: {
-          id: true, // 답변 ID 포함 (선택 사항)
-        },
-      },
+      answers: { select: { id: true } },
     },
   });
 
-  // 각 유저의 답변 수를 계산하고 내림차순으로 정렬
-  const usersRankedByAnswerCount = usersWithAnswerCount
+  return usersWithAnswerCount
     .map((user) => ({
       id: user.id,
       nickname: user.nickname,
       answerCount: user.answers.length,
     }))
     .sort((a, b) => b.answerCount - a.answerCount)
-    .slice(0, limit); // 상위 limit 개수만 추출
-
-  return usersRankedByAnswerCount;
+    .slice(0, limit);
 }
 
-/**
- * 즐겨찾기 수를 직접 조회
- * @param targetType 즐겨찾기 대상의 타입
- * @param targetId 즐겨찾기 대상의 ID
- * @returns 즐겨찾기 수
- */
 async function getFavoriteCountByTargetType(
   targetType: FavoriteTargetType,
   targetId: number
@@ -117,166 +86,119 @@ async function getFavoriteCountByTargetType(
       targetId,
     },
   });
-
   return count;
 }
 
-/**
- * 즐겨찾기 수 캐시를 업데이트
- * @param targetType 즐겨찾기 대상의 타입
- * @param targetId 즐겨찾기 대상의 ID
- */
 async function updateFavoriteCount(
   targetType: FavoriteTargetType,
   targetId: number
 ) {
   const count = await getFavoriteCountByTargetType(targetType, targetId);
-
-  switch (targetType) {
-    case FavoriteTargetType.QUESTION:
-      await prisma.question.update({
-        where: { id: targetId },
-        data: { favoriteCount: count },
-      });
-      break;
-    case FavoriteTargetType.ANSWER:
-      await prisma.answer.update({
-        where: { id: targetId },
-        data: { favoriteCount: count },
-      });
-      break;
-    case FavoriteTargetType.COMMENT:
-      await prisma.comment.update({
-        where: { id: targetId },
-        data: { favoriteCount: count },
-      });
-      break;
-    case FavoriteTargetType.POST:
-      await prisma.communityPost.update({
-        where: { id: targetId },
-        data: { favoriteCount: count },
-      });
-      break;
-  }
+  await updateEntityFavoriteCount(targetType, targetId, {
+    favoriteCount: count,
+  });
 }
 
-/**
- * 즐겨찾기 수 캐시를 조회
- * @param targetType 즐겨찾기 대상의 타입
- * @param targetId 즐겨찾기 대상의 ID
- * @returns 즐겨찾기 수
- */
 async function getFavoriteCount(
   targetType: FavoriteTargetType,
   targetId: number
 ): Promise<number> {
+  const result = await findUniqueEntity(targetType, targetId, {
+    select: { favoriteCount: true },
+  });
+  return result?.favoriteCount ?? 0;
+}
+
+async function incrementFavoriteCount(
+  targetType: FavoriteTargetType,
+  targetId: number,
+  tx?: Prisma.TransactionClient
+) {
+  await updateEntityFavoriteCount(
+    targetType,
+    targetId,
+    {
+      favoriteCount: { increment: 1 },
+    },
+    tx
+  );
+}
+
+async function decrementFavoriteCount(
+  targetType: FavoriteTargetType,
+  targetId: number,
+  tx?: Prisma.TransactionClient
+) {
+  await updateEntityFavoriteCount(
+    targetType,
+    targetId,
+    {
+      favoriteCount: { decrement: 1 },
+    },
+    tx
+  );
+}
+
+async function updateEntityFavoriteCount(
+  targetType: FavoriteTargetType,
+  targetId: number,
+  data: {
+    favoriteCount: number | { increment: number } | { decrement: number };
+  },
+  tx?: Prisma.TransactionClient
+) {
+  const prismaClient = tx || prisma;
   switch (targetType) {
-    case FavoriteTargetType.QUESTION: {
-      const question = (await prisma.question.findUnique({
+    case FavoriteTargetType.QUESTION:
+      await prismaClient.question.update({ where: { id: targetId }, data });
+      break;
+    case FavoriteTargetType.ANSWER:
+      await prismaClient.answer.update({ where: { id: targetId }, data });
+      break;
+    case FavoriteTargetType.COMMENT:
+      await prismaClient.comment.update({ where: { id: targetId }, data });
+      break;
+    case FavoriteTargetType.POST:
+      await prismaClient.communityPost.update({
         where: { id: targetId },
-        select: {
-          favoriteCount: true,
-        },
-      })) as { favoriteCount: number } | null;
-      if (!question) return 0;
-      return question.favoriteCount;
-    }
-    case FavoriteTargetType.ANSWER: {
-      const answer = (await prisma.answer.findUnique({
-        where: { id: targetId },
-        select: {
-          favoriteCount: true,
-        },
-      })) as { favoriteCount: number } | null;
-      if (!answer) return 0;
-      return answer.favoriteCount;
-    }
-    case FavoriteTargetType.COMMENT: {
-      const comment = (await prisma.comment.findUnique({
-        where: { id: targetId },
-        select: {
-          favoriteCount: true,
-        },
-      })) as { favoriteCount: number } | null;
-      if (!comment) return 0;
-      return comment.favoriteCount;
-    }
-    case FavoriteTargetType.POST: {
-      const post = (await prisma.communityPost.findUnique({
-        where: { id: targetId },
-        select: {
-          favoriteCount: true,
-        },
-      })) as { favoriteCount: number } | null;
-      if (!post) return 0;
-      return post.favoriteCount;
-    }
+        data,
+      });
+      break;
     default:
       throw new Error("Invalid target type");
   }
 }
 
-async function incrementFavoriteCount(
+async function findUniqueEntity<
+  T extends Question | Answer | Comment | CommunityPost
+>(
   targetType: FavoriteTargetType,
-  targetId: number
-) {
+  targetId: number,
+  select: { select: { favoriteCount: true } }
+): Promise<(T & { favoriteCount: number }) | null> {
   switch (targetType) {
     case FavoriteTargetType.QUESTION:
-      await prisma.question.update({
+      return prisma.question.findUnique({
         where: { id: targetId },
-        data: { favoriteCount: { increment: 1 } },
-      });
-      break;
+        ...select,
+      }) as Promise<(T & { favoriteCount: number }) | null>;
     case FavoriteTargetType.ANSWER:
-      await prisma.answer.update({
+      return prisma.answer.findUnique({
         where: { id: targetId },
-        data: { favoriteCount: { increment: 1 } },
-      });
-      break;
+        ...select,
+      }) as Promise<(T & { favoriteCount: number }) | null>;
     case FavoriteTargetType.COMMENT:
-      await prisma.comment.update({
+      return prisma.comment.findUnique({
         where: { id: targetId },
-        data: { favoriteCount: { increment: 1 } },
-      });
-      break;
+        ...select,
+      }) as Promise<(T & { favoriteCount: number }) | null>;
     case FavoriteTargetType.POST:
-      await prisma.communityPost.update({
+      return prisma.communityPost.findUnique({
         where: { id: targetId },
-        data: { favoriteCount: { increment: 1 } },
-      });
-      break;
-  }
-}
-
-async function decrementFavoriteCount(
-  targetType: FavoriteTargetType,
-  targetId: number
-) {
-  switch (targetType) {
-    case FavoriteTargetType.QUESTION:
-      await prisma.question.update({
-        where: { id: targetId },
-        data: { favoriteCount: { decrement: 1 } },
-      });
-      break;
-    case FavoriteTargetType.ANSWER:
-      await prisma.answer.update({
-        where: { id: targetId },
-        data: { favoriteCount: { decrement: 1 } },
-      });
-      break;
-    case FavoriteTargetType.COMMENT:
-      await prisma.comment.update({
-        where: { id: targetId },
-        data: { favoriteCount: { decrement: 1 } },
-      });
-      break;
-    case FavoriteTargetType.POST:
-      await prisma.communityPost.update({
-        where: { id: targetId },
-        data: { favoriteCount: { decrement: 1 } },
-      });
-      break;
+        ...select,
+      }) as Promise<(T & { favoriteCount: number }) | null>;
+    default:
+      throw new Error("Invalid target type");
   }
 }
 
