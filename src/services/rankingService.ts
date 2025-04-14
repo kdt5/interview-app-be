@@ -31,7 +31,15 @@ interface UserWithLikes extends User {
   comments: { favoriteCount: number }[];
 }
 
-async function getLikesCountRankings(limit: number = 100) {
+export interface LikesCountRankingList {
+  id: number;
+  nickname: string;
+  totalFavoriteCount: number;
+}
+
+async function getLikesCountRankings(
+  limit: number = 100
+): Promise<LikesCountRankingList[]> {
   const usersWithLikes = (await prisma.user.findMany({
     select: {
       id: true,
@@ -57,14 +65,26 @@ async function getLikesCountRankings(limit: number = 100) {
   return usersRankedByLikes;
 }
 
-async function getAnswerCountRankings(limit: number = 100) {
-  const usersWithAnswerCount = await prisma.user.findMany({
+interface UserWithAnswers extends User {
+  answers: { id: number }[];
+}
+
+export interface AnswerCountRankingList {
+  id: number;
+  nickname: string;
+  answerCount: number;
+}
+
+async function getAnswerCountRankings(
+  limit: number = 100
+): Promise<AnswerCountRankingList[]> {
+  const usersWithAnswerCount = (await prisma.user.findMany({
     select: {
       id: true,
       nickname: true,
       answers: { select: { id: true } },
     },
-  });
+  })) as UserWithAnswers[];
 
   return usersWithAnswerCount
     .map((user) => ({
@@ -92,7 +112,7 @@ async function getFavoriteCountByTargetType(
 async function updateFavoriteCount(
   targetType: FavoriteTargetType,
   targetId: number
-) {
+): Promise<void> {
   const count = await getFavoriteCountByTargetType(targetType, targetId);
   await updateEntityFavoriteCount(targetType, targetId, {
     favoriteCount: count,
@@ -113,7 +133,7 @@ async function incrementFavoriteCount(
   targetType: FavoriteTargetType,
   targetId: number,
   tx?: Prisma.TransactionClient
-) {
+): Promise<void> {
   await updateEntityFavoriteCount(
     targetType,
     targetId,
@@ -128,7 +148,7 @@ async function decrementFavoriteCount(
   targetType: FavoriteTargetType,
   targetId: number,
   tx?: Prisma.TransactionClient
-) {
+): Promise<void> {
   await updateEntityFavoriteCount(
     targetType,
     targetId,
@@ -146,7 +166,7 @@ async function updateEntityFavoriteCount(
     favoriteCount: number | { increment: number } | { decrement: number };
   },
   tx?: Prisma.TransactionClient
-) {
+): Promise<void> {
   const prismaClient = tx || prisma;
   switch (targetType) {
     case FavoriteTargetType.QUESTION:

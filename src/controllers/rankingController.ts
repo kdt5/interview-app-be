@@ -1,7 +1,10 @@
 import { NextFunction, Response, Request } from "express";
 import { StatusCodes } from "http-status-codes";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
-import rankingService from "../services/rankingService.js";
+import rankingService, {
+  LikesCountRankingList,
+  AnswerCountRankingList,
+} from "../services/rankingService.js";
 
 interface RankingsRequest extends AuthRequest {
   query: {
@@ -14,9 +17,9 @@ interface RankingsRequest extends AuthRequest {
 // TODO: 통합 랭킹
 
 // 좋아요 랭킹
-export async function getLikesRankings(
+export async function getLikesCountRankings(
   req: Request,
-  res: Response,
+  res: Response<LikesCountRankingList[]>,
   next: NextFunction
 ): Promise<void> {
   try {
@@ -30,9 +33,9 @@ export async function getLikesRankings(
 }
 
 // 답변 랭킹
-export async function getAnswersRankings(
+export async function getAnswersCountRankings(
   req: Request,
-  res: Response,
+  res: Response<AnswerCountRankingList[]>,
   next: NextFunction
 ): Promise<void> {
   try {
