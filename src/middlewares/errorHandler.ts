@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import {
   AuthError,
   ValidationError,
@@ -8,7 +8,13 @@ import { CommonError } from "../constants/errors/commonError.js";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { StatusCodes } from "http-status-codes";
 
-export function errorHandler(error: Error, req: Request, res: Response): void {
+export function errorHandler(
+  error: Error,
+  req: Request,
+  res: Response,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _next: NextFunction
+): void {
   let statusCode: StatusCodes;
 
   // 커스텀 에러 처리
