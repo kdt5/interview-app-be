@@ -1,47 +1,40 @@
 import { PrismaClient, Favorite } from "@prisma/client";
 import rankingService, { FavoriteTargetType } from "../services/rankingService";
 
-const basePrisma = new PrismaClient();
-const prisma = basePrisma.$extends({
+const prisma = new PrismaClient().$extends({
   name: "favoriteExtension",
   query: {
     favorite: {
       async create({ args, query }) {
+        const result = (await query(args)) as Favorite;
         try {
-          return basePrisma.$transaction(async (tx) => {
-            const result = (await query({ ...args, tx })) as Favorite;
-            await rankingService.incrementFavoriteCount(
-              result.targetType as FavoriteTargetType,
-              Number(result.targetId),
-              tx
-            );
-            return result;
-          });
+          await rankingService.incrementFavoriteCount(
+            result.targetType as FavoriteTargetType,
+            Number(result.targetId)
+          );
         } catch (error) {
-          console.error(error);
-          throw error;
+          console.error("incrementFavoriteCount failed:", error);
         }
+        return result;
       },
       async delete({ args, query }) {
-        try {
-          return basePrisma.$transaction(async (tx) => {
-            const favorite = await tx.favorite.findUnique({
-              where: args.where,
-            });
-            const result = await query({ ...args, tx });
-            if (favorite) {
-              await rankingService.decrementFavoriteCount(
-                favorite.targetType as FavoriteTargetType,
-                Number(favorite.targetId),
-                tx
-              );
-            }
-            return result;
-          });
-        } catch (error) {
-          console.error(error);
-          throw error;
+        const favorite = await prisma.favorite.findUnique({
+          where: args.where,
+        });
+
+        const result = await query(args);
+
+        if (favorite) {
+          try {
+            await rankingService.decrementFavoriteCount(
+              favorite.targetType as FavoriteTargetType,
+              Number(favorite.targetId)
+            );
+          } catch (error) {
+            console.error("decrementFavoriteCount failed:", error);
+          }
         }
+        return result;
       },
     },
   },
