@@ -3,44 +3,17 @@ import { StatusCodes } from "http-status-codes";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
 import rankingService from "../services/rankingService.js";
 
-// 구현 예정
-// export async function getMyRankings(
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ): Promise<void> {
-//   try {
-//     const request = req as AuthRequest;
-//     const rankings = await rankingService.getMyRankings(
-//       Number(request.user.userId)
-//     );
-//     res.status(StatusCodes.OK).json(rankings);
-//   } catch (error) {
-//     next(error);
-//   }
-// }
-
 interface RankingsRequest extends AuthRequest {
   query: {
     limit?: string;
   };
 }
 
-// export async function getRankings(
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ): Promise<void> {
-//   try {
-//     const request = req as RankingsRequest;
-//     const { limit } = request.query;
-//     const rankings = await rankingService.getRankings(Number(limit));
-//     res.status(StatusCodes.OK).json(rankings);
-//   } catch (error) {
-//     next(error);
-//   }
-// }
+// TODO: 나의 랭킹
 
+// TODO: 통합 랭킹
+
+// 좋아요 랭킹
 export async function getLikesRankings(
   req: Request,
   res: Response,
@@ -49,13 +22,14 @@ export async function getLikesRankings(
   try {
     const request = req as RankingsRequest;
     const { limit } = request.query;
-    const rankings = await rankingService.getLikesRankings(Number(limit));
+    const rankings = await rankingService.getLikesCountRankings(Number(limit));
     res.status(StatusCodes.OK).json(rankings);
   } catch (error) {
     next(error);
   }
 }
 
+// 답변 랭킹
 export async function getAnswersRankings(
   req: Request,
   res: Response,
@@ -64,7 +38,7 @@ export async function getAnswersRankings(
   try {
     const request = req as RankingsRequest;
     const { limit } = request.query;
-    const rankings = await rankingService.getAnswersRankings(Number(limit));
+    const rankings = await rankingService.getAnswerCountRankings(Number(limit));
     res.status(StatusCodes.OK).json(rankings);
   } catch (error) {
     next(error);
