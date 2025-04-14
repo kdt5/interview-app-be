@@ -25,12 +25,6 @@ const rankingService = {
   decrementFavoriteCount,
 };
 
-interface UserWithLikes extends User {
-  answers: { favoriteCount: number }[];
-  communityPosts: { favoriteCount: number }[];
-  comments: { favoriteCount: number }[];
-}
-
 export interface LikesCountRankingList {
   id: number;
   nickname: string;
@@ -40,29 +34,37 @@ export interface LikesCountRankingList {
 async function getLikesCountRankings(
   limit: number = 100
 ): Promise<LikesCountRankingList[]> {
-  const usersWithLikes = (await prisma.user.findMany({
+  const usersWithLikes = await prisma.favorite.groupBy({
+    by: ["userId"],
+    _count: true,
+    orderBy: {
+      _count: {
+        userId: "desc",
+      },
+    },
+    take: limit,
+  });
+
+  const users = await prisma.user.findMany({
+    where: {
+      id: {
+        in: usersWithLikes.map((fav) => fav.userId),
+      },
+    },
     select: {
       id: true,
       nickname: true,
-      answers: { select: { favoriteCount: true } },
-      communityPosts: { select: { favoriteCount: true } },
-      comments: { select: { favoriteCount: true } },
     },
-  })) as UserWithLikes[];
+  });
 
-  const usersRankedByLikes = usersWithLikes
-    .map((user) => ({
-      id: user.id,
-      nickname: user.nickname,
-      totalFavoriteCount:
-        user.answers.reduce((sum, answer) => sum + answer.favoriteCount, 0) +
-        user.communityPosts.reduce((sum, post) => sum + post.favoriteCount, 0) +
-        user.comments.reduce((sum, comment) => sum + comment.favoriteCount, 0),
-    }))
-    .sort((a, b) => b.totalFavoriteCount - a.totalFavoriteCount)
-    .slice(0, limit);
-
-  return usersRankedByLikes;
+  return usersWithLikes.map((fav) => {
+    const user = users.find((u) => u.id === fav.userId);
+    return {
+      id: fav.userId,
+      nickname: user?.nickname ?? "",
+      totalFavoriteCount: fav._count,
+    };
+  });
 }
 
 interface UserWithAnswers extends User {
@@ -132,6 +134,7 @@ async function getFavoriteCount(
   return result?.favoriteCount ?? 0;
 }
 
+// 좋아요 증가 캐시
 async function incrementFavoriteCount(
   targetType: FavoriteTargetType,
   targetId: number,
@@ -147,6 +150,7 @@ async function incrementFavoriteCount(
   );
 }
 
+// 좋아요 감소 캐시
 async function decrementFavoriteCount(
   targetType: FavoriteTargetType,
   targetId: number,
