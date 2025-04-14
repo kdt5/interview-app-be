@@ -48,19 +48,22 @@ async function getLikesCountRankings(
       communityPosts: { select: { favoriteCount: true } },
       comments: { select: { favoriteCount: true } },
     },
+    orderBy: {
+      answers: {
+        _count: "desc",
+      },
+    },
+    take: limit,
   })) as UserWithLikes[];
 
-  const usersRankedByLikes = usersWithLikes
-    .map((user) => ({
-      id: user.id,
-      nickname: user.nickname,
-      totalFavoriteCount:
-        user.answers.reduce((sum, answer) => sum + answer.favoriteCount, 0) +
-        user.communityPosts.reduce((sum, post) => sum + post.favoriteCount, 0) +
-        user.comments.reduce((sum, comment) => sum + comment.favoriteCount, 0),
-    }))
-    .sort((a, b) => b.totalFavoriteCount - a.totalFavoriteCount)
-    .slice(0, limit);
+  const usersRankedByLikes = usersWithLikes.map((user) => ({
+    id: user.id,
+    nickname: user.nickname,
+    totalFavoriteCount:
+      user.answers.reduce((sum, answer) => sum + answer.favoriteCount, 0) +
+      user.communityPosts.reduce((sum, post) => sum + post.favoriteCount, 0) +
+      user.comments.reduce((sum, comment) => sum + comment.favoriteCount, 0),
+  }));
 
   return usersRankedByLikes;
 }
@@ -84,16 +87,19 @@ async function getAnswerCountRankings(
       nickname: true,
       answers: { select: { id: true } },
     },
+    orderBy: {
+      answers: {
+        _count: "desc",
+      },
+    },
+    take: limit,
   })) as UserWithAnswers[];
 
-  return usersWithAnswerCount
-    .map((user) => ({
-      id: user.id,
-      nickname: user.nickname,
-      answerCount: user.answers.length,
-    }))
-    .sort((a, b) => b.answerCount - a.answerCount)
-    .slice(0, limit);
+  return usersWithAnswerCount.map((user) => ({
+    id: user.id,
+    nickname: user.nickname,
+    answerCount: user.answers.length,
+  }));
 }
 
 async function getFavoriteCountByTargetType(
