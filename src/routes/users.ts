@@ -8,12 +8,16 @@ import {
   changeNickname,
   changePassword,
   recoverPassword,
+  getUserStats,
 } from "../controllers/userController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
 router.get("/me", authMiddleware.authenticate, getMe);
+
+// 유저 통계 조회
+router.get("/stats", authMiddleware.authenticate, getUserStats);
 
 // 닉네임 변경
 router.patch(
