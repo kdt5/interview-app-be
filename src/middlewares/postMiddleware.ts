@@ -4,7 +4,8 @@ import { StatusCodes } from "http-status-codes";
 import prisma from "../lib/prisma";
 
 const postMiddleware = {
-    checkPostOwnership
+    checkPostOwnership,
+    isValidPostCategory,
 };
 
 export default postMiddleware;
@@ -39,3 +40,11 @@ export async function checkPostOwnership (
         next(error);
     }
 }
+
+export async function isValidPostCategory(categoryId: number): Promise<boolean> {
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+  
+    return !!category;
+  }

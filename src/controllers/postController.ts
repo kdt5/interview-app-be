@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { Request, Response, NextFunction } from "express";
 import { UserInfo } from "../services/authService";
 import communityService from "../services/postService";
+import { isValidPostCategory } from "../middlewares/postMiddleware";
 
 export async function createPost(
   req: Request,
@@ -9,10 +10,15 @@ export async function createPost(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { title, content } = req.body as { title: string; content: string };
+    const { title, content, categoryId } = req.body as { title: string; content: string; categoryId: number };
     const userId = (req as Request & { user: UserInfo }).user.userId;
 
-    const newPost = await communityService.createPost(userId, title, content);
+    if(!(await isValidPostCategory(categoryId))) {
+      res.status(StatusCodes.BAD_REQUEST).json({ message: "존재하지 않는 게시글 카테고리 입니다." });
+      return;
+    }
+
+    const newPost = await communityService.createPost(userId, title, content, categoryId);
 
     res.status(StatusCodes.CREATED).json(newPost);
   } catch (error) {
@@ -47,7 +53,14 @@ export async function getPosts(
   next: NextFunction
 ): Promise<void> {
   try {
-    const posts = await communityService.getPosts();
+    const { categoryId } = req.query as { categoryId: string };
+
+    if (categoryId && !(await isValidPostCategory(parseInt(categoryId)))) {
+      res.status(StatusCodes.BAD_REQUEST).json({ message: "존재하지 않는 게시글 카테고리 입니다." });
+      return;
+    }
+
+    const posts = await communityService.getPosts(categoryId ? parseInt(categoryId) : undefined);
 
     res.status(StatusCodes.OK).json(posts);
   } catch (error) {
@@ -90,12 +103,13 @@ export async function updatePost(
 ): Promise<void> {
   try {
     const postId = req.params.postId;
-    const { title, content } = req.body;
+    const { title, content, categoryId } = req.body as { title: string; content: string; categoryId: string };
 
     const updatedPost = await communityService.updatePost(
       parseInt(postId),
       title,
-      content
+      content,
+      parseInt(categoryId)
     );
 
     res.status(StatusCodes.OK).json(updatedPost);

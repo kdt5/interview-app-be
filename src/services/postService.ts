@@ -14,13 +14,15 @@ export default communityService;
 export async function createPost(
   userId: number,
   title: string,
-  content: string
+  content: string,
+  postCategoryId: number
 ) {
   return await prisma.communityPost.create({
     data: {
       userId,
       title,
       content,
+      postCategoryId,
       createdAt: dbDayjs(),
       updatedAt: dbDayjs(),
     },
@@ -33,6 +35,7 @@ export async function getPostDetail(postId: number) {
     include: {
       user: {
         select: {
+          id: true,
           nickname: true,
         },
       },
@@ -40,12 +43,14 @@ export async function getPostDetail(postId: number) {
   });
 }
 
-export async function getPosts() {
+export async function getPosts(postCategoryId?: number) {
   return await prisma.communityPost.findMany({
+    where: postCategoryId ? { postCategoryId } : undefined,
     orderBy: { createdAt: "desc" },
     include: {
       user: {
         select: {
+          id: true,
           nickname: true,
         },
       },
@@ -62,13 +67,15 @@ export async function deletePost(postId: number) {
 export async function updatePost(
   postId: number,
   title: string,
-  content: string
+  content: string,
+  postCategoryId: number
 ) {
   return await prisma.communityPost.update({
     where: { id: postId },
     data: {
       title,
       content,
+      postCategoryId,
       updatedAt: dbDayjs(),
     },
   });
