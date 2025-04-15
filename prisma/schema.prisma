@@ -63,15 +63,15 @@ model WeeklyQuestion {
 
 /// 답변 정보를 저장하는 모델
 model Answer {
-  id            Int       @id @default(autoincrement())
-  content       String    @db.Text
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        Int       @map("user_id")
-  question      Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  questionId    Int       @map("question_id")
-  favoriteCount Int       @default(0) @map("favorite_count")
+  id            Int      @id @default(autoincrement())
+  content       String   @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int      @map("user_id")
+  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId    Int      @map("question_id")
+  favoriteCount Int      @default(0) @map("favorite_count")
 
   @@index([questionId])
   @@index([userId], map: "Answer_user_id_fkey")
@@ -79,34 +79,44 @@ model Answer {
 
 /// 커뮤니티 게시글을 저장하는 모델
 model CommunityPost {
-  id            Int      @id @default(autoincrement())
-  title         String
-  content       String   @db.Text
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @default(now()) @map("updated_at")
-  userId        Int      @map("user_id")
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  favoriteCount Int      @default(0) @map("favorite_count")
+  id             Int                   @id @default(autoincrement())
+  title          String
+  content        String                @db.Text
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @default(now()) @map("updated_at")
+  userId         Int                   @map("user_id")
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favoriteCount  Int                   @default(0) @map("favorite_count")
+  postCategoryId Int                   @map("post_category_id")
+  postCategory   CommunityPostCategory @relation(fields: [postCategoryId], references: [id], onDelete: Cascade)
 
-  @@index([userId], map: "CommunityPost_user_id_fkey")
+  @@index([userId])
+  @@index([postCategoryId])
+  @@index([createdAt])
+}
+
+model CommunityPostCategory {
+  id             Int             @id @default(autoincrement())
+  name           String          @unique @db.VarChar(50)
+  communityPosts CommunityPost[]
 }
 
 model Comment {
-  id               Int              @id @default(autoincrement())
-  content          String           @db.Text
-  createdAt        DateTime         @default(now()) @map("created_at")
-  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at")
-  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId           Int              @map("user_id")
-  category         CommentCategory? @relation(fields: [categoryId], references: [id])
-  categoryId       Int?             @map("category_id")
-  targetId         Int              @map("post_id")
-  parent           Comment?         @relation("Parent", fields: [parentId], references: [id])
-  parentId         Int?             @map("parent_id")
-  children         Comment[]        @relation("Parent")
-  isDeleted        Boolean          @default(false) @map("is_deleted")
-  deletedAt        DateTime?        @map("deleted_at")
-  favoriteCount Int    @default(0) @map("favorite_count")
+  id            Int              @id @default(autoincrement())
+  content       String           @db.Text
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @default(now()) @updatedAt @map("updated_at")
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int              @map("user_id")
+  category      CommentCategory? @relation(fields: [categoryId], references: [id])
+  categoryId    Int?             @map("category_id")
+  targetId      Int              @map("post_id")
+  parent        Comment?         @relation("Parent", fields: [parentId], references: [id])
+  parentId      Int?             @map("parent_id")
+  children      Comment[]        @relation("Parent")
+  isDeleted     Boolean          @default(false) @map("is_deleted")
+  deletedAt     DateTime?        @map("deleted_at")
+  favoriteCount Int              @default(0) @map("favorite_count")
 
   @@index([userId], map: "Comment_user_id_fkey")
   @@index([parentId], map: "Comment_parent_id_fkey")
