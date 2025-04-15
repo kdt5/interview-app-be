@@ -4,7 +4,6 @@ import {
   getQuestions,
   getWeeklyQuestion,
   addWeeklyQuestion,
-  getAnswers,
 } from "../controllers/questionsController.js";
 import {
   validateAddWeeklyQuestion,
@@ -13,6 +12,7 @@ import {
 } from "../middlewares/questionsValidator.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import { validationErrorMiddleware } from "../middlewares/validationErrorMiddleware.js";
+import { getAnswers } from "../controllers/answerController.js";
 
 const router = Router();
 
@@ -38,6 +38,7 @@ router.get(
   validationErrorMiddleware,
   getQuestionDetail
 );
+
 router.get(
   "/:questionId/answers",
   authMiddleware.authenticate,

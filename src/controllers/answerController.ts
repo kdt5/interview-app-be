@@ -2,8 +2,9 @@ import { Prisma } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import answerService from "../services/answerService.js";
-import { checkQuestionExists } from "../services/questionService.js";
+import { questionService } from "../services/questionService.js";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
+import { GetAllAnswersRequest } from "./questionsController.js";
 
 export interface RecordAnswerRequest extends AuthRequest {
   params: {
@@ -25,7 +26,9 @@ export async function recordAnswer(
     const { questionId } = request.params;
     const userId = request.user.userId;
 
-    const questionExists = await checkQuestionExists(parseInt(questionId));
+    const questionExists = await questionService.checkQuestionExists(
+      parseInt(questionId)
+    );
 
     if (!questionExists) {
       res.status(StatusCodes.NOT_FOUND).json({
@@ -87,6 +90,8 @@ export async function getAnswer(
 
     const answer = await answerService.getAnswer(parseInt(answerId));
 
+    await answerService.increaseAnswerViewCount(parseInt(answerId));
+
     if (!answer) {
       res.status(StatusCodes.NOT_FOUND).json({
         message: "존재하지 않는 답변입니다.",
@@ -107,6 +112,29 @@ export interface EditAnswerRequest extends Request {
   body: {
     newAnswer: string;
   };
+}
+
+export async function getAnswers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const request = req as GetAllAnswersRequest;
+    const { questionId } = request.params;
+
+    const answers = await answerService.getAnswers(parseInt(questionId));
+    if (answers.length === 0) {
+      res.status(StatusCodes.NOT_FOUND).json({
+        message: "조건에 해당하는 질문 또는 답변이 존재하지 않습니다.",
+      });
+      return;
+    }
+
+    res.status(StatusCodes.OK).json(answers);
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function editAnswer(
