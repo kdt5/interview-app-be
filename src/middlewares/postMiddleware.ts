@@ -42,9 +42,9 @@ export async function checkPostOwnership (
 }
 
 export async function isValidPostCategory(categoryId: number): Promise<boolean> {
-    const category = await prisma.category.findUnique({
+    const category = await prisma.communityPostCategory.findUnique({
       where: { id: categoryId },
     });
-  
+
     return !!category;
   }
