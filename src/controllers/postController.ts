@@ -2,7 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { Request, Response, NextFunction } from "express";
 import { UserInfo } from "../services/authService";
 import communityService from "../services/postService";
-import { isValidPostCategory } from "../middlewares/postMiddleware";
+import postMiddleware from "../middlewares/postMiddleware";
 
 export interface CreatePostRequest extends Request {
   body: {
@@ -22,7 +22,7 @@ export async function createPost(
     const { title, content, categoryId } = request.body;
     const userId = (req as Request & { user: UserInfo }).user.userId;
 
-    if(!(await isValidPostCategory(categoryId))) {
+    if(!(await postMiddleware.isValidPostCategory(categoryId))) {
       res.status(StatusCodes.BAD_REQUEST).json({ message: "존재하지 않는 게시글 카테고리 입니다." });
       return;
     }
@@ -73,7 +73,7 @@ export async function getPosts(
   try {
     const { categoryId } = req.query as { categoryId: string };
 
-    if (categoryId && !(await isValidPostCategory(parseInt(categoryId)))) {
+    if (categoryId && !(await postMiddleware.isValidPostCategory(parseInt(categoryId)))) {
       res.status(StatusCodes.BAD_REQUEST).json({ message: "존재하지 않는 게시글 카테고리 입니다." });
       return;
     }

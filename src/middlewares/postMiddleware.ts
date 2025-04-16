@@ -10,7 +10,7 @@ const postMiddleware = {
 
 export default postMiddleware;
 
-export async function checkPostOwnership (
+async function checkPostOwnership (
     req: Request & { user?: UserInfo },
     res: Response,
     next: NextFunction
@@ -41,7 +41,7 @@ export async function checkPostOwnership (
     }
 }
 
-export async function isValidPostCategory(categoryId: number): Promise<boolean> {
+async function isValidPostCategory(categoryId: number): Promise<boolean> {
     const category = await prisma.communityPostCategory.findUnique({
       where: { id: categoryId },
     });
