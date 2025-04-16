@@ -72,17 +72,27 @@ model Answer {
 
 /// 커뮤니티 게시글을 저장하는 모델
 model CommunityPost {
-  id            Int      @id @default(autoincrement())
-  title         String
-  content       String   @db.Text
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @default(now()) @map("updated_at")
-  userId        Int      @map("user_id")
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  favoriteCount Int      @default(0) @map("favorite_count")
+  id             Int                   @id @default(autoincrement())
+  title          String
+  content        String                @db.Text
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @default(now()) @map("updated_at")
+  userId         Int                   @map("user_id")
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favoriteCount  Int                   @default(0) @map("favorite_count")
+  postCategoryId Int                   @map("post_category_id")
+  postCategory   CommunityPostCategory @relation(fields: [postCategoryId], references: [id], onDelete: Cascade)
   viewCount     Int      @default(0) @map("view_count")
 
-  @@index([userId], map: "CommunityPost_user_id_fkey")
+  @@index([userId])
+  @@index([postCategoryId])
+  @@index([createdAt])
+}
+
+model CommunityPostCategory {
+  id             Int             @id @default(autoincrement())
+  name           String          @unique @db.VarChar(50)
+  communityPosts CommunityPost[]
 }
 
 model Comment {

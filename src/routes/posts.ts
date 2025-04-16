@@ -11,6 +11,7 @@ import postMiddleware from "../middlewares/postMiddleware.js";
 import {
   validatePostBody,
   validatePostId,
+  validatePostQuery,
 } from "../middlewares/postValidator.js";
 import { validationErrorMiddleware } from "../middlewares/validationErrorMiddleware.js";
 
@@ -21,6 +22,7 @@ router.post(
   "/",
   authMiddleware.authenticate,
   validatePostBody,
+  validatePostQuery,
   validationErrorMiddleware,
   createPost
 );
@@ -37,6 +39,7 @@ router.patch(
   authMiddleware.authenticate,
   validatePostId,
   validatePostBody,
+  validatePostQuery,
   validationErrorMiddleware,
   postMiddleware.checkPostOwnership,
   updatePost
