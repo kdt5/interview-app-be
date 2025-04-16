@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
 
@@ -7,15 +8,12 @@ const communityService = {
   getPosts,
   deletePost,
   updatePost,
+  increasePostViewCount,
 };
 
 export default communityService;
 
-export async function createPost(
-  userId: number,
-  title: string,
-  content: string
-) {
+async function createPost(userId: number, title: string, content: string) {
   return await prisma.communityPost.create({
     data: {
       userId,
@@ -27,49 +25,58 @@ export async function createPost(
   });
 }
 
-export async function getPostDetail(postId: number) {
+const PostSelect: Prisma.CommunityPostSelect = {
+  id: true,
+  title: true,
+  content: true,
+  user: {
+    select: {
+      id: true,
+      nickname: true,
+    },
+  },
+  createdAt: true,
+  updatedAt: true,
+  viewCount: true,
+  favoriteCount: true,
+};
+
+async function getPostDetail(postId: number) {
   return await prisma.communityPost.findUnique({
+    select: PostSelect,
     where: { id: postId },
-    include: {
-      user: {
-        select: {
-          nickname: true,
-        },
-      },
-    },
   });
 }
 
-export async function getPosts() {
+async function getPosts() {
   return await prisma.communityPost.findMany({
+    select: PostSelect,
     orderBy: { createdAt: "desc" },
-    include: {
-      user: {
-        select: {
-          nickname: true,
-        },
-      },
-    },
   });
 }
 
-export async function deletePost(postId: number) {
+async function deletePost(postId: number) {
   return await prisma.communityPost.delete({
     where: { id: postId },
   });
 }
 
-export async function updatePost(
-  postId: number,
-  title: string,
-  content: string
-) {
+async function updatePost(postId: number, title: string, content: string) {
   return await prisma.communityPost.update({
     where: { id: postId },
     data: {
       title,
       content,
       updatedAt: dbDayjs(),
+    },
+  });
+}
+
+async function increasePostViewCount(postId: number) {
+  return await prisma.communityPost.update({
+    where: { id: postId },
+    data: {
+      viewCount: { increment: 1 },
     },
   });
 }
