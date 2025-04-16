@@ -4,13 +4,22 @@ import { UserInfo } from "../services/authService";
 import communityService from "../services/postService";
 import { isValidPostCategory } from "../middlewares/postMiddleware";
 
+export interface CreatePostRequest extends Request {
+  body: {
+    title: string;
+    content: string;
+    categoryId: number;
+  }
+}
+
 export async function createPost(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { title, content, categoryId } = req.body as { title: string; content: string; categoryId: number };
+    const request = req as CreatePostRequest;
+    const { title, content, categoryId } = request.body;
     const userId = (req as Request & { user: UserInfo }).user.userId;
 
     if(!(await isValidPostCategory(categoryId))) {
