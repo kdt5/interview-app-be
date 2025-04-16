@@ -1,6 +1,7 @@
 import { NextFunction, Response, Request } from "express";
 import { StatusCodes } from "http-status-codes";
 import { authService } from "../services/authService.js";
+import userService from "../services/userService.js";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
 
 export async function getMe(
@@ -15,7 +16,23 @@ export async function getMe(
     res.status(StatusCodes.OK).json({
       email: user.email,
       nickname: user.nickname,
+      positionId: user.positionId,
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getUserStats(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const request = req as AuthRequest;
+    const userStats = await userService.getUserStats(request.user.userId);
+
+    res.status(StatusCodes.OK).json(userStats);
   } catch (error) {
     next(error);
   }

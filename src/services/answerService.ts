@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
 
@@ -6,11 +7,13 @@ const answerService = {
   updateAnswer,
   deleteAnswer,
   getAnswer,
+  getAnswers,
   getAnsweredQuestions,
+  increaseAnswerViewCount,
 };
 export default answerService;
 
-export async function recordAnswer(
+async function recordAnswer(
   userId: number,
   questionId: number,
   content: string
@@ -25,7 +28,7 @@ export async function recordAnswer(
   });
 }
 
-export async function getAnsweredQuestions(userId: number) {
+async function getAnsweredQuestions(userId: number) {
   return await prisma.answer.findMany({
     where: { userId: userId },
     select: {
@@ -39,19 +42,43 @@ export async function getAnsweredQuestions(userId: number) {
               categoryId: true,
             },
           },
+          viewCount: true,
         },
       },
     },
   });
 }
 
-export async function getAnswer(answerId: number) {
+const AnswerSelect: Prisma.AnswerSelect = {
+  id: true,
+  content: true,
+  user: {
+    select: {
+      id: true,
+      nickname: true,
+    },
+  },
+  createdAt: true,
+  updatedAt: true,
+  viewCount: true,
+  favoriteCount: true,
+};
+
+async function getAnswer(answerId: number) {
   return await prisma.answer.findUnique({
     where: { id: answerId },
+    select: AnswerSelect,
   });
 }
 
-export async function updateAnswer(answerId: number, editAnswer: string) {
+async function getAnswers(questionId: number) {
+  return await prisma.answer.findMany({
+    where: { questionId },
+    select: AnswerSelect,
+  });
+}
+
+async function updateAnswer(answerId: number, editAnswer: string) {
   const newAnswer = await prisma.answer.update({
     where: { id: answerId },
     data: {
@@ -63,10 +90,23 @@ export async function updateAnswer(answerId: number, editAnswer: string) {
   return newAnswer;
 }
 
-export async function deleteAnswer(answerId: number) {
+async function deleteAnswer(answerId: number) {
   const deletedAnswer = await prisma.answer.delete({
     where: { id: answerId },
   });
 
   return deletedAnswer;
+}
+
+async function increaseAnswerViewCount(answerId: number) {
+  const updatedAnswer = await prisma.answer.update({
+    where: { id: answerId },
+    data: {
+      viewCount: {
+        increment: 1,
+      },
+    },
+  });
+
+  return updatedAnswer;
 }

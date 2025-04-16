@@ -15,10 +15,10 @@ export async function getQuestionDetail(
 ): Promise<void> {
   try {
     const request = req as GetQuestionDetailRequest;
-    const { questionId } = request.params;
-    const question = await questionService.getQuestionById(
-      parseInt(questionId)
-    );
+    const questionId = parseInt(request.params.questionId);
+    const question = await questionService.getQuestionById(questionId);
+
+    await questionService.increaseQuestionViewCount(questionId);
 
     if (!question) {
       res
@@ -27,16 +27,7 @@ export async function getQuestionDetail(
       return;
     }
 
-    res.status(StatusCodes.OK).json({
-      questionDetail: {
-        id: question.id,
-        title: question.title,
-        content: question.content,
-        isWeekly: question.isWeekly,
-        createdAt: question.createdAt,
-        categories: question.categories.map((qc) => qc.category.id),
-      },
-    });
+    res.status(StatusCodes.OK).json(question);
   } catch (error) {
     next(error);
   }
@@ -57,15 +48,7 @@ export async function getWeeklyQuestion(
       return;
     }
 
-    res.status(StatusCodes.OK).json({
-      questionDetail: {
-        startDate: question.startDate,
-        formattedStartDate: question.formattedStartDate,
-        title: question.question.title,
-        content: question.question.content,
-        categories: question.question.categories.map((qc) => qc.categoryId),
-      },
-    });
+    res.status(StatusCodes.OK).json(question);
   } catch (error) {
     next(error);
   }
@@ -141,27 +124,4 @@ export interface GetAllAnswersRequest extends Request {
   params: {
     questionId: string;
   };
-}
-
-export async function getAnswers(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    const request = req as GetAllAnswersRequest;
-    const { questionId } = request.params;
-
-    const answers = await questionService.getAnswers(parseInt(questionId));
-    if (answers.length === 0) {
-      res.status(StatusCodes.NOT_FOUND).json({
-        message: "조건에 해당하는 질문 또는 답변이 존재하지 않습니다.",
-      });
-      return;
-    }
-
-    res.status(StatusCodes.OK).json(answers);
-  } catch (error) {
-    next(error);
-  }
 }

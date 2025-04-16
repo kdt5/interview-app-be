@@ -31,24 +31,16 @@ model User {
 
 /// 질문 정보를 저장하는 모델
 model Question {
-  /// 고유 식별자
   id             Int                @id @default(autoincrement())
-  /// 질문 제목
   title          String
-  /// 질문 내용
   content        String             @db.Text
-  /// 주간 질문 여부
   isWeekly       Boolean            @default(false) @map("is_weekly")
-  /// 질문 작성일
   createdAt      DateTime           @default(now()) @map("created_at")
-  /// 질문 즐겨찾기 수
   favoriteCount  Int                @default(0) @map("favorite_count")
-  /// 질문에 달린 답변들
   answers        Answer[]
-  /// 질문과 연관된 카테고리들
   categories     QuestionCategory[]
-  /// 주간 질문과의 관계 (One-to-One)
   weeklyQuestion WeeklyQuestion?
+  viewCount      Int                @default(0) @map("view_count")
 }
 
 /// 주간 질문을 저장하는 모델
@@ -72,6 +64,7 @@ model Answer {
   question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionId    Int      @map("question_id")
   favoriteCount Int      @default(0) @map("favorite_count")
+  viewCount     Int      @default(0) @map("view_count")
 
   @@index([questionId])
   @@index([userId], map: "Answer_user_id_fkey")
@@ -89,6 +82,7 @@ model CommunityPost {
   favoriteCount  Int                   @default(0) @map("favorite_count")
   postCategoryId Int                   @map("post_category_id")
   postCategory   CommunityPostCategory @relation(fields: [postCategoryId], references: [id], onDelete: Cascade)
+  viewCount     Int      @default(0) @map("view_count")
 
   @@index([userId])
   @@index([postCategoryId])

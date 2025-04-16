@@ -26,20 +26,29 @@ export async function createPost(
   }
 }
 
+interface GetPostDetailRequest extends Request {
+  params: {
+    postId: string;
+  };
+}
+
 export async function getPostDetail(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { postId } = req.params;
+    const request = req as GetPostDetailRequest;
+    const postId = parseInt(request.params.postId);
 
-    const postDetail = await communityService.getPostDetail(parseInt(postId));
+    const postDetail = await communityService.getPostDetail(postId);
 
     if (!postDetail) {
       res.status(StatusCodes.NOT_FOUND).json({ message: "Post not found" });
       return;
     }
+
+    await communityService.increasePostViewCount(postId);
 
     res.status(StatusCodes.OK).json(postDetail);
   } catch (error) {
@@ -68,52 +77,59 @@ export async function getPosts(
   }
 }
 
+interface DeletePostRequest extends Request {
+  params: {
+    postId: string;
+  };
+}
+
 export async function deletePost(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { postId } = req.params;
+    const request = req as DeletePostRequest;
+    const postId = parseInt(request.params.postId);
 
-    await communityService.deletePost(parseInt(postId));
+    await communityService.deletePost(postId);
 
     res.status(StatusCodes.NO_CONTENT).send();
-
   } catch (error) {
     next(error);
   }
 }
 
-export interface PostUpdateRequest extends Request {
+export interface UpdatePostRequest extends Request {
   params: {
     postId: string;
-  }
-  
+  };
+
   body: {
     title: string;
     content: string;
+    categoryId: string;
   };
 }
 
 export async function updatePost(
-  req: PostUpdateRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const postId = req.params.postId;
-    const { title, content, categoryId } = req.body as { title: string; content: string; categoryId: string };
+    const request = req as UpdatePostRequest;
+    const postId = parseInt(request.params.postId);
+    const { title, content, categoryId } = request.body;
 
     const updatedPost = await communityService.updatePost(
-      parseInt(postId),
+      postId,
       title,
       content,
       parseInt(categoryId)
     );
 
     res.status(StatusCodes.OK).json(updatedPost);
-    
   } catch (error) {
     next(error);
   }

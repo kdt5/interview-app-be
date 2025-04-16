@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
 
@@ -7,11 +8,12 @@ const communityService = {
   getPosts,
   deletePost,
   updatePost,
+  increasePostViewCount,
 };
 
 export default communityService;
 
-export async function createPost(
+async function createPost(
   userId: number,
   title: string,
   content: string,
@@ -29,42 +31,44 @@ export async function createPost(
   });
 }
 
-export async function getPostDetail(postId: number) {
+const PostSelect: Prisma.CommunityPostSelect = {
+  id: true,
+  title: true,
+  content: true,
+  user: {
+    select: {
+      id: true,
+      nickname: true,
+    },
+  },
+  createdAt: true,
+  updatedAt: true,
+  viewCount: true,
+  favoriteCount: true,
+};
+
+async function getPostDetail(postId: number) {
   return await prisma.communityPost.findUnique({
     where: { id: postId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          nickname: true,
-        },
-      },
-    },
+    select: PostSelect,
   });
 }
 
-export async function getPosts(postCategoryId?: number) {
+async function getPosts(postCategoryId?: number) {
   return await prisma.communityPost.findMany({
     where: postCategoryId ? { postCategoryId } : undefined,
+    select: PostSelect,
     orderBy: { createdAt: "desc" },
-    include: {
-      user: {
-        select: {
-          id: true,
-          nickname: true,
-        },
-      },
-    },
   });
 }
 
-export async function deletePost(postId: number) {
+async function deletePost(postId: number) {
   return await prisma.communityPost.delete({
     where: { id: postId },
   });
 }
 
-export async function updatePost(
+async function updatePost(
   postId: number,
   title: string,
   content: string,
@@ -77,6 +81,15 @@ export async function updatePost(
       content,
       postCategoryId,
       updatedAt: dbDayjs(),
+    },
+  });
+}
+
+async function increasePostViewCount(postId: number) {
+  return await prisma.communityPost.update({
+    where: { id: postId },
+    data: {
+      viewCount: { increment: 1 },
     },
   });
 }
