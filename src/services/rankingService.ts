@@ -19,7 +19,6 @@ const rankingService = {
 };
 
 export interface RankingUser {
-  userId: number;
   nickname: string;
   totalFavoriteCount: number;
   totalAnswerCount: number;
@@ -105,7 +104,6 @@ async function getLikesCountRankings(
       0;
 
     return {
-      userId: user.id,
       nickname: user.nickname,
       totalFavoriteCount: answerSum + postSum + commentSum,
       totalAnswerCount: user.answers.length,
@@ -187,7 +185,6 @@ async function getAnswerCountRankings(
       0;
 
     return {
-      userId: user.id,
       nickname: user.nickname,
       totalFavoriteCount: answerSum + postSum + commentSum,
       totalAnswerCount: user._count.answers,
