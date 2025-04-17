@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { questionService } from "../services/questionService.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
+import answerService from "../services/answerService.js";
+import { favoriteService } from "../services/favoriteService.js";
 
 export interface GetQuestionDetailRequest extends Request {
   params: {
@@ -80,7 +83,7 @@ export async function addWeeklyQuestion(
   }
 }
 
-export interface GetAllQuestionRequest extends Request {
+export interface GetAllQuestionRequest extends AuthRequest {
   query: {
     positionId?: string;
     categoryId?: string;
@@ -114,7 +117,28 @@ export async function getQuestions(
       return;
     }
 
-    res.status(StatusCodes.OK).json(questions);
+    const questionAnswerStatuses: boolean[] =
+      await answerService.getAnsweredStatuses(
+        request.user.userId,
+        questions.map((question) => question.id)
+      );
+
+    const questionFavoriteStatuses: boolean[] =
+      await favoriteService.getFavoriteStatuses(
+        request.user.userId,
+        "QUESTION",
+        questions.map((question) => question.id)
+      );
+
+    const response = questions.map((question, index) => {
+      return {
+        ...question,
+        isAnswered: questionAnswerStatuses[index],
+        isFavorite: questionFavoriteStatuses[index],
+      };
+    });
+
+    res.status(StatusCodes.OK).json(response);
   } catch (error) {
     next(error);
   }

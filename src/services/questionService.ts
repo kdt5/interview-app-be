@@ -52,9 +52,10 @@ async function getQuestionById(questionId: number) {
   });
 }
 
-const QuestionsSelect: Prisma.QuestionSelect = {
+export const QuestionsSelect: Prisma.QuestionSelect = {
   id: true,
   title: true,
+  createdAt: true,
   viewCount: true,
   favoriteCount: true,
   categories: {
@@ -64,6 +65,11 @@ const QuestionsSelect: Prisma.QuestionSelect = {
           id: true,
         },
       },
+    },
+  },
+  _count: {
+    select: {
+      answers: true,
     },
   },
 };
@@ -105,6 +111,9 @@ async function getQuestions(positionId?: number, categoryId?: number) {
   const questions = await prisma.question.findMany({
     where: whereClause,
     select: QuestionsSelect,
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
   return questions;
