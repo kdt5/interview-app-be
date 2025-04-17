@@ -1,19 +1,12 @@
 import prisma from "../lib/prisma.js";
 import {
-  User,
   Question,
   Answer,
   Comment,
   CommunityPost,
   Prisma,
 } from "@prisma/client";
-
-export enum FavoriteTargetType {
-  QUESTION = "QUESTION",
-  ANSWER = "ANSWER",
-  COMMENT = "COMMENT",
-  POST = "POST",
-}
+import { FavoriteTargetType } from "../constants/favorite.js";
 
 const rankingService = {
   getLikesCountRankings,
@@ -25,66 +18,116 @@ const rankingService = {
   decrementFavoriteCount,
 };
 
-export interface LikesCountRankingList {
-  id: number;
+export interface RankingUser {
   nickname: string;
   totalFavoriteCount: number;
+  totalAnswerCount: number;
 }
 
 async function getLikesCountRankings(
   limit: number = 100
-): Promise<LikesCountRankingList[]> {
-  const usersWithLikes = await prisma.favorite.groupBy({
-    by: ["userId"],
-    _count: true,
-    orderBy: {
-      _count: {
-        userId: "desc",
+): Promise<RankingUser[]> {
+  // 각 타입별로 좋아요 수가 많은 사용자 ID 조회
+  const [answerFavorites, postFavorites, commentFavorites] = await Promise.all([
+    prisma.answer.groupBy({
+      by: ["userId"],
+      _sum: {
+        favoriteCount: true,
       },
-    },
-    take: limit,
-  });
+      orderBy: {
+        _sum: {
+          favoriteCount: "desc",
+        },
+      },
+      take: limit,
+    }),
+    prisma.communityPost.groupBy({
+      by: ["userId"],
+      _sum: {
+        favoriteCount: true,
+      },
+      orderBy: {
+        _sum: {
+          favoriteCount: "desc",
+        },
+      },
+      take: limit,
+    }),
+    prisma.comment.groupBy({
+      by: ["userId"],
+      _sum: {
+        favoriteCount: true,
+      },
+      orderBy: {
+        _sum: {
+          favoriteCount: "desc",
+        },
+      },
+      take: limit,
+    }),
+  ]);
 
+  // 모든 사용자 ID 수집
+  const userIds = new Set([
+    ...answerFavorites.map((f) => f.userId),
+    ...postFavorites.map((f) => f.userId),
+    ...commentFavorites.map((f) => f.userId),
+  ]);
+
+  // 사용자 정보 조회
   const users = await prisma.user.findMany({
     where: {
       id: {
-        in: usersWithLikes.map((fav) => fav.userId),
+        in: Array.from(userIds),
       },
     },
     select: {
       id: true,
       nickname: true,
+      answers: {
+        select: {
+          id: true,
+        },
+      },
     },
   });
 
-  return usersWithLikes.map((fav) => {
-    const user = users.find((u) => u.id === fav.userId);
+  // 사용자별 좋아요 수 계산
+  const userFavorites = users.map((user) => {
+    const answerSum =
+      answerFavorites.find((f) => f.userId === user.id)?._sum.favoriteCount ??
+      0;
+    const postSum =
+      postFavorites.find((f) => f.userId === user.id)?._sum.favoriteCount ?? 0;
+    const commentSum =
+      commentFavorites.find((f) => f.userId === user.id)?._sum.favoriteCount ??
+      0;
+
     return {
-      id: fav.userId,
-      nickname: user?.nickname ?? "",
-      totalFavoriteCount: fav._count,
+      nickname: user.nickname,
+      totalFavoriteCount: answerSum + postSum + commentSum,
+      totalAnswerCount: user.answers.length,
     };
   });
-}
 
-interface UserWithAnswers extends User {
-  answers: { id: number }[];
-}
-
-export interface AnswerCountRankingList {
-  id: number;
-  nickname: string;
-  answerCount: number;
+  return userFavorites
+    .sort((a, b) => b.totalFavoriteCount - a.totalFavoriteCount)
+    .slice(0, limit);
 }
 
 async function getAnswerCountRankings(
   limit: number = 100
-): Promise<AnswerCountRankingList[]> {
-  const usersWithAnswerCount = (await prisma.user.findMany({
+): Promise<RankingUser[]> {
+  // 답변 수가 많은 사용자 조회
+  const usersWithAnswers = await prisma.user.findMany({
     select: {
       id: true,
       nickname: true,
-      answers: { select: { id: true } },
+      _count: {
+        select: {
+          answers: true,
+        },
+      },
     },
     orderBy: {
       answers: {
@@ -92,13 +135,61 @@ async function getAnswerCountRankings(
       },
     },
     take: limit,
-  })) as UserWithAnswers[];
+  });
 
-  return usersWithAnswerCount.map((user) => ({
-    id: user.id,
-    nickname: user.nickname,
-    answerCount: user.answers.length,
-  }));
+  // 사용자별 좋아요 수 계산
+  const [answerFavorites, postFavorites, commentFavorites] = await Promise.all([
+    prisma.answer.groupBy({
+      by: ["userId"],
+      where: {
+        userId: {
+          in: usersWithAnswers.map((u) => u.id),
+        },
+      },
+      _sum: {
+        favoriteCount: true,
+      },
+    }),
+    prisma.communityPost.groupBy({
+      by: ["userId"],
+      where: {
+        userId: {
+          in: usersWithAnswers.map((u) => u.id),
+        },
+      },
+      _sum: {
+        favoriteCount: true,
+      },
+    }),
+    prisma.comment.groupBy({
+      by: ["userId"],
+      where: {
+        userId: {
+          in: usersWithAnswers.map((u) => u.id),
+        },
+      },
+      _sum: {
+        favoriteCount: true,
+      },
+    }),
+  ]);
+
+  return usersWithAnswers.map((user) => {
+    const answerSum =
+      answerFavorites.find((f) => f.userId === user.id)?._sum.favoriteCount ??
+      0;
+    const postSum =
+      postFavorites.find((f) => f.userId === user.id)?._sum.favoriteCount ?? 0;
+    const commentSum =
+      commentFavorites.find((f) => f.userId === user.id)?._sum.favoriteCount ??
+      0;
+
+    return {
+      nickname: user.nickname,
+      totalFavoriteCount: answerSum + postSum + commentSum,
+      totalAnswerCount: user._count.answers,
+    };
+  });
 }
 
 async function getFavoriteCountByTargetType(
