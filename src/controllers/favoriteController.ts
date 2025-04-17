@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { favoriteService } from "../services/favoriteService.js";
+import favoriteService from "../services/favoriteService.js";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
 import { FavoriteTargetType } from "@prisma/client";
