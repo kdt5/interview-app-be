@@ -22,9 +22,8 @@ export async function getLikesCountRankings(
   try {
     const request = req as RankingsRequest;
     const { limit } = request.query;
-    const rankings = await rankingService.getLikesCountRankings(
-      limit ? Number(limit) : 100
-    );
+    const limitValue = limit ? Number(limit) : 100;
+    const rankings = await rankingService.getLikesCountRankings(limitValue);
     res.status(StatusCodes.OK).json(rankings);
   } catch (error) {
     next(error);
@@ -40,9 +39,8 @@ export async function getAnswersCountRankings(
   try {
     const request = req as RankingsRequest;
     const { limit } = request.query;
-    const rankings = await rankingService.getAnswerCountRankings(
-      limit ? Number(limit) : 100
-    );
+    const limitValue = limit ? Number(limit) : 100;
+    const rankings = await rankingService.getAnswerCountRankings(limitValue);
     res.status(StatusCodes.OK).json(rankings);
   } catch (error) {
     next(error);
