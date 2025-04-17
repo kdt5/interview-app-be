@@ -1,12 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
 import { Favorite, FavoriteTargetType } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
-export async function getFavorites(
-  userId: number,
-  targetType: FavoriteTargetType
-) {
+const favoriteService = {
+  getFavorites,
+  getFavoriteStatus,
+  createFavorite,
+  removeFavorite,
+  updateFavoriteCount,
+  incrementFavoriteCount,
+  decrementFavoriteCount,
+};
+
+async function getFavorites(userId: number, targetType: FavoriteTargetType) {
   const favoriteTargetIds: { targetId: number }[] =
     await prisma.favorite.findMany({
       where: {
@@ -111,7 +118,7 @@ export async function getFavorites(
   }
 }
 
-export async function getFavoriteStatus(
+async function getFavoriteStatus(
   userId: number,
   targetType: FavoriteTargetType,
   targetId: number
@@ -127,7 +134,7 @@ export async function getFavoriteStatus(
   });
 }
 
-export async function createFavorite(
+async function createFavorite(
   userId: number,
   targetType: FavoriteTargetType,
   targetId: number
@@ -142,7 +149,7 @@ export async function createFavorite(
   });
 }
 
-export async function removeFavorite(
+async function removeFavorite(
   userId: number,
   targetType: FavoriteTargetType,
   targetId: number
@@ -158,9 +165,90 @@ export async function removeFavorite(
   });
 }
 
-export const favoriteService = {
-  getFavorites,
-  getFavoriteStatus,
-  createFavorite,
-  removeFavorite,
-};
+async function getFavoriteCount(
+  targetType: FavoriteTargetType,
+  targetId: number
+): Promise<number> {
+  const count = await prisma.favorite.count({
+    where: {
+      targetType,
+      targetId,
+    },
+  });
+  return count;
+}
+
+// 좋아요 캐시 업데이트
+async function updateFavoriteCount(
+  targetType: FavoriteTargetType,
+  targetId: number
+): Promise<void> {
+  const count = await getFavoriteCount(targetType, targetId);
+  await updateEntityFavoriteCount(targetType, targetId, {
+    favoriteCount: count,
+  });
+}
+
+async function updateEntityFavoriteCount(
+  targetType: FavoriteTargetType,
+  targetId: number,
+  data: {
+    favoriteCount: number | { increment: number } | { decrement: number };
+  },
+  tx?: Prisma.TransactionClient
+): Promise<void> {
+  const prismaClient = tx || prisma;
+  switch (targetType) {
+    case "QUESTION":
+      await prismaClient.question.update({ where: { id: targetId }, data });
+      break;
+    case "ANSWER":
+      await prismaClient.answer.update({ where: { id: targetId }, data });
+      break;
+    case "COMMENT":
+      await prismaClient.comment.update({ where: { id: targetId }, data });
+      break;
+    case "POST":
+      await prismaClient.communityPost.update({
+        where: { id: targetId },
+        data,
+      });
+      break;
+    default:
+      throw new Error("Invalid target type");
+  }
+}
+
+// 좋아요 증가 (캐시)
+async function incrementFavoriteCount(
+  targetType: FavoriteTargetType,
+  targetId: number,
+  tx?: Prisma.TransactionClient
+): Promise<void> {
+  await updateEntityFavoriteCount(
+    targetType,
+    targetId,
+    {
+      favoriteCount: { increment: 1 },
+    },
+    tx
+  );
+}
+
+// 좋아요 감소 (캐시)
+async function decrementFavoriteCount(
+  targetType: FavoriteTargetType,
+  targetId: number,
+  tx?: Prisma.TransactionClient
+): Promise<void> {
+  await updateEntityFavoriteCount(
+    targetType,
+    targetId,
+    {
+      favoriteCount: { decrement: 1 },
+    },
+    tx
+  );
+}
+
+export default favoriteService;
