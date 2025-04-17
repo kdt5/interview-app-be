@@ -3,10 +3,15 @@ import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
 import { Favorite, FavoriteTargetType } from "@prisma/client";
 
-export async function getFavorites(
-  userId: number,
-  targetType: FavoriteTargetType
-) {
+export const favoriteService = {
+  getFavorites,
+  getFavoriteStatus,
+  createFavorite,
+  removeFavorite,
+  getFavoriteStatuses,
+};
+
+async function getFavorites(userId: number, targetType: FavoriteTargetType) {
   const favoriteTargetIds: { targetId: number }[] =
     await prisma.favorite.findMany({
       where: {
@@ -111,7 +116,7 @@ export async function getFavorites(
   }
 }
 
-export async function getFavoriteStatus(
+async function getFavoriteStatus(
   userId: number,
   targetType: FavoriteTargetType,
   targetId: number
@@ -127,7 +132,30 @@ export async function getFavoriteStatus(
   });
 }
 
-export async function createFavorite(
+async function getFavoriteStatuses(
+  userId: number,
+  targetType: FavoriteTargetType,
+  targetIds: number[]
+): Promise<boolean[]> {
+  const favorites = await prisma.favorite.findMany({
+    where: {
+      userId,
+      targetType: targetType,
+      targetId: {
+        in: targetIds,
+      },
+    },
+    select: {
+      targetId: true,
+    },
+  });
+
+  const favoriteIds = favorites.map((favorite) => favorite.targetId);
+
+  return targetIds.map((questionId) => favoriteIds.includes(questionId));
+}
+
+async function createFavorite(
   userId: number,
   targetType: FavoriteTargetType,
   targetId: number
@@ -142,7 +170,7 @@ export async function createFavorite(
   });
 }
 
-export async function removeFavorite(
+async function removeFavorite(
   userId: number,
   targetType: FavoriteTargetType,
   targetId: number
@@ -157,10 +185,3 @@ export async function removeFavorite(
     },
   });
 }
-
-export const favoriteService = {
-  getFavorites,
-  getFavoriteStatus,
-  createFavorite,
-  removeFavorite,
-};

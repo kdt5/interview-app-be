@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
+import { QuestionsSelect } from "./questionService.js";
 
 const answerService = {
   recordAnswer,
@@ -10,6 +11,7 @@ const answerService = {
   getAnswers,
   getAnsweredQuestions,
   increaseAnswerViewCount,
+  getAnsweredStatuses,
 };
 export default answerService;
 
@@ -27,28 +29,6 @@ async function recordAnswer(
     },
   });
 }
-
-async function getAnsweredQuestions(userId: number) {
-  return await prisma.answer.findMany({
-    where: { userId: userId },
-    select: {
-      id: true,
-      question: {
-        select: {
-          id: true,
-          title: true,
-          categories: {
-            select: {
-              categoryId: true,
-            },
-          },
-          viewCount: true,
-        },
-      },
-    },
-  });
-}
-
 const AnswerSelect: Prisma.AnswerSelect = {
   id: true,
   content: true,
@@ -64,6 +44,35 @@ const AnswerSelect: Prisma.AnswerSelect = {
   favoriteCount: true,
 };
 
+async function getAnsweredQuestions(userId: number) {
+  const answeredQuestions = await prisma.answer.findMany({
+    where: { userId: userId },
+    select: {
+      ...AnswerSelect,
+      question: {
+        select: QuestionsSelect,
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const mappedAnsweredQuestions = answeredQuestions.map((answeredQuestion) => {
+    return {
+      question: {
+        ...answeredQuestion.question,
+      },
+      answer: {
+        ...answeredQuestion,
+        question: undefined,
+      },
+    };
+  });
+
+  return mappedAnsweredQuestions;
+}
+
 async function getAnswer(answerId: number) {
   return await prisma.answer.findUnique({
     where: { id: answerId },
@@ -75,6 +84,9 @@ async function getAnswers(questionId: number) {
   return await prisma.answer.findMany({
     where: { questionId },
     select: AnswerSelect,
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 }
 
@@ -109,4 +121,26 @@ async function increaseAnswerViewCount(answerId: number) {
   });
 
   return updatedAnswer;
+}
+
+async function getAnsweredStatuses(userId: number, questionIds: number[]) {
+  const answeredQuestions = await prisma.answer.findMany({
+    where: {
+      userId,
+      questionId: {
+        in: questionIds,
+      },
+    },
+    select: {
+      questionId: true,
+    },
+  });
+
+  const answeredQuestionIds = answeredQuestions.map(
+    (answeredQuestion) => answeredQuestion.questionId
+  );
+
+  return questionIds.map((questionId) => {
+    return answeredQuestionIds.includes(questionId);
+  });
 }
