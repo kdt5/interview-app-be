@@ -1,19 +1,13 @@
 import prisma from "../lib/prisma.js";
 import {
-  User,
   Question,
   Answer,
   Comment,
   CommunityPost,
   Prisma,
 } from "@prisma/client";
-
-export enum FavoriteTargetType {
-  QUESTION = "QUESTION",
-  ANSWER = "ANSWER",
-  COMMENT = "COMMENT",
-  POST = "POST",
-}
+import { FavoriteTargetType } from "../constants/favorite.js";
+import userService from "./userService.js";
 
 const rankingService = {
   getLikesCountRankings,
@@ -25,66 +19,60 @@ const rankingService = {
   decrementFavoriteCount,
 };
 
-export interface LikesCountRankingList {
-  id: number;
+export interface RankingUser {
+  userId: number;
   nickname: string;
   totalFavoriteCount: number;
+  totalAnswerCount: number;
 }
 
 async function getLikesCountRankings(
   limit: number = 100
-): Promise<LikesCountRankingList[]> {
-  const usersWithLikes = await prisma.favorite.groupBy({
-    by: ["userId"],
-    _count: true,
-    orderBy: {
-      _count: {
-        userId: "desc",
-      },
-    },
-    take: limit,
-  });
-
+): Promise<RankingUser[]> {
   const users = await prisma.user.findMany({
-    where: {
-      id: {
-        in: usersWithLikes.map((fav) => fav.userId),
-      },
-    },
     select: {
       id: true,
       nickname: true,
+      answers: {
+        select: {
+          id: true,
+        },
+      },
     },
   });
 
-  return usersWithLikes.map((fav) => {
-    const user = users.find((u) => u.id === fav.userId);
-    return {
-      id: fav.userId,
-      nickname: user?.nickname ?? "",
-      totalFavoriteCount: fav._count,
-    };
-  });
-}
+  const userFavorites = await Promise.all(
+    users.map(async (user) => ({
+      userId: user.id,
+      nickname: user.nickname,
+      totalAnswerCount: user.answers.length,
+      totalFavoriteCount: (
+        await Promise.all([
+          userService.getUserAnswerFavoriteReceived(user.id),
+          userService.getUserCommunityPostFavoriteReceived(user.id),
+          userService.getUserCommentFavoriteReceived(user.id),
+        ])
+      ).reduce((acc, curr) => acc + curr, 0),
+    }))
+  );
 
-interface UserWithAnswers extends User {
-  answers: { id: number }[];
-}
-
-export interface AnswerCountRankingList {
-  id: number;
-  nickname: string;
-  answerCount: number;
+  return userFavorites
+    .sort((a, b) => b.totalFavoriteCount - a.totalFavoriteCount)
+    .slice(0, limit);
 }
 
 async function getAnswerCountRankings(
   limit: number = 100
-): Promise<AnswerCountRankingList[]> {
-  const usersWithAnswerCount = (await prisma.user.findMany({
+): Promise<RankingUser[]> {
+  const usersWithAnswerCount = await prisma.user.findMany({
     select: {
       id: true,
       nickname: true,
-      answers: { select: { id: true } },
+      answers: {
+        select: {
+          id: true,
+        },
+      },
     },
     orderBy: {
       answers: {
@@ -92,13 +80,22 @@ async function getAnswerCountRankings(
       },
     },
     take: limit,
-  })) as UserWithAnswers[];
+  });
 
-  return usersWithAnswerCount.map((user) => ({
-    id: user.id,
-    nickname: user.nickname,
-    answerCount: user.answers.length,
-  }));
+  return await Promise.all(
+    usersWithAnswerCount.map(async (user) => ({
+      userId: user.id,
+      nickname: user.nickname,
+      totalFavoriteCount: (
+        await Promise.all([
+          userService.getUserAnswerFavoriteReceived(user.id),
+          userService.getUserCommunityPostFavoriteReceived(user.id),
+          userService.getUserCommentFavoriteReceived(user.id),
+        ])
+      ).reduce((acc, curr) => acc + curr, 0),
+      totalAnswerCount: user.answers.length,
+    }))
+  );
 }
 
 async function getFavoriteCountByTargetType(

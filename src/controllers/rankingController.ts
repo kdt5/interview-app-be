@@ -1,10 +1,7 @@
 import { NextFunction, Response, Request } from "express";
 import { StatusCodes } from "http-status-codes";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
-import rankingService, {
-  LikesCountRankingList,
-  AnswerCountRankingList,
-} from "../services/rankingService.js";
+import rankingService, { RankingUser } from "../services/rankingService.js";
 
 interface RankingsRequest extends AuthRequest {
   query: {
@@ -19,13 +16,15 @@ interface RankingsRequest extends AuthRequest {
 // 좋아요 랭킹
 export async function getLikesCountRankings(
   req: Request,
-  res: Response<LikesCountRankingList[]>,
+  res: Response<RankingUser[]>,
   next: NextFunction
 ): Promise<void> {
   try {
     const request = req as RankingsRequest;
     const { limit } = request.query;
-    const rankings = await rankingService.getLikesCountRankings(Number(limit));
+    const rankings = await rankingService.getLikesCountRankings(
+      limit ? Number(limit) : 100
+    );
     res.status(StatusCodes.OK).json(rankings);
   } catch (error) {
     next(error);
@@ -35,13 +34,15 @@ export async function getLikesCountRankings(
 // 답변 랭킹
 export async function getAnswersCountRankings(
   req: Request,
-  res: Response<AnswerCountRankingList[]>,
+  res: Response<RankingUser[]>,
   next: NextFunction
 ): Promise<void> {
   try {
     const request = req as RankingsRequest;
     const { limit } = request.query;
-    const rankings = await rankingService.getAnswerCountRankings(Number(limit));
+    const rankings = await rankingService.getAnswerCountRankings(
+      limit ? Number(limit) : 100
+    );
     res.status(StatusCodes.OK).json(rankings);
   } catch (error) {
     next(error);
