@@ -7,7 +7,6 @@ import {
   Prisma,
 } from "@prisma/client";
 import { FavoriteTargetType } from "../constants/favorite.js";
-import userService from "./userService.js";
 
 const rankingService = {
   getLikesCountRankings,
@@ -121,13 +120,14 @@ async function getLikesCountRankings(
 async function getAnswerCountRankings(
   limit: number = 100
 ): Promise<RankingUser[]> {
-  const usersWithAnswerCount = await prisma.user.findMany({
+  // 답변 수가 많은 사용자 조회
+  const usersWithAnswers = await prisma.user.findMany({
     select: {
       id: true,
       nickname: true,
-      answers: {
+      _count: {
         select: {
-          id: true,
+          answers: true,
         },
       },
     },
@@ -139,20 +139,60 @@ async function getAnswerCountRankings(
     take: limit,
   });
 
-  return await Promise.all(
-    usersWithAnswerCount.map(async (user) => ({
+  // 사용자별 좋아요 수 계산
+  const [answerFavorites, postFavorites, commentFavorites] = await Promise.all([
+    prisma.answer.groupBy({
+      by: ["userId"],
+      where: {
+        userId: {
+          in: usersWithAnswers.map((u) => u.id),
+        },
+      },
+      _sum: {
+        favoriteCount: true,
+      },
+    }),
+    prisma.communityPost.groupBy({
+      by: ["userId"],
+      where: {
+        userId: {
+          in: usersWithAnswers.map((u) => u.id),
+        },
+      },
+      _sum: {
+        favoriteCount: true,
+      },
+    }),
+    prisma.comment.groupBy({
+      by: ["userId"],
+      where: {
+        userId: {
+          in: usersWithAnswers.map((u) => u.id),
+        },
+      },
+      _sum: {
+        favoriteCount: true,
+      },
+    }),
+  ]);
+
+  return usersWithAnswers.map((user) => {
+    const answerSum =
+      answerFavorites.find((f) => f.userId === user.id)?._sum.favoriteCount ??
+      0;
+    const postSum =
+      postFavorites.find((f) => f.userId === user.id)?._sum.favoriteCount ?? 0;
+    const commentSum =
+      commentFavorites.find((f) => f.userId === user.id)?._sum.favoriteCount ??
+      0;
+
+    return {
       userId: user.id,
       nickname: user.nickname,
-      totalFavoriteCount: (
-        await Promise.all([
-          userService.getUserAnswerFavoriteReceived(user.id),
-          userService.getUserCommunityPostFavoriteReceived(user.id),
-          userService.getUserCommentFavoriteReceived(user.id),
-        ])
-      ).reduce((acc, curr) => acc + curr, 0),
-      totalAnswerCount: user.answers.length,
-    }))
-  );
+      totalFavoriteCount: answerSum + postSum + commentSum,
+      totalAnswerCount: user._count.answers,
+    };
+  });
 }
 
 async function getFavoriteCountByTargetType(
