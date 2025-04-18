@@ -5,6 +5,7 @@ const userService = {
   getUserAnswerFavoriteReceived,
   getUserCommunityPostFavoriteReceived,
   getUserCommentFavoriteReceived,
+  getUserAnswerCount,
 };
 
 // 유저가 받은 답변 좋아요 수
@@ -52,10 +53,20 @@ async function getUserCommentFavoriteReceived(userId: number): Promise<number> {
 }
 
 interface UserStats {
-  answerCount: number;
-  favoriteCount: number;
-  communityPostCount: number;
-  commentCount: number;
+  answerCount: number; // 답변 수
+  favoriteCount: number; // 받은 좋아요 합계
+  communityPostCount: number; // 커뮤니티 게시글 수
+  commentCount: number; // 댓글 수
+}
+
+async function getUserAnswerCount(userId: number): Promise<number> {
+  const result = await prisma.answer.count({
+    where: {
+      userId,
+    },
+  });
+
+  return result;
 }
 
 async function getUserStats(userId: number): Promise<UserStats> {
