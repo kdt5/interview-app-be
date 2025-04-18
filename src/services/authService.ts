@@ -130,6 +130,7 @@ async function authenticateUser(
       email: user.email,
       nickname: user.nickname,
       positionId: user.positionId ?? 0,
+      profileImageUrl: user.profileImageUrl,
     },
     accessToken,
     refreshToken,
@@ -272,6 +273,7 @@ async function getUserByEmail(email: string): Promise<UserInfo> {
     email: user.email,
     nickname: user.nickname,
     positionId: user.positionId ?? 0,
+    profileImageUrl: user.profileImageUrl,
   };
 }
 
