@@ -16,7 +16,7 @@ model User {
   password        String               @db.VarChar(60)
   createdAt       DateTime             @default(now()) @map("created_at")
   updatedAt       DateTime             @default(now()) @updatedAt @map("updated_at")
-  profileImageUrl String?               @unique @db.VarChar(254) @map("profile_image_url")
+  profileImageUrl String?              @map("profile_image_url") @db.VarChar(254)
   answers         Answer[]
   comments        Comment[]
   favorites       Favorite[]
@@ -83,7 +83,7 @@ model CommunityPost {
   favoriteCount  Int                   @default(0) @map("favorite_count")
   postCategoryId Int                   @map("post_category_id")
   postCategory   CommunityPostCategory @relation(fields: [postCategoryId], references: [id], onDelete: Cascade)
-  viewCount     Int      @default(0) @map("view_count")
+  viewCount      Int                   @default(0) @map("view_count")
 
   @@index([userId])
   @@index([postCategoryId])
