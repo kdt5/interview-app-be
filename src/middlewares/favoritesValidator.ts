@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { FavoriteTargetType } from "@prisma/client";
 import { param } from "express-validator";
 

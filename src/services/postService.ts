@@ -13,12 +13,18 @@ const communityService = {
 
 export default communityService;
 
-async function createPost(userId: number, title: string, content: string) {
+async function createPost(
+  userId: number,
+  title: string,
+  content: string,
+  postCategoryId: number
+) {
   return await prisma.communityPost.create({
     data: {
       userId,
       title,
       content,
+      postCategoryId,
       createdAt: dbDayjs(),
       updatedAt: dbDayjs(),
     },
@@ -43,13 +49,14 @@ const PostSelect: Prisma.CommunityPostSelect = {
 
 async function getPostDetail(postId: number) {
   return await prisma.communityPost.findUnique({
-    select: PostSelect,
     where: { id: postId },
+    select: PostSelect,
   });
 }
 
-async function getPosts() {
+async function getPosts(postCategoryId?: number) {
   return await prisma.communityPost.findMany({
+    where: postCategoryId ? { postCategoryId } : undefined,
     select: PostSelect,
     orderBy: { createdAt: "desc" },
   });
@@ -61,12 +68,18 @@ async function deletePost(postId: number) {
   });
 }
 
-async function updatePost(postId: number, title: string, content: string) {
+async function updatePost(
+  postId: number,
+  title: string,
+  content: string,
+  postCategoryId: number
+) {
   return await prisma.communityPost.update({
     where: { id: postId },
     data: {
       title,
       content,
+      postCategoryId,
       updatedAt: dbDayjs(),
     },
   });
