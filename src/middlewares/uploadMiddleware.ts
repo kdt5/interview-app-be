@@ -2,8 +2,8 @@ import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import prisma from "../lib/prisma";
 
 const uploadMiddleware = {
-    deleteImageFromS3,
-    getUserImageUrl,
+  deleteImageFromS3,
+  getUserImageUrl,
 };
 
 export default uploadMiddleware;
@@ -17,7 +17,6 @@ const s3 = new S3Client({
 });
 
 async function deleteImageFromS3(fileUrl: string) {
-    //remove from s3
   const bucket = process.env.AWS_S3_BUCKET_NAME!;
   const key = new URL(fileUrl).pathname.slice(1);
 
@@ -30,14 +29,14 @@ async function deleteImageFromS3(fileUrl: string) {
 }
 
 async function getUserImageUrl(userId: number): Promise<string> {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { profileImageUrl: true }
-    });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { profileImageUrl: true },
+  });
 
-    if (!user || !user.profileImageUrl) {
-        return "";
-    } else {
-        return user.profileImageUrl as string;
-    }
+  if (!user || !user.profileImageUrl) {
+    return "";
+  } else {
+    return user.profileImageUrl as string;
+  }
 }
