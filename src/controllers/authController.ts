@@ -1,10 +1,10 @@
 import { Request, NextFunction, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { authService } from "../services/authService.js";
+import authService from "../services/authService.js";
 import authMiddleware, { AuthRequest } from "../middlewares/authMiddleware.js";
 import { AuthError } from "../constants/errors/authError.js";
 import tokenService from "../services/tokenService.js";
-
+import { UserInfoResponse } from "./userController.js";
 interface CheckEmailAvailabilityRequest extends Request {
   body: {
     email: string;
@@ -128,7 +128,7 @@ interface LoginRequest extends Request {
 
 export async function login(
   req: Request,
-  res: Response,
+  res: Response<UserInfoResponse>,
   next: NextFunction
 ): Promise<void> {
   try {
@@ -142,7 +142,8 @@ export async function login(
     res.status(StatusCodes.OK).json({
       email: user.email,
       nickname: user.nickname,
-      positionId: user.positionId,
+      positionId: user.positionId ?? 0,
+      profileImageUrl: user.profileImageUrl,
     });
   } catch (error) {
     next(error);

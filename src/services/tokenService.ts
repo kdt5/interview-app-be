@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
 import { AuthError } from "../constants/errors/authError.js";
 import dbDayjs from "../lib/dayjs.js";
-import { authService, UserInfo } from "./authService.js";
+import authService, { UserInfo } from "./authService.js";
 
 const HASH_ROUNDS = 10; // 10 rounds → 약 10ms, 12 rounds → 약 100ms
 

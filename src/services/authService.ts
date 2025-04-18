@@ -14,7 +14,8 @@ export interface UserInfo {
   userId: number;
   email: string;
   nickname: string;
-  positionId: number | null;
+  positionId: number;
+  profileImageUrl?: string;
 }
 
 export interface AuthResponse {
@@ -25,7 +26,19 @@ export interface AuthResponse {
 
 type CheckType = "email" | "nickname";
 
-export async function checkAvailability(
+const authService = {
+  checkAvailability,
+  checkPositionAvailability,
+  createUser,
+  authenticateUser,
+  changeUserNickname,
+  changeUserPassword,
+  recoverUserPassword,
+  resetPassword,
+  getUserByEmail,
+};
+
+async function checkAvailability(
   item: string,
   type: CheckType
 ): Promise<boolean> {
@@ -37,7 +50,7 @@ export async function checkAvailability(
   return !existingItem;
 }
 
-export async function checkPositionAvailability(
+async function checkPositionAvailability(
   positionId: number | undefined
 ): Promise<boolean> {
   if (!positionId) return true;
@@ -47,7 +60,7 @@ export async function checkPositionAvailability(
   return !!existingPosition;
 }
 
-export async function createUser(
+async function createUser(
   password: string,
   email: string,
   nickname: string,
@@ -83,7 +96,7 @@ export async function createUser(
   });
 }
 
-export async function authenticateUser(
+async function authenticateUser(
   email: string,
   password: string
 ): Promise<AuthResponse> {
@@ -116,14 +129,14 @@ export async function authenticateUser(
       userId: user.id,
       email: user.email,
       nickname: user.nickname,
-      positionId: user.positionId ?? null,
+      positionId: user.positionId ?? 0,
     },
     accessToken,
     refreshToken,
   };
 }
 
-export async function changeUserNickname(
+async function changeUserNickname(
   email: string | undefined,
   nickname: string
 ): Promise<void> {
@@ -145,7 +158,7 @@ export async function changeUserNickname(
   });
 }
 
-export async function recoverUserPassword(email: string): Promise<void> {
+async function recoverUserPassword(email: string): Promise<void> {
   const user = await prisma.user.findUnique({
     where: { email: email },
   });
@@ -176,7 +189,7 @@ export async function recoverUserPassword(email: string): Promise<void> {
   await emailService.sendPasswordResetEmail(user.email, resetLink);
 }
 
-export async function resetPassword(
+async function resetPassword(
   token: string,
   newPassword: string
 ): Promise<void> {
@@ -216,7 +229,7 @@ export async function resetPassword(
   }
 }
 
-export async function changeUserPassword(
+async function changeUserPassword(
   email: string | undefined,
   oldPassword: string,
   newPassword: string
@@ -245,7 +258,7 @@ export async function changeUserPassword(
   });
 }
 
-export async function getUserByEmail(email: string): Promise<UserInfo> {
+async function getUserByEmail(email: string): Promise<UserInfo> {
   const user = await prisma.user.findUnique({
     where: { email: email },
   });
@@ -258,18 +271,8 @@ export async function getUserByEmail(email: string): Promise<UserInfo> {
     userId: user.id,
     email: user.email,
     nickname: user.nickname,
-    positionId: user.positionId ?? null,
+    positionId: user.positionId ?? 0,
   };
 }
 
-export const authService = {
-  checkAvailability,
-  checkPositionAvailability,
-  createUser,
-  authenticateUser,
-  changeUserNickname,
-  changeUserPassword,
-  recoverUserPassword,
-  resetPassword,
-  getUserByEmail,
-};
+export default authService;
