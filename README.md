@@ -54,5 +54,5 @@ npx prisma migrate status
 5. 다른 팀원들은 수정된 `schema.prisma`와 마이그레이션 파일을 merge한 뒤 마이그레이션 적용
 
 ```bash
-npx prisma migrate dev
+npx prisma generate  # Prisma 클라이언트 타입 생성
 ```
