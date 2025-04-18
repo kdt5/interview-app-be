@@ -5,6 +5,8 @@ import authMiddleware, { AuthRequest } from "../middlewares/authMiddleware.js";
 import { AuthError } from "../constants/errors/authError.js";
 import tokenService from "../services/tokenService.js";
 import { UserInfoResponse } from "./userController.js";
+import userService from "../services/userService.js";
+
 interface CheckEmailAvailabilityRequest extends Request {
   body: {
     email: string;
@@ -139,10 +141,16 @@ export async function login(
 
     authMiddleware.setTokenCookies(res, { accessToken, refreshToken });
 
+    const userAnswerCount = await userService.getUserAnswerCount(user.userId);
+
     res.status(StatusCodes.OK).json({
       email: user.email,
       nickname: user.nickname,
       positionId: user.positionId ?? 0,
+      level: 0, // TODO: 레벨 추가
+      _count: {
+        answer: userAnswerCount,
+      },
       profileImageUrl: user.profileImageUrl,
     });
   } catch (error) {
