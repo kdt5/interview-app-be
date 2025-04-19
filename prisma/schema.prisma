@@ -10,21 +10,22 @@ datasource db {
 
 /// 사용자 정보를 저장하는 모델
 model User {
-  id             Int                  @id @default(autoincrement())
-  nickname       String               @unique @db.VarChar(50)
-  email          String               @unique @db.VarChar(254)
-  password       String               @db.VarChar(60)
-  createdAt      DateTime             @default(now()) @map("created_at")
-  updatedAt      DateTime             @default(now()) @updatedAt @map("updated_at")
-  answers        Answer[]
-  comments       Comment[]
-  favorites      Favorite[]
-  refreshTokens  RefreshToken[]
-  resetTokens    PasswordResetToken[]
-  Position       Position?            @relation(fields: [positionId], references: [id])
-  positionId     Int?                 @map("position_id")
-  communityPosts CommunityPost[]
-  reports        Report[]
+  id              Int                  @id @default(autoincrement())
+  nickname        String               @unique @db.VarChar(50)
+  email           String               @unique @db.VarChar(254)
+  password        String               @db.VarChar(60)
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @default(now()) @updatedAt @map("updated_at")
+  profileImageUrl String?              @map("profile_image_url") @db.VarChar(254)
+  answers         Answer[]
+  comments        Comment[]
+  favorites       Favorite[]
+  refreshTokens   RefreshToken[]
+  resetTokens     PasswordResetToken[]
+  Position        Position?            @relation(fields: [positionId], references: [id])
+  positionId      Int?                 @map("position_id")
+  communityPosts  CommunityPost[]
+  reports         Report[]
 
   @@index([positionId], map: "User_position_id_fkey")
 }
@@ -82,7 +83,7 @@ model CommunityPost {
   favoriteCount  Int                   @default(0) @map("favorite_count")
   postCategoryId Int                   @map("post_category_id")
   postCategory   CommunityPostCategory @relation(fields: [postCategoryId], references: [id], onDelete: Cascade)
-  viewCount     Int      @default(0) @map("view_count")
+  viewCount      Int                   @default(0) @map("view_count")
 
   @@index([userId])
   @@index([postCategoryId])
