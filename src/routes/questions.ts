@@ -1,9 +1,10 @@
 import { Router } from "express";
 import {
   getQuestionDetail,
-  getQuestions,
-  getWeeklyQuestion,
+  getBasicQuestions,
+  getCurrentWeeklyQuestion,
   addWeeklyQuestion,
+  getWeeklyQuestions,
 } from "../controllers/questionsController.js";
 import {
   validateAddWeeklyQuestion,
@@ -21,16 +22,23 @@ router.get(
   authMiddleware.authenticate,
   validateGetAllQuestion,
   validationErrorMiddleware,
-  getQuestions
+  getBasicQuestions
 );
-router.get("/weekly", authMiddleware.authenticate, getWeeklyQuestion);
-router.post(
-  "/weekly",
-  authMiddleware.authenticate,
-  validateAddWeeklyQuestion,
-  validationErrorMiddleware,
-  addWeeklyQuestion
-);
+
+router
+  .route("/weekly/current")
+  .get(authMiddleware.authenticate, getCurrentWeeklyQuestion);
+
+router
+  .route("weekly")
+  .get(authMiddleware.authenticate, getWeeklyQuestions)
+  .post(
+    authMiddleware.authenticate,
+    validateAddWeeklyQuestion,
+    validationErrorMiddleware,
+    addWeeklyQuestion
+  );
+
 router.get(
   "/:questionId",
   authMiddleware.authenticate,
