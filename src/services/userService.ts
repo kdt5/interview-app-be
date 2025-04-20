@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import prisma from "../lib/prisma.js";
 
 const userService = {
@@ -8,9 +9,14 @@ const userService = {
   getUserAnswerCount,
 };
 
-export const UserBasicInfoSelect = {
+export const UserBasicInfoSelect: Prisma.UserSelect = {
   id: true,
   nickname: true,
+  _count: {
+    select: {
+      answers: true,
+    },
+  },
 };
 
 // 유저가 받은 답변 좋아요 수

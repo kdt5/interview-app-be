@@ -29,7 +29,7 @@ async function checkQuestionExists(questionId: number) {
   );
 }
 
-const QuestionSelect: Prisma.QuestionSelect = {
+export const QuestionSelect: Prisma.QuestionSelect = {
   id: true,
   title: true,
   content: true,

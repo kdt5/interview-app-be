@@ -1,5 +1,6 @@
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
+import { QuestionSelect, QuestionsSelect } from "./questionService.js";
 import { UserBasicInfoSelect } from "./userService.js";
 
 const answerService = {
@@ -33,8 +34,8 @@ async function getAnsweredQuestions(userId: number) {
   const answeredQuestions = await prisma.answer.findMany({
     where: { userId: userId },
     include: {
-      user: {
-        select: UserBasicInfoSelect,
+      question: {
+        select: QuestionsSelect,
       },
     },
     orderBy: {
@@ -50,10 +51,10 @@ async function getAnswer(answerId: number) {
     where: { id: answerId },
     include: {
       user: {
-        select: {
-          id: true,
-          nickname: true,
-        },
+        select: UserBasicInfoSelect,
+      },
+      question: {
+        select: QuestionSelect,
       },
     },
   });
@@ -64,10 +65,7 @@ async function getAnswers(questionId: number) {
     where: { questionId },
     include: {
       user: {
-        select: {
-          id: true,
-          nickname: true,
-        },
+        select: UserBasicInfoSelect,
       },
     },
     orderBy: {
