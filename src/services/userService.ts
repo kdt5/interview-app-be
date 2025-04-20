@@ -8,6 +8,11 @@ const userService = {
   getUserAnswerCount,
 };
 
+export const UserBasicInfoSelect = {
+  id: true,
+  nickname: true,
+};
+
 // 유저가 받은 답변 좋아요 수
 async function getUserAnswerFavoriteReceived(userId: number): Promise<number> {
   const result = await prisma.answer.aggregate({

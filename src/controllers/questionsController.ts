@@ -2,8 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { questionService } from "../services/questionService.js";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
-import answerService from "../services/answerService.js";
-import { favoriteService } from "../services/favoriteService.js";
 
 export interface GetQuestionDetailRequest extends Request {
   params: {
@@ -107,6 +105,7 @@ export async function getQuestions(
         : parseInt(request.query.categoryId);
 
     const questions = await questionService.getQuestions(
+      request.user.userId,
       positionId,
       categoryId
     );
@@ -117,28 +116,7 @@ export async function getQuestions(
       return;
     }
 
-    const questionAnswerStatuses: boolean[] =
-      await answerService.getAnsweredStatuses(
-        request.user.userId,
-        questions.map((question) => question.id)
-      );
-
-    const questionFavoriteStatuses: boolean[] =
-      await favoriteService.getFavoriteStatuses(
-        request.user.userId,
-        "QUESTION",
-        questions.map((question) => question.id)
-      );
-
-    const response = questions.map((question, index) => {
-      return {
-        ...question,
-        isAnswered: questionAnswerStatuses[index],
-        isFavorite: questionFavoriteStatuses[index],
-      };
-    });
-
-    res.status(StatusCodes.OK).json(response);
+    res.status(StatusCodes.OK).json(questions);
   } catch (error) {
     next(error);
   }

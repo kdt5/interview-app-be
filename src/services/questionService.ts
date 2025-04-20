@@ -4,6 +4,8 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import weekOfYear from "dayjs/plugin/weekOfYear.js";
+import answerService from "./answerService.js";
+import { favoriteService } from "./favoriteService.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -74,7 +76,11 @@ export const QuestionsSelect: Prisma.QuestionSelect = {
   },
 };
 
-async function getQuestions(positionId?: number, categoryId?: number) {
+async function getQuestions(
+  userId: number,
+  positionId?: number,
+  categoryId?: number
+) {
   const whereClause: Prisma.QuestionWhereInput = {};
 
   if (positionId && categoryId) {
@@ -114,6 +120,27 @@ async function getQuestions(positionId?: number, categoryId?: number) {
     orderBy: {
       createdAt: "desc",
     },
+  });
+
+  const questionAnswerStatuses: boolean[] =
+    await answerService.getAnsweredStatuses(
+      userId,
+      questions.map((question) => question.id)
+    );
+
+  const questionFavoriteStatuses: boolean[] =
+    await favoriteService.getFavoriteStatuses(
+      userId,
+      "QUESTION",
+      questions.map((question) => question.id)
+    );
+
+  questions.map((question, index) => {
+    return {
+      ...question,
+      isAnswered: questionAnswerStatuses[index],
+      isFavorite: questionFavoriteStatuses[index],
+    };
   });
 
   return questions;

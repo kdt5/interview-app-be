@@ -1,7 +1,6 @@
-import { Prisma } from "@prisma/client";
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
-import { QuestionsSelect } from "./questionService.js";
+import { UserBasicInfoSelect } from "./userService.js";
 
 const answerService = {
   recordAnswer,
@@ -29,61 +28,48 @@ async function recordAnswer(
     },
   });
 }
-const AnswerSelect: Prisma.AnswerSelect = {
-  id: true,
-  content: true,
-  user: {
-    select: {
-      id: true,
-      nickname: true,
-    },
-  },
-  createdAt: true,
-  updatedAt: true,
-  viewCount: true,
-  favoriteCount: true,
-};
 
 async function getAnsweredQuestions(userId: number) {
   const answeredQuestions = await prisma.answer.findMany({
     where: { userId: userId },
-    select: {
-      ...AnswerSelect,
-      question: {
-        select: QuestionsSelect,
+    include: {
+      user: {
+        select: UserBasicInfoSelect,
       },
     },
     orderBy: {
-      createdAt: "desc",
+      id: "desc",
     },
   });
 
-  const mappedAnsweredQuestions = answeredQuestions.map((answeredQuestion) => {
-    return {
-      question: {
-        ...answeredQuestion.question,
-      },
-      answer: {
-        ...answeredQuestion,
-        question: undefined,
-      },
-    };
-  });
-
-  return mappedAnsweredQuestions;
+  return answeredQuestions;
 }
 
 async function getAnswer(answerId: number) {
   return await prisma.answer.findUnique({
     where: { id: answerId },
-    select: AnswerSelect,
+    include: {
+      user: {
+        select: {
+          id: true,
+          nickname: true,
+        },
+      },
+    },
   });
 }
 
 async function getAnswers(questionId: number) {
   return await prisma.answer.findMany({
     where: { questionId },
-    select: AnswerSelect,
+    include: {
+      user: {
+        select: {
+          id: true,
+          nickname: true,
+        },
+      },
+    },
     orderBy: {
       createdAt: "desc",
     },
@@ -131,16 +117,13 @@ async function getAnsweredStatuses(userId: number, questionIds: number[]) {
         in: questionIds,
       },
     },
-    select: {
-      questionId: true,
-    },
   });
 
-  const answeredQuestionIds = answeredQuestions.map(
-    (answeredQuestion) => answeredQuestion.questionId
+  const answeredQuestionIds = new Set(
+    answeredQuestions.map((answeredQuestion) => answeredQuestion.questionId)
   );
 
   return questionIds.map((questionId) => {
-    return answeredQuestionIds.includes(questionId);
+    return answeredQuestionIds.has(questionId);
   });
 }
