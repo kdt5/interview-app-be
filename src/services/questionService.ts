@@ -4,6 +4,8 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import weekOfYear from "dayjs/plugin/weekOfYear.js";
+import answerService from "./answerService.js";
+import { favoriteService } from "./favoriteService.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -27,7 +29,7 @@ async function checkQuestionExists(questionId: number) {
   );
 }
 
-const QuestionSelect: Prisma.QuestionSelect = {
+export const QuestionSelect: Prisma.QuestionSelect = {
   id: true,
   title: true,
   content: true,
@@ -52,9 +54,10 @@ async function getQuestionById(questionId: number) {
   });
 }
 
-const QuestionsSelect: Prisma.QuestionSelect = {
+export const QuestionsSelect: Prisma.QuestionSelect = {
   id: true,
   title: true,
+  createdAt: true,
   viewCount: true,
   favoriteCount: true,
   categories: {
@@ -66,9 +69,18 @@ const QuestionsSelect: Prisma.QuestionSelect = {
       },
     },
   },
+  _count: {
+    select: {
+      answers: true,
+    },
+  },
 };
 
-async function getQuestions(positionId?: number, categoryId?: number) {
+async function getQuestions(
+  userId: number,
+  positionId?: number,
+  categoryId?: number
+) {
   const whereClause: Prisma.QuestionWhereInput = {};
 
   if (positionId && categoryId) {
@@ -105,6 +117,30 @@ async function getQuestions(positionId?: number, categoryId?: number) {
   const questions = await prisma.question.findMany({
     where: whereClause,
     select: QuestionsSelect,
+    orderBy: {
+      id: "desc",
+    },
+  });
+
+  const questionAnswerStatuses: boolean[] =
+    await answerService.getAnsweredStatuses(
+      userId,
+      questions.map((question) => question.id)
+    );
+
+  const questionFavoriteStatuses: boolean[] =
+    await favoriteService.getFavoriteStatuses(
+      userId,
+      "QUESTION",
+      questions.map((question) => question.id)
+    );
+
+  questions.map((question, index) => {
+    return {
+      ...question,
+      isAnswered: questionAnswerStatuses[index],
+      isFavorite: questionFavoriteStatuses[index],
+    };
   });
 
   return questions;

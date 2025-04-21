@@ -3,7 +3,7 @@ import prisma from "../lib/prisma.js";
 import { Favorite, FavoriteTargetType } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 
-const favoriteService = {
+export const favoriteService = {
   getFavorites,
   getFavoriteStatus,
   createFavorite,
@@ -11,6 +11,7 @@ const favoriteService = {
   updateFavoriteCount,
   incrementFavoriteCount,
   decrementFavoriteCount,
+  getFavoriteStatuses,
 };
 
 async function getFavorites(userId: number, targetType: FavoriteTargetType) {
@@ -133,6 +134,29 @@ async function getFavoriteStatus(
       },
     },
   });
+}
+
+async function getFavoriteStatuses(
+  userId: number,
+  targetType: FavoriteTargetType,
+  targetIds: number[]
+): Promise<boolean[]> {
+  const favorites = await prisma.favorite.findMany({
+    where: {
+      userId,
+      targetType: targetType,
+      targetId: {
+        in: targetIds,
+      },
+    },
+    select: {
+      targetId: true,
+    },
+  });
+
+  const favoriteIds = favorites.map((favorite) => favorite.targetId);
+
+  return targetIds.map((questionId) => favoriteIds.includes(questionId));
 }
 
 async function createFavorite(
