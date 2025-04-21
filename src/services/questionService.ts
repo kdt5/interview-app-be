@@ -118,7 +118,7 @@ async function getQuestions(
     where: whereClause,
     select: QuestionsSelect,
     orderBy: {
-      createdAt: "desc",
+      id: "desc",
     },
   });
 

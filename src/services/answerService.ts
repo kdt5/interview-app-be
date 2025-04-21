@@ -69,7 +69,7 @@ async function getAnswers(questionId: number) {
       },
     },
     orderBy: {
-      createdAt: "desc",
+      id: "desc",
     },
   });
 }
