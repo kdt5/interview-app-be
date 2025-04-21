@@ -15,6 +15,8 @@ export interface UserInfo {
   email: string;
   nickname: string;
   positionId: number;
+  level: number;
+  point: number;
   profileImageUrl?: string;
 }
 
@@ -102,6 +104,16 @@ async function authenticateUser(
 ): Promise<AuthResponse> {
   const user = await prisma.user.findUnique({
     where: { email },
+    select: {
+      id: true,
+      email: true,
+      nickname: true,
+      positionId: true,
+      level: true,
+      point: true,
+      profileImageUrl: true,
+      password: true,
+    },
     include: { refreshTokens: true },
   });
 
@@ -130,7 +142,9 @@ async function authenticateUser(
       email: user.email,
       nickname: user.nickname,
       positionId: user.positionId ?? 0,
-      profileImageUrl: user.profileImageUrl,
+      level: user.level,
+      point: user.point,
+      profileImageUrl: user.profileImageUrl ?? undefined,
     },
     accessToken,
     refreshToken,
@@ -262,6 +276,15 @@ async function changeUserPassword(
 async function getUserByEmail(email: string): Promise<UserInfo> {
   const user = await prisma.user.findUnique({
     where: { email: email },
+    select: {
+      id: true,
+      email: true,
+      nickname: true,
+      positionId: true,
+      level: true,
+      point: true,
+      profileImageUrl: true,
+    },
   });
 
   if (!user) {
@@ -273,7 +296,9 @@ async function getUserByEmail(email: string): Promise<UserInfo> {
     email: user.email,
     nickname: user.nickname,
     positionId: user.positionId ?? 0,
-    profileImageUrl: user.profileImageUrl,
+    level: user.level,
+    point: user.point,
+    profileImageUrl: user.profileImageUrl ?? undefined,
   };
 }
 
