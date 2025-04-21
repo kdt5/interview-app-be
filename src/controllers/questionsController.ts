@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { questionService } from "../services/questionService.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
 
 export interface GetQuestionDetailRequest extends Request {
   params: {
@@ -80,7 +81,7 @@ export async function addWeeklyQuestion(
   }
 }
 
-export interface GetAllQuestionRequest extends Request {
+export interface GetAllQuestionRequest extends AuthRequest {
   query: {
     positionId?: string;
     categoryId?: string;
@@ -104,6 +105,7 @@ export async function getQuestions(
         : parseInt(request.query.categoryId);
 
     const questions = await questionService.getQuestions(
+      request.user.userId,
       positionId,
       categoryId
     );
