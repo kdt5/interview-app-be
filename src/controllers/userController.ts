@@ -8,11 +8,11 @@ export interface UserInfoResponse {
   email: string;
   nickname: string;
   level: number;
-  _count: {
+  count: {
     answer: number;
   };
   positionId: number;
-  profileImageUrl?: string;
+  profileImageUrl: string | null;
 }
 
 export async function getMe(
@@ -30,7 +30,7 @@ export async function getMe(
       email: user.email,
       nickname: user.nickname,
       level: 0, // TODO: 레벨 추가
-      _count: {
+      count: {
         answer: userAnswerCount,
       },
       positionId: user.positionId ?? 0,

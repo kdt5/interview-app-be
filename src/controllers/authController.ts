@@ -148,7 +148,7 @@ export async function login(
       nickname: user.nickname,
       positionId: user.positionId ?? 0,
       level: 0, // TODO: 레벨 추가
-      _count: {
+      count: {
         answer: userAnswerCount,
       },
       profileImageUrl: user.profileImageUrl,
