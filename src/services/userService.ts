@@ -6,6 +6,8 @@ const userService = {
   getUserCommunityPostFavoriteReceived,
   getUserCommentFavoriteReceived,
   getUserAnswerCount,
+  addPointsToUser,
+  getLevelUpProgress,
 };
 
 // 유저가 받은 답변 좋아요 수
@@ -107,6 +109,57 @@ async function getUserStats(userId: number): Promise<UserStats> {
     communityPostCount,
     commentCount,
   };
+}
+
+function getLevelUpProgress(points: number, level: number){
+  const requiredPoints = calculateTotalRequiredLevelUpPoints(level + 1) - calculateTotalRequiredLevelUpPoints(level);
+
+  return {
+    currentPoints: points,
+    requiredPoints,
+    progressPercent: Math.floor((points / requiredPoints) * 100),
+  };
+}
+
+function calculateTotalRequiredLevelUpPoints(level: number): number {
+  let total = 0;
+
+  for (let i = 1; i <= level; i++) {
+    total += level * 10;
+  }
+
+  return total;
+}
+
+async function addPointsToUser(userId: number, points: number): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if(!user) {
+    throw new Error("존재하지 않는 사용자 입니다.");
+  }
+
+  let currentLevel = user.level as number;
+  const newTotalPoints = user.point + points as number;
+  let totalRequiredPoints = calculateTotalRequiredLevelUpPoints(currentLevel + 1);
+
+  while(newTotalPoints >= totalRequiredPoints) {
+    currentLevel++;
+    totalRequiredPoints = calculateTotalRequiredLevelUpPoints(currentLevel + 1);
+  }
+
+  await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      point: newTotalPoints,
+      level: currentLevel,
+    },
+  });
 }
 
 export default userService;
