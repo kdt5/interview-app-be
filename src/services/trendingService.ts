@@ -11,6 +11,11 @@ const trendingService = {
 const startDate = dbDayjs({ days: -7 });
 const endDate = dbDayjs();
 
+// 가중치 상수
+const FAVORITE_WEIGHT = 2; // 즐겨찾기 가중치
+const COMMENT_WEIGHT = 1; // 댓글 가중치
+const VIEW_WEIGHT = 0.3; // 조회수 가중치
+
 async function getTrendingPosts(
   limit: number = 10,
   categoryId?: number
@@ -44,40 +49,55 @@ async function getTrendingPosts(
     },
   });
 
-  // 즐겨찾기와 댓글 수를 합산하여 정렬
+  // 즐겨찾기와 댓글 수를 가중치를 적용하여 합산
   const postScores = new Map<number, number>();
 
   recentFavorites.forEach((fav) => {
     postScores.set(
       fav.targetId,
-      (postScores.get(fav.targetId) || 0) + fav._count.targetId
+      (postScores.get(fav.targetId) || 0) +
+        fav._count.targetId * FAVORITE_WEIGHT
     );
   });
 
   recentComments.forEach((comment) => {
     postScores.set(
       comment.targetId,
-      (postScores.get(comment.targetId) || 0) + comment._count.targetId
+      (postScores.get(comment.targetId) || 0) +
+        comment._count.targetId * COMMENT_WEIGHT
     );
   });
 
   // 점수가 높은 순서대로 postId 정렬
-  const sortedPostIds = Array.from(postScores.entries())
+  const scoredPostIds = Array.from(postScores.entries())
     .sort((a, b) => b[1] - a[1])
-    .map(([postId]) => postId);
+    .map(([postId]) => postId)
+    .slice(0, limit);
 
   // 정렬된 순서대로 게시글 조회
   const trendingPosts = await prisma.communityPost.findMany({
     where: {
       id: {
-        in: sortedPostIds,
+        in: scoredPostIds,
       },
       postCategoryId: categoryId ? categoryId : undefined,
     },
   });
 
+  // 조회수 점수 추가
+  trendingPosts.forEach((post) => {
+    const currentScore = postScores.get(post.id) || 0;
+    postScores.set(post.id, currentScore + post.viewCount * VIEW_WEIGHT);
+  });
+
+  // 최종 점수로 재정렬
+  const finalScoredPostIds = Array.from(postScores.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([postId]) => postId)
+    .slice(0, limit);
+
   // 정렬된 순서대로 반환
-  const result = sortedPostIds.map(
+  const result = finalScoredPostIds.map(
     (postId) => trendingPosts.find((post) => post.id === postId)!
   );
 
@@ -86,7 +106,7 @@ async function getTrendingPosts(
     const additionalPosts = await prisma.communityPost.findMany({
       where: {
         id: {
-          notIn: sortedPostIds,
+          notIn: finalScoredPostIds,
         },
         postCategoryId: categoryId ? categoryId : undefined,
       },
