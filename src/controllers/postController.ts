@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { StatusCodes } from "http-status-codes";
 import { Request, Response, NextFunction } from "express";
 import { UserInfo } from "../services/authService";
@@ -59,7 +60,15 @@ export async function getPostDetail(
 
     await communityService.increasePostViewCount(postId);
 
-    res.status(StatusCodes.OK).json(postDetail);
+    const { _count, ...userWithoutCount } = postDetail.user as { _count?: { answers?: number } };
+
+    res.status(StatusCodes.OK).json({
+      ...postDetail,
+      user: {
+        ...userWithoutCount,
+        answerCount: _count && typeof _count.answers === "number" ? _count.answers : 0,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -80,7 +89,17 @@ export async function getPosts(
 
     const posts = await communityService.getPosts(categoryId ? parseInt(categoryId) : undefined);
 
-    res.status(StatusCodes.OK).json(posts);
+    res.status(StatusCodes.OK).json(posts.map(post => {
+      const { _count, ...userWithoutCount } = post.user as { _count?: { answers?: number } };
+
+      return {
+        ...post,
+        user: {
+          ...userWithoutCount,
+          answerCount: _count && typeof _count.answers === "number" ? _count.answers : 0,
+        },
+      }
+    }));
   } catch (error) {
     next(error);
   }

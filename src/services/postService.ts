@@ -40,6 +40,11 @@ const PostSelect: Prisma.CommunityPostSelect = {
       id: true,
       nickname: true,
       profileImageUrl: true,
+      _count: {
+        select: {
+          answers: true,
+        }
+      }
     },
   },
   createdAt: true,
