@@ -1,6 +1,6 @@
 import prisma from "../lib/prisma.js";
 import dbDayjs from "../lib/dayjs.js";
-import { CommunityPost, FavoriteTargetType } from "@prisma/client";
+import { CommunityPost, FavoriteTargetType, Prisma } from "@prisma/client";
 
 const trendingService = {
   getTrendingPosts,
@@ -20,59 +20,48 @@ async function getTrendingPosts(
   limit: number = 10,
   categoryId?: number
 ): Promise<CommunityPost[]> {
-  // 최근 일주일 동안의 즐겨찾기 수 집계
-  const recentFavorites = await prisma.favorite.groupBy({
-    by: ["targetId"],
-    where: {
-      targetType: FavoriteTargetType.POST,
-      createdAt: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-    _count: {
-      targetId: true,
-    },
-  });
+  // 최근 일주일 동안의 활동 점수 계산
+  const recentActivities = await prisma.$queryRaw<
+    { postId: number; score: number }[]
+  >`
+    WITH recent_favorites AS (
+      SELECT 
+        targetId as postId,
+        COUNT(*) * ${FAVORITE_WEIGHT} as favorite_score
+      FROM Favorite
+      WHERE targetType = ${FavoriteTargetType.POST}
+        AND createdAt >= ${startDate}
+        AND createdAt <= ${endDate}
+      GROUP BY targetId
+    ),
+    recent_comments AS (
+      SELECT 
+        targetId as postId,
+        COUNT(*) * ${COMMENT_WEIGHT} as comment_score
+      FROM Comment
+      WHERE createdAt >= ${startDate}
+        AND createdAt <= ${endDate}
+      GROUP BY targetId
+    )
+    SELECT 
+      p.id as postId,
+      COALESCE(f.favorite_score, 0) + 
+      COALESCE(c.comment_score, 0) + 
+      (p.viewCount * ${VIEW_WEIGHT}) as score
+    FROM CommunityPost p
+    LEFT JOIN recent_favorites f ON p.id = f.postId
+    LEFT JOIN recent_comments c ON p.id = c.postId
+    WHERE ${
+      categoryId
+        ? Prisma.sql`p.postCategoryId = ${categoryId}`
+        : Prisma.sql`1=1`
+    }
+    ORDER BY score DESC
+    LIMIT ${limit}
+  `;
 
-  // 최근 일주일 동안의 댓글 수 집계
-  const recentComments = await prisma.comment.groupBy({
-    by: ["targetId"],
-    where: {
-      createdAt: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-    _count: {
-      targetId: true,
-    },
-  });
-
-  // 즐겨찾기와 댓글 수를 가중치를 적용하여 합산
-  const postScores = new Map<number, number>();
-
-  recentFavorites.forEach((fav) => {
-    postScores.set(
-      fav.targetId,
-      (postScores.get(fav.targetId) || 0) +
-        fav._count.targetId * FAVORITE_WEIGHT
-    );
-  });
-
-  recentComments.forEach((comment) => {
-    postScores.set(
-      comment.targetId,
-      (postScores.get(comment.targetId) || 0) +
-        comment._count.targetId * COMMENT_WEIGHT
-    );
-  });
-
-  // 점수가 높은 순서대로 postId 정렬
-  const scoredPostIds = Array.from(postScores.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([postId]) => postId)
-    .slice(0, limit);
+  // 점수가 있는 게시글 ID 목록
+  const scoredPostIds = recentActivities.map((activity) => activity.postId);
 
   // 정렬된 순서대로 게시글 조회
   const trendingPosts = await prisma.communityPost.findMany({
@@ -80,24 +69,11 @@ async function getTrendingPosts(
       id: {
         in: scoredPostIds,
       },
-      postCategoryId: categoryId ? categoryId : undefined,
     },
   });
 
-  // 조회수 점수 추가
-  trendingPosts.forEach((post) => {
-    const currentScore = postScores.get(post.id) || 0;
-    postScores.set(post.id, currentScore + post.viewCount * VIEW_WEIGHT);
-  });
-
-  // 최종 점수로 재정렬
-  const finalScoredPostIds = Array.from(postScores.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([postId]) => postId)
-    .slice(0, limit);
-
   // 정렬된 순서대로 반환
-  const result = finalScoredPostIds.map(
+  const result = scoredPostIds.map(
     (postId) => trendingPosts.find((post) => post.id === postId)!
   );
 
@@ -106,7 +82,7 @@ async function getTrendingPosts(
     const additionalPosts = await prisma.communityPost.findMany({
       where: {
         id: {
-          notIn: finalScoredPostIds,
+          notIn: scoredPostIds,
         },
         postCategoryId: categoryId ? categoryId : undefined,
       },
