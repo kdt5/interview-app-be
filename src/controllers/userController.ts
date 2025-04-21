@@ -1,22 +1,40 @@
 import { NextFunction, Response, Request } from "express";
 import { StatusCodes } from "http-status-codes";
-import { authService } from "../services/authService.js";
+import authService from "../services/authService.js";
 import userService from "../services/userService.js";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
 
+export interface UserInfoResponse {
+  email: string;
+  nickname: string;
+  level: number;
+  _count: {
+    answer: number;
+  };
+  positionId: number;
+  profileImageUrl?: string;
+}
+
 export async function getMe(
   req: Request,
-  res: Response,
+  res: Response<UserInfoResponse>,
   next: NextFunction
 ): Promise<void> {
   try {
     const request = req as AuthRequest;
     const user = await authService.getUserByEmail(request.user.email);
 
+    const userAnswerCount = await userService.getUserAnswerCount(user.userId);
+
     res.status(StatusCodes.OK).json({
       email: user.email,
       nickname: user.nickname,
-      positionId: user.positionId,
+      level: 0, // TODO: 레벨 추가
+      _count: {
+        answer: userAnswerCount,
+      },
+      positionId: user.positionId ?? 0,
+      profileImageUrl: user.profileImageUrl,
     });
   } catch (error) {
     next(error);

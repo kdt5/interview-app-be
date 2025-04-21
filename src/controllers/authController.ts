@@ -1,9 +1,11 @@
 import { Request, NextFunction, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { authService } from "../services/authService.js";
+import authService from "../services/authService.js";
 import authMiddleware, { AuthRequest } from "../middlewares/authMiddleware.js";
 import { AuthError } from "../constants/errors/authError.js";
 import tokenService from "../services/tokenService.js";
+import { UserInfoResponse } from "./userController.js";
+import userService from "../services/userService.js";
 
 interface CheckEmailAvailabilityRequest extends Request {
   body: {
@@ -128,7 +130,7 @@ interface LoginRequest extends Request {
 
 export async function login(
   req: Request,
-  res: Response,
+  res: Response<UserInfoResponse>,
   next: NextFunction
 ): Promise<void> {
   try {
@@ -139,10 +141,17 @@ export async function login(
 
     authMiddleware.setTokenCookies(res, { accessToken, refreshToken });
 
+    const userAnswerCount = await userService.getUserAnswerCount(user.userId);
+
     res.status(StatusCodes.OK).json({
       email: user.email,
       nickname: user.nickname,
-      positionId: user.positionId,
+      positionId: user.positionId ?? 0,
+      level: 0, // TODO: 레벨 추가
+      _count: {
+        answer: userAnswerCount,
+      },
+      profileImageUrl: user.profileImageUrl,
     });
   } catch (error) {
     next(error);

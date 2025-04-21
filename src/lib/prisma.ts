@@ -1,5 +1,5 @@
 import { PrismaClient, Favorite } from "@prisma/client";
-import rankingService, { FavoriteTargetType } from "../services/rankingService";
+import favoriteService from "../services/favoriteService";
 
 const prisma = new PrismaClient().$extends({
   name: "favoriteExtension",
@@ -8,8 +8,8 @@ const prisma = new PrismaClient().$extends({
       async create({ args, query }) {
         const result = (await query(args)) as Favorite;
         try {
-          await rankingService.incrementFavoriteCount(
-            result.targetType as FavoriteTargetType,
+          await favoriteService.incrementFavoriteCount(
+            result.targetType,
             Number(result.targetId)
           );
         } catch (error) {
@@ -26,8 +26,8 @@ const prisma = new PrismaClient().$extends({
 
         if (favorite) {
           try {
-            await rankingService.decrementFavoriteCount(
-              favorite.targetType as FavoriteTargetType,
+            await favoriteService.decrementFavoriteCount(
+              favorite.targetType,
               Number(favorite.targetId)
             );
           } catch (error) {
