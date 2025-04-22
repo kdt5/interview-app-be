@@ -121,7 +121,7 @@ export async function checkCommentPermission(
 
 export interface UpdateCommentRequest extends AuthRequest {
   params: {
-    commentId: string;
+    targetId: string;
   };
   body: {
     content: string;
@@ -135,10 +135,10 @@ export async function updateComment(
 ): Promise<void> {
   try {
     const request = req as UpdateCommentRequest;
-    const { commentId } = request.params;
+    const { targetId } = request.params;
     const { content } = request.body;
 
-    await commentService.updateComment(parseInt(commentId), content);
+    await commentService.updateComment(parseInt(targetId), content);
   } catch (error) {
     next(error);
   }
@@ -146,7 +146,7 @@ export async function updateComment(
 
 interface DeleteCommentRequest extends AuthRequest {
   params: {
-    commentId: string;
+    targetId: string;
   };
 }
 
@@ -157,8 +157,8 @@ export async function deleteComment(
 ): Promise<void> {
   try {
     const request = req as DeleteCommentRequest;
-    const { commentId } = request.params;
-    await commentService.deleteComment(parseInt(commentId));
+    const { targetId } = request.params;
+    await commentService.deleteComment(parseInt(targetId));
   } catch (error) {
     next(error);
   }
