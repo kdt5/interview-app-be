@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { questionService } from "../services/questionService.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
 
 export interface GetQuestionDetailRequest extends Request {
   params: {
@@ -33,13 +34,13 @@ export async function getQuestionDetail(
   }
 }
 
-export async function getWeeklyQuestion(
+export async function getCurrentWeeklyQuestion(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const question = await questionService.getWeeklyQuestion();
+    const question = await questionService.getCurrentWeeklyQuestion();
 
     if (!question) {
       res
@@ -80,20 +81,20 @@ export async function addWeeklyQuestion(
   }
 }
 
-export interface GetAllQuestionRequest extends Request {
+export interface GetQuestionRequest extends AuthRequest {
   query: {
     positionId?: string;
     categoryId?: string;
   };
 }
 
-export async function getQuestions(
+export async function getBasicQuestions(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const request = req as GetAllQuestionRequest;
+    const request = req as GetQuestionRequest;
     const positionId =
       request.query.positionId === undefined
         ? undefined
@@ -103,7 +104,8 @@ export async function getQuestions(
         ? undefined
         : parseInt(request.query.categoryId);
 
-    const questions = await questionService.getQuestions(
+    const questions = await questionService.getBasicQuestions(
+      request.user.userId,
       positionId,
       categoryId
     );
@@ -120,8 +122,26 @@ export async function getQuestions(
   }
 }
 
-export interface GetAllAnswersRequest extends Request {
-  params: {
-    questionId: string;
-  };
+export async function getWeeklyQuestions(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const request = req as AuthRequest;
+    const questions = await questionService.getWeeklyQuestions(
+      request.user.userId
+    );
+
+    if (questions.length === 0) {
+      res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "주간 질문 목록을 찾을 수 없습니다." });
+      return;
+    }
+
+    res.status(StatusCodes.OK).json(questions);
+  } catch (error) {
+    next(error);
+  }
 }

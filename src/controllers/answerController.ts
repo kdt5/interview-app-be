@@ -4,7 +4,6 @@ import { StatusCodes } from "http-status-codes";
 import answerService from "../services/answerService.js";
 import { questionService } from "../services/questionService.js";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
-import { GetAllAnswersRequest } from "./questionsController.js";
 
 export interface RecordAnswerRequest extends AuthRequest {
   params: {
@@ -61,20 +60,7 @@ export async function getAnsweredQuestions(
       return;
     }
 
-    const mappedAnsweredQuestions = answeredQuestions.map((answer) => {
-      return {
-        id: answer.id,
-        question: {
-          id: answer.question.id,
-          title: answer.question.title,
-          categories: answer.question.categories.map(
-            (category) => category.categoryId
-          ),
-        },
-      };
-    });
-
-    res.status(StatusCodes.OK).json(mappedAnsweredQuestions);
+    res.status(StatusCodes.OK).json(answeredQuestions);
   } catch (error) {
     next(error);
   }
@@ -105,12 +91,9 @@ export async function getAnswer(
   }
 }
 
-export interface EditAnswerRequest extends Request {
+interface GetAnswersRequest extends AuthRequest {
   params: {
-    answerId: string;
-  };
-  body: {
-    newAnswer: string;
+    questionId: string;
   };
 }
 
@@ -120,7 +103,7 @@ export async function getAnswers(
   next: NextFunction
 ): Promise<void> {
   try {
-    const request = req as GetAllAnswersRequest;
+    const request = req as GetAnswersRequest;
     const { questionId } = request.params;
 
     const answers = await answerService.getAnswers(parseInt(questionId));
@@ -135,6 +118,15 @@ export async function getAnswers(
   } catch (error) {
     next(error);
   }
+}
+
+export interface EditAnswerRequest extends Request {
+  params: {
+    answerId: string;
+  };
+  body: {
+    newAnswer: string;
+  };
 }
 
 export async function editAnswer(
