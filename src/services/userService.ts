@@ -134,23 +134,20 @@ async function getUserStats(userId: number): Promise<UserStats> {
 }
 
 function getLevelUpProgress(points: number, level: number){
-  const requiredPoints = calculateTotalRequiredLevelUpPoints(level + 1) - calculateTotalRequiredLevelUpPoints(level);
+  const currentLevelMinPoints = calculateTotalRequiredLevelUpPoints(level);
+  const nextLevelMinPoints = calculateTotalRequiredLevelUpPoints(level + 1);
+  const requiredPoints = nextLevelMinPoints - currentLevelMinPoints;
+  const currentProgress = points - currentLevelMinPoints;
 
   return {
-    currentPoints: points,
+    currentPoints: currentProgress,
     requiredPoints,
-    progressPercent: Math.floor((points / requiredPoints) * 100),
+    progressPercent: Math.floor((currentProgress / requiredPoints) * 100),
   };
 }
 
 function calculateTotalRequiredLevelUpPoints(level: number): number {
-  let total = 0;
-
-  for (let i = 1; i <= level; i++) {
-    total += level * 10;
-  }
-
-  return total;
+  return (level * (level + 1) / 2 * 10);
 }
 
 async function getFavoriteContentAuthor(targetType: FavoriteTargetType, contentId: number) {
