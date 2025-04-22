@@ -113,8 +113,8 @@ async function authenticateUser(
       point: true,
       profileImageUrl: true,
       password: true,
+      refreshTokens: true,
     },
-    include: { refreshTokens: true },
   });
 
   if (!user) throw new AuthError("UNAUTHORIZED");
