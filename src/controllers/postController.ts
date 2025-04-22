@@ -54,7 +54,7 @@ export async function getPostDetail(
     const postDetail = await communityService.getPostDetail(postId);
 
     if (!postDetail) {
-      res.status(StatusCodes.NOT_FOUND).json({ message: "Post not found" });
+      res.status(StatusCodes.NOT_FOUND).json({ message: "존재하지 않는 게시글 입니다." });
       return;
     }
 
