@@ -26,11 +26,7 @@ router.get(
 );
 
 router
-  .route("/weekly/current")
-  .get(authMiddleware.authenticate, getCurrentWeeklyQuestion);
-
-router
-  .route("weekly")
+  .route("/weekly")
   .get(authMiddleware.authenticate, getWeeklyQuestions)
   .post(
     authMiddleware.authenticate,
@@ -38,6 +34,10 @@ router
     validationErrorMiddleware,
     addWeeklyQuestion
   );
+
+router
+  .route("/weekly/current")
+  .get(authMiddleware.authenticate, getCurrentWeeklyQuestion);
 
 router.get(
   "/:questionId",
