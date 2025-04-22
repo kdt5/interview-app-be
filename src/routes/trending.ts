@@ -1,9 +1,9 @@
 import { Router } from "express";
-import authMiddleware from "../middlewares/authMiddleware";
+import authMiddleware from "../middlewares/authMiddleware.js";
 import {
   getTrendingQuestions,
   getTrendingPosts,
-} from "../controllers/trendingController";
+} from "../controllers/trendingController.js";
 
 const router = Router();
 

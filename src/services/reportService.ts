@@ -1,6 +1,6 @@
 import { ReportStatus, ReportTargetType } from "@prisma/client";
-import prisma from "../lib/prisma";
-import { GetReportRequest } from "../controllers/reportController";
+import prisma from "../lib/prisma.js";
+import { GetReportRequest } from "../controllers/reportController.js";
 
 const reportService = {
   getReports,

@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import {
   EditAnswerRequest,
   RecordAnswerRequest,
-} from "../controllers/answerController";
+} from "../controllers/answerController.js";
 
 export function validateRecordAnswer(
   req: Request,

@@ -1,5 +1,5 @@
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import prisma from "../lib/prisma";
+import prisma from "../lib/prisma.js";
 
 const uploadMiddleware = {
   deleteImageFromS3,
@@ -37,6 +37,6 @@ async function getUserImageUrl(userId: number): Promise<string> {
   if (!user || !user.profileImageUrl) {
     return "";
   } else {
-    return user.profileImageUrl as string;
+    return user.profileImageUrl;
   }
 }

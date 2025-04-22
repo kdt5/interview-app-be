@@ -23,33 +23,87 @@ const COMMENT_WEIGHT = 1; // 댓글 가중치
 const ANSWER_WEIGHT = 1; // 답변 가중치
 const VIEW_WEIGHT = 0.3; // 조회수 가중치
 
+function getRecentFavoritesCte(
+  targetType: FavoriteTargetType,
+  weight: number,
+  startDate: Date,
+  endDate: Date
+): Prisma.Sql {
+  return Prisma.sql`
+    SELECT 
+      target_id as ${Prisma.raw(
+        targetType === FavoriteTargetType.POST ? "postId" : "questionId"
+      )},
+      COUNT(*) * ${weight} as favorite_score
+    FROM Favorite
+    WHERE target_type = ${targetType}
+      AND created_at >= ${startDate}
+      AND created_at <= ${endDate}
+    GROUP BY target_id
+  `;
+}
+
+function getRecentCommentsCte(
+  weight: number,
+  startDate: Date,
+  endDate: Date
+): Prisma.Sql {
+  return Prisma.sql`
+    SELECT 
+      post_id as postId,
+      COUNT(*) * ${weight} as comment_score
+    FROM Comment
+    WHERE created_at >= ${startDate}
+      AND created_at <= ${endDate}  
+    GROUP BY post_id
+  `;
+}
+
+function getRecentAnswersCte(
+  weight: number,
+  startDate: Date,
+  endDate: Date
+): Prisma.Sql {
+  return Prisma.sql`
+    SELECT 
+      question_id as questionId,
+      COUNT(*) * ${weight} as answer_score
+    FROM Answer
+    WHERE created_at >= ${startDate}
+      AND created_at <= ${endDate}
+    GROUP BY question_id
+  `;
+}
+
 async function getTrendingPosts(
   categoryId?: number,
   limit: number = 10
 ): Promise<CommunityPost[]> {
+  // categoryId 검증
+  if (categoryId !== undefined && !Number.isInteger(categoryId)) {
+    throw new Error("Invalid categoryId");
+  }
+
+  // limit 검증
+  if (!Number.isInteger(limit) || limit <= 0) {
+    throw new Error("Invalid limit");
+  }
+
   // 최근 활동 점수 계산
   const recentActivities = await prisma.$queryRaw<
     { postId: number; score: number }[]
   >`
-    WITH recent_favorites AS (
-      SELECT 
-        target_id as postId,
-        COUNT(*) * ${FAVORITE_WEIGHT} as favorite_score
-      FROM Favorite
-      WHERE target_type = ${FavoriteTargetType.POST}
-        AND created_at >= ${startDate}
-        AND created_at <= ${endDate}
-      GROUP BY target_id
-    ),
-    recent_comments AS (
-      SELECT 
-        post_id as postId,
-        COUNT(*) * ${COMMENT_WEIGHT} as comment_score
-      FROM Comment
-      WHERE created_at >= ${startDate}
-        AND created_at <= ${endDate}
-      GROUP BY post_id
-    )
+    WITH recent_favorites AS (${getRecentFavoritesCte(
+      FavoriteTargetType.POST,
+      FAVORITE_WEIGHT,
+      startDate,
+      endDate
+    )}),
+    recent_comments AS (${getRecentCommentsCte(
+      COMMENT_WEIGHT,
+      startDate,
+      endDate
+    )})
     SELECT 
       p.id as postId,
       COALESCE(f.favorite_score, 0) + 
@@ -108,29 +162,31 @@ async function getTrendingQuestions(
   categoryId?: number,
   limit: number = 10
 ): Promise<Question[]> {
+  // categoryId 검증
+  if (categoryId !== undefined && !Number.isInteger(categoryId)) {
+    throw new Error("Invalid categoryId");
+  }
+
+  // limit 검증
+  if (!Number.isInteger(limit) || limit <= 0) {
+    throw new Error("Invalid limit");
+  }
+
   // 최근 활동 점수 계산
   const recentActivities = await prisma.$queryRaw<
     { questionId: number; score: number }[]
   >`
-    WITH recent_favorites AS (
-      SELECT 
-        target_id as questionId,
-        COUNT(*) * ${FAVORITE_WEIGHT} as favorite_score
-      FROM Favorite
-      WHERE target_type = ${FavoriteTargetType.QUESTION}
-        AND created_at >= ${startDate}
-        AND created_at <= ${endDate}
-      GROUP BY target_id
-    ),
-    recent_answers AS (
-      SELECT 
-        question_id as questionId,
-        COUNT(*) * ${ANSWER_WEIGHT} as answer_score
-      FROM Answer
-      WHERE created_at >= ${startDate}
-        AND created_at <= ${endDate}
-      GROUP BY question_id
-    )
+    WITH recent_favorites AS (${getRecentFavoritesCte(
+      FavoriteTargetType.QUESTION,
+      FAVORITE_WEIGHT,
+      startDate,
+      endDate
+    )}),
+    recent_answers AS (${getRecentAnswersCte(
+      ANSWER_WEIGHT,
+      startDate,
+      endDate
+    )})
     SELECT 
       q.id as questionId,
       COALESCE(f.favorite_score, 0) + 

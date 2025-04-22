@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import trendingService from "../services/trendingService";
+import trendingService from "../services/trendingService.js";
 
 interface TrendingQuestionsRequest extends Request {
   query: {
@@ -18,8 +18,8 @@ export async function getTrendingQuestions(
     const request = req as TrendingQuestionsRequest;
     const { categoryId, limit } = request.query;
     const trendingQuestions = await trendingService.getTrendingQuestions(
-      categoryId ? parseInt(categoryId) : undefined,
-      limit ? parseInt(limit) : undefined
+      categoryId ? Number(categoryId) : undefined,
+      limit ? Number(limit) : undefined
     );
     res.status(StatusCodes.OK).json(trendingQuestions);
   } catch (error) {
@@ -42,8 +42,8 @@ export async function getTrendingPosts(
     const request = req as TrendingPostsRequest;
     const { categoryId, limit } = request.query;
     const trendingPosts = await trendingService.getTrendingPosts(
-      categoryId ? parseInt(categoryId) : undefined,
-      limit ? parseInt(limit) : undefined
+      categoryId ? Number(categoryId) : undefined,
+      limit ? Number(limit) : undefined
     );
     res.status(StatusCodes.OK).json(trendingPosts);
   } catch (error) {
