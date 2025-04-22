@@ -90,9 +90,7 @@ async function getTrendingPosts(
   }
 
   // 최근 활동 점수 계산
-  const recentActivities = await prisma.$queryRaw<
-    { postId: number; score: number }[]
-  >`
+  const trendingPosts = await prisma.$queryRaw<CommunityPost[]>`
     WITH recent_favorites AS (${getRecentFavoritesCte(
       FavoriteTargetType.POST,
       FAVORITE_WEIGHT,
@@ -105,10 +103,7 @@ async function getTrendingPosts(
       endDate
     )})
     SELECT 
-      p.id as postId,
-      COALESCE(f.favorite_score, 0) + 
-      COALESCE(c.comment_score, 0) + 
-      (p.view_count * ${VIEW_WEIGHT}) as score
+      p.*
     FROM CommunityPost p
     LEFT JOIN recent_favorites f ON p.id = f.postId
     LEFT JOIN recent_comments c ON p.id = c.postId
@@ -117,45 +112,31 @@ async function getTrendingPosts(
         ? Prisma.sql`p.post_category_id = ${categoryId}`
         : Prisma.sql`1=1`
     }
-    ORDER BY score DESC
+    ORDER BY (COALESCE(f.favorite_score, 0) + 
+      COALESCE(c.comment_score, 0) + 
+      (p.view_count * ${VIEW_WEIGHT})) DESC
     LIMIT ${limit}
   `;
-  // 점수가 있는 게시글 ID 목록
-  const scoredPostIds = recentActivities.map((activity) => activity.postId);
-
-  // 정렬된 순서대로 게시글 조회
-  const trendingPosts = await prisma.communityPost.findMany({
-    where: {
-      id: {
-        in: scoredPostIds,
-      },
-    },
-  });
-
-  // 정렬된 순서대로 반환
-  const result = scoredPostIds.map(
-    (postId) => trendingPosts.find((post) => post.id === postId)!
-  );
 
   // limit보다 적으면 조회수 순으로 추가 게시글 조회
-  if (result.length < limit) {
+  if (trendingPosts.length < limit) {
     const additionalPosts = await prisma.communityPost.findMany({
       where: {
         id: {
-          notIn: scoredPostIds,
+          notIn: trendingPosts.map((post) => post.id),
         },
         postCategoryId: categoryId ? categoryId : undefined,
       },
       orderBy: {
         viewCount: "desc",
       },
-      take: limit - result.length,
+      take: limit - trendingPosts.length,
     });
 
-    result.push(...additionalPosts);
+    trendingPosts.push(...additionalPosts);
   }
 
-  return result;
+  return trendingPosts;
 }
 
 async function getTrendingQuestions(
@@ -173,9 +154,7 @@ async function getTrendingQuestions(
   }
 
   // 최근 활동 점수 계산
-  const recentActivities = await prisma.$queryRaw<
-    { questionId: number; score: number }[]
-  >`
+  const trendingQuestions = await prisma.$queryRaw<Question[]>`
     WITH recent_favorites AS (${getRecentFavoritesCte(
       FavoriteTargetType.QUESTION,
       FAVORITE_WEIGHT,
@@ -188,10 +167,7 @@ async function getTrendingQuestions(
       endDate
     )})
     SELECT 
-      q.id as questionId,
-      COALESCE(f.favorite_score, 0) + 
-      COALESCE(a.answer_score, 0) + 
-      (q.view_count * ${VIEW_WEIGHT}) as score
+      q.*
     FROM Question q
     LEFT JOIN recent_favorites f ON q.id = f.questionId
     LEFT JOIN recent_answers a ON q.id = a.questionId
@@ -203,35 +179,18 @@ async function getTrendingQuestions(
     )`
         : Prisma.sql``
     }
-    ORDER BY score DESC
+    ORDER BY (COALESCE(f.favorite_score, 0) + 
+      COALESCE(a.answer_score, 0) + 
+      (q.view_count * ${VIEW_WEIGHT})) DESC
     LIMIT ${limit}
   `;
-  // 점수가 있는 질문 ID 목록
-  const scoredQuestionIds = recentActivities.map(
-    (activity) => activity.questionId
-  );
-
-  // 정렬된 순서대로 질문 조회
-  const trendingQuestions = await prisma.question.findMany({
-    where: {
-      id: {
-        in: scoredQuestionIds,
-      },
-    },
-  });
-
-  // 정렬된 순서대로 반환
-  const result = scoredQuestionIds.map(
-    (questionId) =>
-      trendingQuestions.find((question) => question.id === questionId)!
-  );
 
   // limit보다 적으면 조회수 순으로 추가 질문 조회
-  if (result.length < limit) {
+  if (trendingQuestions.length < limit) {
     const additionalQuestions = await prisma.question.findMany({
       where: {
         id: {
-          notIn: scoredQuestionIds,
+          notIn: trendingQuestions.map((question) => question.id),
         },
         ...(categoryId
           ? {
@@ -246,13 +205,13 @@ async function getTrendingQuestions(
       orderBy: {
         viewCount: "desc",
       },
-      take: limit - result.length,
+      take: limit - trendingQuestions.length,
     });
 
-    result.push(...additionalQuestions);
+    trendingQuestions.push(...additionalQuestions);
   }
 
-  return result;
+  return trendingQuestions;
 }
 
 export default trendingService;
