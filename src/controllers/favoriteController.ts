@@ -4,6 +4,8 @@ import favoriteService from "../services/favoriteService.js";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
 import { FavoriteTargetType } from "@prisma/client";
+import userService from "../services/userService.js";
+import { RECEIVE_LIKE_POINTS } from "../constants/levelUpPoints.js";
 
 export async function getFavorites(
   req: Request,
@@ -81,6 +83,12 @@ export async function addFavorite(
       targetType,
       targetId
     );
+
+    const authorId = await userService.getFavoriteContentAuthor(targetType, targetId);
+
+    if (authorId !== undefined) {
+      await userService.addPointsToUser(authorId, RECEIVE_LIKE_POINTS);
+    }
 
     res.status(StatusCodes.CREATED).json({
       message: "추가되었습니다.",

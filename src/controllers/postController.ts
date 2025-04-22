@@ -3,6 +3,8 @@ import { Request, Response, NextFunction } from "express";
 import { UserInfo } from "../services/authService";
 import communityService from "../services/postService";
 import postMiddleware from "../middlewares/postMiddleware";
+import userService from "../services/userService";
+import { POST_COMMUNITY_POST_POINTS } from "../constants/levelUpPoints";
 
 export interface CreatePostRequest extends Request {
   body: {
@@ -28,6 +30,8 @@ export async function createPost(
     }
 
     const newPost = await communityService.createPost(userId, title, content, categoryId);
+
+    await userService.addPointsToUser(userId, POST_COMMUNITY_POST_POINTS);
 
     res.status(StatusCodes.CREATED).json(newPost);
   } catch (error) {

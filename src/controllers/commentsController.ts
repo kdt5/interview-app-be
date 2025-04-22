@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import commentService from "../services/commentService";
 import { AuthRequest } from "../middlewares/authMiddleware";
+import userService from "../services/userService";
+import { POST_COMMENT_POINTS } from "../constants/levelUpPoints";
 
 interface GetCommentsRequest extends Request {
   params: {
@@ -77,6 +79,8 @@ export async function addComment(
       content,
       parentId ? parseInt(parentId) : undefined
     );
+
+    await userService.addPointsToUser(request.user.userId, POST_COMMENT_POINTS);
 
     res.status(StatusCodes.CREATED).json(comment);
   } catch (error) {

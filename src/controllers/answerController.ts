@@ -5,6 +5,8 @@ import answerService from "../services/answerService.js";
 import { questionService } from "../services/questionService.js";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
 import { GetAllAnswersRequest } from "./questionsController.js";
+import userService from "../services/userService.js";
+import { POST_ANSWER_POINTS } from "../constants/levelUpPoints.js";
 
 export interface RecordAnswerRequest extends AuthRequest {
   params: {
@@ -38,6 +40,8 @@ export async function recordAnswer(
     }
 
     await answerService.recordAnswer(userId, parseInt(questionId), content);
+
+    await userService.addPointsToUser(userId, POST_ANSWER_POINTS);
 
     res.status(StatusCodes.CREATED).end();
   } catch (error) {
