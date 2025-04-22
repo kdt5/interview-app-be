@@ -61,6 +61,11 @@ interface UserStats {
   favoriteCount: number; // 받은 좋아요 합계
   communityPostCount: number; // 커뮤니티 게시글 수
   commentCount: number; // 댓글 수
+  levelUpProgress: {
+    currentPoints: number;
+    requiredPoints: number;
+    progressPercent: number;
+  }
 }
 
 async function getUserAnswerCount(userId: number): Promise<number> {
@@ -87,6 +92,8 @@ async function getUserStats(userId: number): Promise<UserStats> {
           comments: true,
         },
       },
+      level: true,
+      point: true,
     },
   });
 
@@ -104,12 +111,14 @@ async function getUserStats(userId: number): Promise<UserStats> {
       getUserCommentFavoriteReceived(userId),
     ])
   ).reduce((acc, curr) => acc + curr, 0);
+  const levelUpProgress = getLevelUpProgress(user.point, user.level);
 
   return {
     answerCount,
     favoriteCount,
     communityPostCount,
     commentCount,
+    levelUpProgress,
   };
 }
 
