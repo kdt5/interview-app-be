@@ -15,7 +15,7 @@ export interface UserInfo {
   email: string;
   nickname: string;
   positionId: number;
-  profileImageUrl?: string;
+  profileImageUrl: string | null;
 }
 
 export interface AuthResponse {
