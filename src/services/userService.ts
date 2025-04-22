@@ -1,3 +1,4 @@
+import { FavoriteTargetType } from "@prisma/client";
 import prisma from "../lib/prisma.js";
 
 const userService = {
@@ -8,6 +9,7 @@ const userService = {
   getUserAnswerCount,
   addPointsToUser,
   getLevelUpProgress,
+  getFavoriteContentAuthor,
 };
 
 // 유저가 받은 답변 좋아요 수
@@ -129,6 +131,39 @@ function calculateTotalRequiredLevelUpPoints(level: number): number {
   }
 
   return total;
+}
+
+async function getFavoriteContentAuthor(targetType: FavoriteTargetType, contentId: number) {
+  let userId: number | undefined;
+
+  switch(targetType){
+    case("ANSWER"): {
+      const answer = await prisma.answer.findUnique({
+        where: {id: contentId},
+        select: {userId: true}
+      });
+      userId = answer?.userId;
+      break;
+    }
+    case("COMMENT"): {
+      const comment = await prisma.comment.findUnique({
+        where: {id: contentId},
+        select: {userId: true}
+      });
+      userId = comment?.userId;
+      break;
+    }
+    case("POST"): {
+      const post = await prisma.communityPost.findUnique({
+        where: {id: contentId},
+        select: {userId: true}
+      });
+      userId = post?.userId;
+      break;
+    }
+  }
+
+  return userId;
 }
 
 async function addPointsToUser(userId: number, points: number): Promise<void> {
