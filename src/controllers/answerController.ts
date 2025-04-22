@@ -91,15 +91,6 @@ export async function getAnswer(
   }
 }
 
-export interface EditAnswerRequest extends Request {
-  params: {
-    answerId: string;
-  };
-  body: {
-    newAnswer: string;
-  };
-}
-
 interface GetAnswersRequest extends AuthRequest {
   params: {
     questionId: string;
@@ -127,6 +118,15 @@ export async function getAnswers(
   } catch (error) {
     next(error);
   }
+}
+
+export interface EditAnswerRequest extends Request {
+  params: {
+    answerId: string;
+  };
+  body: {
+    newAnswer: string;
+  };
 }
 
 export async function editAnswer(
