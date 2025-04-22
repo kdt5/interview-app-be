@@ -1,23 +1,18 @@
 import { Prisma } from "@prisma/client";
 import prisma from "../lib/prisma.js";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc.js";
-import timezone from "dayjs/plugin/timezone.js";
-import weekOfYear from "dayjs/plugin/weekOfYear.js";
 import answerService from "./answerService.js";
 import { favoriteService } from "./favoriteService.js";
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.extend(weekOfYear);
+import { getWeeklyFormattedDate, getWeekStartDate } from "../utils/date.js";
 
 export const questionService = {
   checkQuestionExists,
   getQuestionById,
-  getWeeklyQuestion,
   addWeeklyQuestion,
   getQuestions,
+  getBasicQuestions,
+  getWeeklyQuestions,
   increaseQuestionViewCount,
+  getCurrentWeeklyQuestion,
 };
 
 async function checkQuestionExists(questionId: number) {
@@ -43,6 +38,11 @@ export const QuestionSelect: Prisma.QuestionSelect = {
           id: true,
         },
       },
+    },
+  },
+  _count: {
+    select: {
+      answers: true,
     },
   },
 };
@@ -78,42 +78,8 @@ export const QuestionsSelect: Prisma.QuestionSelect = {
 
 async function getQuestions(
   userId: number,
-  positionId?: number,
-  categoryId?: number
+  whereClause: Prisma.QuestionWhereInput
 ) {
-  const whereClause: Prisma.QuestionWhereInput = {};
-
-  if (positionId && categoryId) {
-    whereClause.categories = {
-      some: {
-        category: {
-          position: {
-            id: positionId,
-          },
-          id: categoryId,
-        },
-      },
-    };
-  } else if (positionId) {
-    whereClause.categories = {
-      some: {
-        category: {
-          position: {
-            id: positionId,
-          },
-        },
-      },
-    };
-  } else if (categoryId) {
-    whereClause.categories = {
-      some: {
-        category: {
-          id: categoryId,
-        },
-      },
-    };
-  }
-
   const questions = await prisma.question.findMany({
     where: whereClause,
     select: QuestionsSelect,
@@ -146,13 +112,7 @@ async function getQuestions(
   return questions;
 }
 
-async function getWeeklyQuestion() {
-  const weekStart = dayjs()
-    .tz("Asia/Seoul")
-    .startOf("week")
-    .add(1, "day")
-    .toDate();
-
+async function getWeeklyQuestion(weekStart: Date) {
   const weeklyQuestion = await prisma.weeklyQuestion.findUnique({
     select: {
       startDate: true,
@@ -165,25 +125,62 @@ async function getWeeklyQuestion() {
     },
   });
 
-  if (weeklyQuestion && weeklyQuestion.startDate) {
-    const formattedDate = `M-${dayjs(weeklyQuestion.startDate)
-      .tz("Asia/Seoul")
-      .format("MM")}-W-${dayjs(weeklyQuestion.startDate)
-      .tz("Asia/Seoul")
-      .week()}`;
-
-    return { ...weeklyQuestion, formattedStartDate: formattedDate };
+  if (weeklyQuestion === null) {
+    throw new Error("Weekly question not found");
   }
 
-  return weeklyQuestion;
+  const formattedWeeklyQuestion = {
+    ...weeklyQuestion,
+    formattedStartDate: getWeeklyFormattedDate(weeklyQuestion.startDate),
+  };
+
+  return formattedWeeklyQuestion;
+}
+
+async function getWeeklyQuestions(userId: number) {
+  const weeklyQuestions = await prisma.weeklyQuestion.findMany({
+    select: {
+      startDate: true,
+      question: {
+        select: QuestionSelect,
+      },
+    },
+    orderBy: {
+      startDate: "desc",
+    },
+  });
+
+  if (weeklyQuestions === null) {
+    throw new Error("Weekly question not found");
+  }
+
+  const questionAnswerStatuses: boolean[] =
+    await answerService.getAnsweredStatuses(
+      userId,
+      weeklyQuestions.map((weeklyQuestion) => weeklyQuestion.question.id)
+    );
+
+  const questionFavoriteStatuses: boolean[] =
+    await favoriteService.getFavoriteStatuses(
+      userId,
+      "QUESTION",
+      weeklyQuestions.map((weeklyQuestion) => weeklyQuestion.question.id)
+    );
+
+  const formattedWeeklyQuestions = weeklyQuestions.map((weeklyQuestion) => {
+    return {
+      ...weeklyQuestions,
+      isAnswered: questionAnswerStatuses,
+      isFavorite: questionFavoriteStatuses,
+      formattedStartDate: getWeeklyFormattedDate(weeklyQuestion.startDate),
+    };
+  });
+
+  return formattedWeeklyQuestions;
 }
 
 async function addWeeklyQuestion(questionId: number, startDate: string) {
-  const parsedStartDate = dayjs(startDate)
-    .tz("Asia/Seoul")
-    .startOf("week")
-    .add(1, "day")
-    .toDate();
+  const parsedStartDate = getWeekStartDate(startDate);
 
   return await prisma.weeklyQuestion.create({
     data: {
@@ -202,4 +199,31 @@ async function increaseQuestionViewCount(questionId: number) {
       },
     },
   });
+}
+
+async function getBasicQuestions(
+  userId: number,
+  positionId?: number,
+  categoryId?: number
+) {
+  const whereInput: Prisma.QuestionWhereInput = {
+    categories: {
+      some: {
+        category: {
+          id: categoryId,
+          position: {
+            id: positionId,
+          },
+        },
+      },
+    },
+  };
+
+  return await getQuestions(userId, whereInput);
+}
+
+async function getCurrentWeeklyQuestion() {
+  const weekStart = getWeekStartDate();
+
+  return await getWeeklyQuestion(weekStart);
 }
