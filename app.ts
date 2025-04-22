@@ -13,7 +13,8 @@ import answersRouter from "./src/routes/answers.js";
 import communityRouter from "./src/routes/posts.js";
 import reportsRouter from "./src/routes/reports.js";
 import rankingsRouter from "./src/routes/rankings.js";
-import uploadRouter from './src/routes/uploads';
+import uploadRouter from "./src/routes/uploads";
+import trendingRouter from "./src/routes/trending.js";
 import { StatusCodes } from "http-status-codes";
 
 const app = express();
@@ -37,6 +38,7 @@ app.use("/api/posts", communityRouter);
 app.use("/api/reports", reportsRouter);
 app.use("/api/rankings", rankingsRouter);
 app.use("/api/uploads", uploadRouter);
+app.use("/api/trending", trendingRouter);
 
 // 404 처리
 app.use((req, res) => {

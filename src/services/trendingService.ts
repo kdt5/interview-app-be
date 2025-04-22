@@ -24,8 +24,8 @@ const ANSWER_WEIGHT = 1; // 답변 가중치
 const VIEW_WEIGHT = 0.3; // 조회수 가중치
 
 async function getTrendingPosts(
-  limit: number = 10,
-  categoryId?: number
+  categoryId?: number,
+  limit: number = 10
 ): Promise<CommunityPost[]> {
   // 최근 활동 점수 계산
   const recentActivities = await prisma.$queryRaw<
@@ -33,40 +33,39 @@ async function getTrendingPosts(
   >`
     WITH recent_favorites AS (
       SELECT 
-        targetId as postId,
+        target_id as postId,
         COUNT(*) * ${FAVORITE_WEIGHT} as favorite_score
       FROM Favorite
-      WHERE targetType = ${FavoriteTargetType.POST}
-        AND createdAt >= ${startDate}
-        AND createdAt <= ${endDate}
-      GROUP BY targetId
+      WHERE target_type = ${FavoriteTargetType.POST}
+        AND created_at >= ${startDate}
+        AND created_at <= ${endDate}
+      GROUP BY target_id
     ),
     recent_comments AS (
       SELECT 
-        targetId as postId,
+        post_id as postId,
         COUNT(*) * ${COMMENT_WEIGHT} as comment_score
       FROM Comment
-      WHERE createdAt >= ${startDate}
-        AND createdAt <= ${endDate}
-      GROUP BY targetId
+      WHERE created_at >= ${startDate}
+        AND created_at <= ${endDate}
+      GROUP BY post_id
     )
     SELECT 
       p.id as postId,
       COALESCE(f.favorite_score, 0) + 
       COALESCE(c.comment_score, 0) + 
-      (p.viewCount * ${VIEW_WEIGHT}) as score
+      (p.view_count * ${VIEW_WEIGHT}) as score
     FROM CommunityPost p
     LEFT JOIN recent_favorites f ON p.id = f.postId
     LEFT JOIN recent_comments c ON p.id = c.postId
     WHERE ${
       categoryId
-        ? Prisma.sql`p.postCategoryId = ${categoryId}`
+        ? Prisma.sql`p.post_category_id = ${categoryId}`
         : Prisma.sql`1=1`
     }
     ORDER BY score DESC
     LIMIT ${limit}
   `;
-
   // 점수가 있는 게시글 ID 목록
   const scoredPostIds = recentActivities.map((activity) => activity.postId);
 
@@ -106,8 +105,8 @@ async function getTrendingPosts(
 }
 
 async function getTrendingQuestions(
-  limit: number = 10,
-  categoryId?: number
+  categoryId?: number,
+  limit: number = 10
 ): Promise<Question[]> {
   // 최근 활동 점수 계산
   const recentActivities = await prisma.$queryRaw<
@@ -115,28 +114,28 @@ async function getTrendingQuestions(
   >`
     WITH recent_favorites AS (
       SELECT 
-        targetId as questionId,
+        target_id as questionId,
         COUNT(*) * ${FAVORITE_WEIGHT} as favorite_score
       FROM Favorite
-      WHERE targetType = ${FavoriteTargetType.QUESTION}
-        AND createdAt >= ${startDate}
-        AND createdAt <= ${endDate}
-      GROUP BY targetId
+      WHERE target_type = ${FavoriteTargetType.QUESTION}
+        AND created_at >= ${startDate}
+        AND created_at <= ${endDate}
+      GROUP BY target_id
     ),
     recent_answers AS (
       SELECT 
-        questionId,
+        question_id as questionId,
         COUNT(*) * ${ANSWER_WEIGHT} as answer_score
       FROM Answer
-      WHERE createdAt >= ${startDate}
-        AND createdAt <= ${endDate}
-      GROUP BY questionId
+      WHERE created_at >= ${startDate}
+        AND created_at <= ${endDate}
+      GROUP BY question_id
     )
     SELECT 
       q.id as questionId,
       COALESCE(f.favorite_score, 0) + 
       COALESCE(a.answer_score, 0) + 
-      (q.viewCount * ${VIEW_WEIGHT}) as score
+      (q.view_count * ${VIEW_WEIGHT}) as score
     FROM Question q
     LEFT JOIN recent_favorites f ON q.id = f.questionId
     LEFT JOIN recent_answers a ON q.id = a.questionId
@@ -144,14 +143,13 @@ async function getTrendingQuestions(
       categoryId
         ? Prisma.sql`WHERE EXISTS (
       SELECT 1 FROM QuestionCategory qc 
-      WHERE qc.questionId = q.id AND qc.categoryId = ${categoryId}
+      WHERE qc.question_id = q.id AND qc.category_id = ${categoryId}
     )`
         : Prisma.sql``
     }
     ORDER BY score DESC
     LIMIT ${limit}
   `;
-
   // 점수가 있는 질문 ID 목록
   const scoredQuestionIds = recentActivities.map(
     (activity) => activity.questionId
