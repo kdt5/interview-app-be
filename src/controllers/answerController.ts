@@ -4,7 +4,6 @@ import { StatusCodes } from "http-status-codes";
 import answerService from "../services/answerService.js";
 import { questionService } from "../services/questionService.js";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
-import { GetAllAnswersRequest } from "./questionsController.js";
 
 export interface RecordAnswerRequest extends AuthRequest {
   params: {
@@ -101,13 +100,19 @@ export interface EditAnswerRequest extends Request {
   };
 }
 
+interface GetAnswersRequest extends AuthRequest {
+  params: {
+    questionId: string;
+  };
+}
+
 export async function getAnswers(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const request = req as GetAllAnswersRequest;
+    const request = req as GetAnswersRequest;
     const { questionId } = request.params;
 
     const answers = await answerService.getAnswers(parseInt(questionId));
