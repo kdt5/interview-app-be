@@ -147,9 +147,9 @@ export async function login(
       email: user.email,
       nickname: user.nickname,
       positionId: user.positionId ?? 0,
-      level: 0, // TODO: 레벨 추가
+      level: user.level,
       answersCount: userAnswerCount,
-      profileImageUrl: user.profileImageUrl,
+      profileImageUrl: user.profileImageUrl ?? null,
     });
   } catch (error) {
     next(error);
