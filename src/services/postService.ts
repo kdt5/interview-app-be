@@ -35,6 +35,7 @@ const PostSelect: Prisma.CommunityPostSelect = {
   id: true,
   title: true,
   content: true,
+  postCategoryId: true,
   user: {
     select: {
       id: true,
