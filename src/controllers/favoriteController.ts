@@ -84,10 +84,12 @@ export async function addFavorite(
       targetId
     );
 
-    const authorId = await userService.getFavoriteContentAuthor(targetType, targetId);
+    if(targetType !== "QUESTION") {
+      const authorId = await userService.getFavoriteContentAuthor(targetType, targetId);
 
-    if (authorId !== undefined) {
-      await userService.addPointsToUser(authorId, RECEIVE_LIKE_POINTS);
+      if (authorId !== undefined) {
+        await userService.addPointsToUser(authorId, RECEIVE_LIKE_POINTS);
+      }
     }
 
     res.status(StatusCodes.CREATED).json({
