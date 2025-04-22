@@ -11,7 +11,7 @@ export interface CreatePostRequest extends Request {
     title: string;
     content: string;
     categoryId: number;
-  }
+  };
 }
 
 export async function createPost(
@@ -24,12 +24,19 @@ export async function createPost(
     const { title, content, categoryId } = request.body;
     const userId = (req as Request & { user: UserInfo }).user.userId;
 
-    if(!(await postMiddleware.isValidPostCategory(categoryId))) {
-      res.status(StatusCodes.BAD_REQUEST).json({ message: "존재하지 않는 게시글 카테고리 입니다." });
+    if (!(await postMiddleware.isValidPostCategory(categoryId))) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: "존재하지 않는 게시글 카테고리 입니다." });
       return;
     }
 
-    const newPost = await communityService.createPost(userId, title, content, categoryId);
+    const newPost = await communityService.createPost(
+      userId,
+      title,
+      content,
+      categoryId
+    );
 
     await userService.addPointsToUser(userId, POST_COMMUNITY_POST_POINTS);
 
@@ -77,12 +84,19 @@ export async function getPosts(
   try {
     const { categoryId } = req.query as { categoryId: string };
 
-    if (categoryId && !(await postMiddleware.isValidPostCategory(parseInt(categoryId)))) {
-      res.status(StatusCodes.BAD_REQUEST).json({ message: "존재하지 않는 게시글 카테고리 입니다." });
+    if (
+      categoryId &&
+      !(await postMiddleware.isValidPostCategory(parseInt(categoryId)))
+    ) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: "존재하지 않는 게시글 카테고리 입니다." });
       return;
     }
 
-    const posts = await communityService.getPosts(categoryId ? parseInt(categoryId) : undefined);
+    const posts = await communityService.getPosts(
+      categoryId ? parseInt(categoryId) : undefined
+    );
 
     res.status(StatusCodes.OK).json(posts);
   } catch (error) {

@@ -76,7 +76,7 @@ interface UserStats {
     currentPoints: number;
     requiredPoints: number;
     progressPercent: number;
-  }
+  };
 }
 
 async function getUserAnswerCount(userId: number): Promise<number> {
@@ -133,7 +133,7 @@ async function getUserStats(userId: number): Promise<UserStats> {
   };
 }
 
-function getLevelUpProgress(points: number, level: number){
+function getLevelUpProgress(points: number, level: number) {
   const currentLevelMinPoints = calculateTotalRequiredLevelUpPoints(level);
   const nextLevelMinPoints = calculateTotalRequiredLevelUpPoints(level + 1);
   const requiredPoints = nextLevelMinPoints - currentLevelMinPoints;
@@ -147,33 +147,36 @@ function getLevelUpProgress(points: number, level: number){
 }
 
 function calculateTotalRequiredLevelUpPoints(level: number): number {
-  return (level * (level + 1) / 2 * 10);
+  return ((level * (level + 1)) / 2) * 10;
 }
 
-async function getFavoriteContentAuthor(targetType: FavoriteTargetType, contentId: number) {
+async function getFavoriteContentAuthor(
+  targetType: FavoriteTargetType,
+  contentId: number
+) {
   let userId: number | undefined;
 
-  switch(targetType){
-    case("ANSWER"): {
+  switch (targetType) {
+    case "ANSWER": {
       const answer = await prisma.answer.findUnique({
-        where: {id: contentId},
-        select: {userId: true}
+        where: { id: contentId },
+        select: { userId: true },
       });
       userId = answer?.userId;
       break;
     }
-    case("COMMENT"): {
+    case "COMMENT": {
       const comment = await prisma.comment.findUnique({
-        where: {id: contentId},
-        select: {userId: true}
+        where: { id: contentId },
+        select: { userId: true },
       });
       userId = comment?.userId;
       break;
     }
-    case("POST"): {
+    case "POST": {
       const post = await prisma.communityPost.findUnique({
-        where: {id: contentId},
-        select: {userId: true}
+        where: { id: contentId },
+        select: { userId: true },
       });
       userId = post?.userId;
       break;
@@ -190,15 +193,17 @@ async function addPointsToUser(userId: number, points: number): Promise<void> {
     },
   });
 
-  if(!user) {
+  if (!user) {
     throw new Error("존재하지 않는 사용자 입니다.");
   }
 
   let currentLevel = user.level as number;
-  const newTotalPoints = user.point + points as number;
-  let totalRequiredPoints = calculateTotalRequiredLevelUpPoints(currentLevel + 1);
+  const newTotalPoints = (user.point + points) as number;
+  let totalRequiredPoints = calculateTotalRequiredLevelUpPoints(
+    currentLevel + 1
+  );
 
-  while(newTotalPoints >= totalRequiredPoints) {
+  while (newTotalPoints >= totalRequiredPoints) {
     currentLevel++;
     totalRequiredPoints = calculateTotalRequiredLevelUpPoints(currentLevel + 1);
   }
