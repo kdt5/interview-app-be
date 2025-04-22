@@ -65,20 +65,7 @@ export async function getAnsweredQuestions(
       return;
     }
 
-    const mappedAnsweredQuestions = answeredQuestions.map((answer) => {
-      return {
-        id: answer.id,
-        question: {
-          id: answer.question.id,
-          title: answer.question.title,
-          categories: answer.question.categories.map(
-            (category) => category.categoryId
-          ),
-        },
-      };
-    });
-
-    res.status(StatusCodes.OK).json(mappedAnsweredQuestions);
+    res.status(StatusCodes.OK).json(answeredQuestions);
   } catch (error) {
     next(error);
   }
