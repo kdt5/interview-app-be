@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `User` ADD COLUMN `level` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `point` INTEGER NOT NULL DEFAULT 0,
+    MODIFY `profile_image_url` TEXT NULL;

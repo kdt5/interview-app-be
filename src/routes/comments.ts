@@ -17,9 +17,11 @@ import {
 const router = Router();
 
 router
-  .route("/comments")
+  .route("/:targetId")
   .all(authMiddleware.authenticate)
   .post(validateAddComment, addComment)
   .get(validateGetComments, getComments)
   .patch(validateUpdateComment, checkCommentPermission, updateComment)
   .delete(validateDeleteComment, checkCommentPermission, deleteComment);
+
+export default router;
