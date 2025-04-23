@@ -38,16 +38,16 @@ export const validateTrendingLimit = (
   const limit = request.query.limit;
 
   if (limit === undefined) {
-    request.validatedLimit = 100;
+    request.validatedLimit = 10;
     next();
     return;
   }
 
   const limitNum = Number(limit);
-  if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+  if (isNaN(limitNum) || limitNum < 1 || limitNum > 50) {
     res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ error: "Limit must be between 1 and 100" });
+      .json({ error: "Limit must be between 1 and 50" });
     return;
   }
 
