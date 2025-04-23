@@ -69,6 +69,9 @@ model Answer {
 
   @@index([questionId])
   @@index([userId], map: "Answer_user_id_fkey")
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([userId, favoriteCount])
 }
 
 /// 커뮤니티 게시글을 저장하는 모델
@@ -88,6 +91,8 @@ model CommunityPost {
   @@index([userId])
   @@index([postCategoryId])
   @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([userId, favoriteCount])
 }
 
 model CommunityPostCategory {
@@ -116,6 +121,9 @@ model Comment {
   @@index([userId], map: "Comment_user_id_fkey")
   @@index([parentId], map: "Comment_parent_id_fkey")
   @@index([categoryId], map: "Comment_category_id_fkey")
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([userId, favoriteCount])
   @@map("Comment")
 }
 
