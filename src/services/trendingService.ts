@@ -79,16 +79,6 @@ async function getTrendingPosts(
   categoryId?: number,
   limit: number = 10
 ): Promise<CommunityPost[]> {
-  // categoryId 검증
-  if (categoryId !== undefined && !Number.isInteger(categoryId)) {
-    throw new Error("Invalid categoryId");
-  }
-
-  // limit 검증
-  if (!Number.isInteger(limit) || limit <= 0) {
-    throw new Error("Invalid limit");
-  }
-
   // 최근 활동 점수 계산
   const trendingPosts = await prisma.$queryRaw<CommunityPost[]>`
     WITH recent_favorites AS (${getRecentFavoritesCte(
@@ -143,16 +133,6 @@ async function getTrendingQuestions(
   categoryId?: number,
   limit: number = 10
 ): Promise<Question[]> {
-  // categoryId 검증
-  if (categoryId !== undefined && !Number.isInteger(categoryId)) {
-    throw new Error("Invalid categoryId");
-  }
-
-  // limit 검증
-  if (!Number.isInteger(limit) || limit <= 0) {
-    throw new Error("Invalid limit");
-  }
-
   // 최근 활동 점수 계산
   const trendingQuestions = await prisma.$queryRaw<Question[]>`
     WITH recent_favorites AS (${getRecentFavoritesCte(
