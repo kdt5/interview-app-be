@@ -94,9 +94,7 @@ export async function getPosts(
       return;
     }
 
-    const posts = await communityService.getPosts(
-      categoryId ? parseInt(categoryId) : undefined
-    );
+    const posts = await communityService.getPosts(parseInt(categoryId));
 
     res.status(StatusCodes.OK).json(posts);
   } catch (error) {
