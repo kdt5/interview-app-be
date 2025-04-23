@@ -5,11 +5,32 @@ on:
     branches:
       - develop
 
+env:
+  NODE_ENV: production
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npx eslint .
+
+      - name: Build application
+        run: npm run build
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -17,8 +38,23 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /home/ubuntu/interviewit/backend
+            # 디렉토리 존재 확인
+            [ -d /home/ubuntu/interviewit/backend ] && cd /home/ubuntu/interviewit/backend || exit 1
+
             git pull origin develop
             npm ci
-            npm run build 
-            pm2 reload ecosystem.config.js --env production
+            npm run build
+
+            # 환경 변수 설정
+            export NODE_ENV=production
+
+            # 현재 실행 중인 프로세스 백업
+            pm2 save
+
+            # PM2 프로세스 상태 확인 및 재시작
+            pm2 status || pm2 start ecosystem.config.js --env production
+            pm2 reload ecosystem.config.js --env production || {
+              echo "배포 실패: 이전 버전으로 롤백합니다."
+              pm2 restore
+              exit 1
+            }
