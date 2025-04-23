@@ -53,7 +53,7 @@ jobs:
 
             # PM2 프로세스 상태 확인 및 재시작
             pm2 status || pm2 start ecosystem.config.js --env production
-            pm2 reload ecosystem.config.js --env production || {
+            pm2 reload ecosystem.config.cjs --env production || {
               echo "배포 실패: 이전 버전으로 롤백합니다."
               pm2 restore
               exit 1
