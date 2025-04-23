@@ -1,13 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import trendingService from "../services/trendingService.js";
-
-interface TrendingQuestionsRequest extends Request {
-  query: {
-    categoryId?: string;
-    limit?: string;
-  };
-}
+import { TrendingRequest } from "../middlewares/trendingValidator.js";
 
 export async function getTrendingQuestions(
   req: Request,
@@ -15,11 +9,10 @@ export async function getTrendingQuestions(
   next: NextFunction
 ) {
   try {
-    const request = req as TrendingQuestionsRequest;
-    const { categoryId, limit } = request.query;
+    const request = req as TrendingRequest;
     const trendingQuestions = await trendingService.getTrendingQuestions(
-      categoryId ? Number(categoryId) : undefined,
-      limit ? Number(limit) : undefined
+      request.validatedCategoryId,
+      request.validatedLimit
     );
     res.status(StatusCodes.OK).json(trendingQuestions);
   } catch (error) {
@@ -27,23 +20,16 @@ export async function getTrendingQuestions(
   }
 }
 
-interface TrendingPostsRequest extends Request {
-  query: {
-    categoryId?: string;
-    limit?: string;
-  };
-}
 export async function getTrendingPosts(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const request = req as TrendingPostsRequest;
-    const { categoryId, limit } = request.query;
+    const request = req as TrendingRequest;
     const trendingPosts = await trendingService.getTrendingPosts(
-      categoryId ? Number(categoryId) : undefined,
-      limit ? Number(limit) : undefined
+      request.validatedCategoryId,
+      request.validatedLimit
     );
     res.status(StatusCodes.OK).json(trendingPosts);
   } catch (error) {
