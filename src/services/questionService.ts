@@ -114,14 +114,13 @@ async function getQuestions(
 
 async function getWeeklyQuestion(weekStart: Date) {
   const weeklyQuestion = await prisma.weeklyQuestion.findUnique({
-    select: {
-      startDate: true,
+    where: {
+      startDate: weekStart,
+    },
+    include: {
       question: {
         select: QuestionSelect,
       },
-    },
-    where: {
-      startDate: weekStart,
     },
   });
 
@@ -129,9 +128,28 @@ async function getWeeklyQuestion(weekStart: Date) {
     throw new Error("Weekly question not found");
   }
 
+  const questionAnswerStatuses: boolean[] =
+    await answerService.getAnsweredStatuses(weeklyQuestion.question.id, [
+      weeklyQuestion.question.id,
+    ]);
+
+  const questionFavoriteStatuses: boolean[] =
+    await favoriteService.getFavoriteStatuses(
+      weeklyQuestion.question.id,
+      "QUESTION",
+      [weeklyQuestion.question.id]
+    );
+
   const formattedWeeklyQuestion = {
     ...weeklyQuestion,
-    formattedStartDate: getWeeklyFormattedDate(weeklyQuestion.startDate),
+    question: {
+      ...weeklyQuestion.question,
+      _count: undefined,
+      answerCount: weeklyQuestion.question._count.answers,
+      isAnswered: questionAnswerStatuses[0],
+      isFavorite: questionFavoriteStatuses[0],
+      formattedStartDate: getWeeklyFormattedDate(weeklyQuestion.startDate),
+    },
   };
 
   return formattedWeeklyQuestion;
@@ -139,8 +157,7 @@ async function getWeeklyQuestion(weekStart: Date) {
 
 async function getWeeklyQuestions(userId: number) {
   const weeklyQuestions = await prisma.weeklyQuestion.findMany({
-    select: {
-      startDate: true,
+    include: {
       question: {
         select: QuestionSelect,
       },
@@ -169,7 +186,9 @@ async function getWeeklyQuestions(userId: number) {
 
   const formattedWeeklyQuestions = weeklyQuestions.map((weeklyQuestion) => {
     return {
-      ...weeklyQuestions,
+      ...weeklyQuestion,
+      _count: undefined,
+      answerCount: weeklyQuestion.question._count.answers,
       isAnswered: questionAnswerStatuses,
       isFavorite: questionFavoriteStatuses,
       formattedStartDate: getWeeklyFormattedDate(weeklyQuestion.startDate),
