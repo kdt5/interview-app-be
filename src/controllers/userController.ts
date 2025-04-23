@@ -27,10 +27,10 @@ export async function getMe(
     res.status(StatusCodes.OK).json({
       email: user.email,
       nickname: user.nickname,
-      level: 0, // TODO: 레벨 추가
+      level: user.level,
       answersCount: userAnswerCount,
       positionId: user.positionId ?? 0,
-      profileImageUrl: user.profileImageUrl,
+      profileImageUrl: user.profileImageUrl ?? null,
     });
   } catch (error) {
     next(error);

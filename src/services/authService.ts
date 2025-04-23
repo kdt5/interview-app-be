@@ -15,7 +15,9 @@ export interface UserInfo {
   email: string;
   nickname: string;
   positionId: number;
-  profileImageUrl: string | null;
+  level: number;
+  point: number;
+  profileImageUrl?: string;
 }
 
 export interface AuthResponse {
@@ -102,7 +104,17 @@ async function authenticateUser(
 ): Promise<AuthResponse> {
   const user = await prisma.user.findUnique({
     where: { email },
-    include: { refreshTokens: true },
+    select: {
+      id: true,
+      email: true,
+      nickname: true,
+      positionId: true,
+      level: true,
+      point: true,
+      profileImageUrl: true,
+      password: true,
+      refreshTokens: true,
+    },
   });
 
   if (!user) throw new AuthError("UNAUTHORIZED");
@@ -130,7 +142,9 @@ async function authenticateUser(
       email: user.email,
       nickname: user.nickname,
       positionId: user.positionId ?? 0,
-      profileImageUrl: user.profileImageUrl,
+      level: user.level,
+      point: user.point,
+      profileImageUrl: user.profileImageUrl ?? undefined,
     },
     accessToken,
     refreshToken,
@@ -262,6 +276,15 @@ async function changeUserPassword(
 async function getUserByEmail(email: string): Promise<UserInfo> {
   const user = await prisma.user.findUnique({
     where: { email: email },
+    select: {
+      id: true,
+      email: true,
+      nickname: true,
+      positionId: true,
+      level: true,
+      point: true,
+      profileImageUrl: true,
+    },
   });
 
   if (!user) {
@@ -273,7 +296,9 @@ async function getUserByEmail(email: string): Promise<UserInfo> {
     email: user.email,
     nickname: user.nickname,
     positionId: user.positionId ?? 0,
-    profileImageUrl: user.profileImageUrl,
+    level: user.level,
+    point: user.point,
+    profileImageUrl: user.profileImageUrl ?? undefined,
   };
 }
 
