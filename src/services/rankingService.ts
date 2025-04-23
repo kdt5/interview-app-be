@@ -1,7 +1,7 @@
 import prisma from "../lib/prisma.js";
 
 const rankingService = {
-  getLikesCountRankings,
+  getLikeCountRankings,
   getAnswerCountRankings,
 };
 
@@ -11,7 +11,7 @@ export interface RankingUser {
   totalAnswerCount: number;
 }
 
-async function getLikesCountRankings(
+async function getLikeCountRankings(
   limit: number = 100
 ): Promise<RankingUser[]> {
   // 각 타입별로 좋아요 수가 많은 사용자 ID 조회

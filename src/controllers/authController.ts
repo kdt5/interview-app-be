@@ -148,7 +148,7 @@ export async function login(
       nickname: user.nickname,
       positionId: user.positionId ?? 0,
       level: user.level,
-      answersCount: userAnswerCount,
+      answerCount: userAnswerCount,
       profileImageUrl: user.profileImageUrl ?? null,
     });
   } catch (error) {
