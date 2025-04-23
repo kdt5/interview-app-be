@@ -1,0 +1,24 @@
+name: Deploy Node.js Backend with PM2
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/interviewit/backend
+            git pull origin develop
+            npm ci
+            npm run build 
+            pm2 reload ecosystem.config.js --env production
