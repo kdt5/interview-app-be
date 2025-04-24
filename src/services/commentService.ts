@@ -1,6 +1,6 @@
-import { DELETED_USER_ID } from "../constants/user";
-import dbDayjs from "../lib/dayjs";
-import prisma from "../lib/prisma";
+import { DELETED_USER_ID } from "../constants/user.js";
+import dbDayjs from "../lib/dayjs.js";
+import prisma from "../lib/prisma.js";
 
 const commentService = {
   checkCommentPermission,

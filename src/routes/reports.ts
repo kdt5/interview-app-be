@@ -5,15 +5,15 @@ import {
   getReportDetail,
   getReports,
   updateReport,
-} from "../controllers/reportController";
-import authMiddleware from "../middlewares/authMiddleware";
+} from "../controllers/reportController.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
 import {
   validateCreateReportBody,
   validateGetReportQuery,
   validateReportId,
   validateUpdateReportBody,
-} from "../middlewares/reportValidator";
-import { validationErrorMiddleware } from "../middlewares/validationErrorMiddleware";
+} from "../middlewares/reportValidator.js";
+import { validationErrorMiddleware } from "../middlewares/validationErrorMiddleware.js";
 
 const router = Router();
 
