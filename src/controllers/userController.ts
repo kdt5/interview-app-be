@@ -8,7 +8,7 @@ export interface UserInfoResponse {
   email: string;
   nickname: string;
   level: number;
-  answersCount: number;
+  answerCount: number;
   positionId: number;
   profileImageUrl: string | null;
 }
@@ -28,7 +28,7 @@ export async function getMe(
       email: user.email,
       nickname: user.nickname,
       level: user.level,
-      answersCount: userAnswerCount,
+      answerCount: userAnswerCount,
       positionId: user.positionId ?? 0,
       profileImageUrl: user.profileImageUrl ?? null,
     });

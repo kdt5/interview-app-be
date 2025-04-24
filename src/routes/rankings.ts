@@ -1,9 +1,9 @@
 import { Router } from "express";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import {
-  getLikesCountRankings,
-  getAnswersCountRankings,
-} from "../controllers/rankingController.js";
+  getLikeCountRankings,
+  getAnswerCountRankings,
+} from "../controllers/rankingController";
 
 const router = Router();
 
@@ -14,9 +14,9 @@ const router = Router();
 //router.get("/me", authMiddleware.authenticate, getMyRankings);
 
 // 좋아요 순위 조회
-router.get("/likes", authMiddleware.authenticate, getLikesCountRankings);
+router.get("/likes", authMiddleware.authenticate, getLikeCountRankings);
 
 // 답변 순위 조회
-router.get("/answers", authMiddleware.authenticate, getAnswersCountRankings);
+router.get("/answers", authMiddleware.authenticate, getAnswerCountRankings);
 
 export default router;
