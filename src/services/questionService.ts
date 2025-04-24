@@ -184,16 +184,18 @@ async function getWeeklyQuestions(userId: number) {
       weeklyQuestions.map((weeklyQuestion) => weeklyQuestion.question.id)
     );
 
-  const formattedWeeklyQuestions = weeklyQuestions.map((weeklyQuestion) => {
-    return {
-      ...weeklyQuestion,
-      _count: undefined,
-      answerCount: weeklyQuestion.question._count.answers,
-      isAnswered: questionAnswerStatuses,
-      isFavorite: questionFavoriteStatuses,
-      formattedStartDate: getWeeklyFormattedDate(weeklyQuestion.startDate),
-    };
-  });
+  const formattedWeeklyQuestions = weeklyQuestions.map(
+    (weeklyQuestion, index) => {
+      return {
+        ...weeklyQuestion,
+        _count: undefined,
+        answerCount: weeklyQuestion.question._count.answers,
+        isAnswered: questionAnswerStatuses[index],
+        isFavorite: questionFavoriteStatuses[index],
+        formattedStartDate: getWeeklyFormattedDate(weeklyQuestion.startDate),
+      };
+    }
+  );
 
   return formattedWeeklyQuestions;
 }
