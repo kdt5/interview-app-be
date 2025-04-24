@@ -3,7 +3,7 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 import {
   getLikeCountRankings,
   getAnswerCountRankings,
-} from "../controllers/rankingController";
+} from "../controllers/rankingController.js";
 
 const router = Router();
 
