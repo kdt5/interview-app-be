@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "../lib/prisma.js";
 
 const rankingService = {
-  getLikesCountRankings,
+  getLikeCountRankings,
   getAnswerCountRankings,
   getTotalRankings,
   getUserRanking,
@@ -131,7 +131,7 @@ async function getRankingUsers(
   return rankings;
 }
 
-async function getLikesCountRankings(
+async function getLikeCountRankings(
   limit: number = 100
 ): Promise<RankingUser[]> {
   return getRankingUsers("total_favorite_count", limit);

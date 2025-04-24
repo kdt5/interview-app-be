@@ -44,7 +44,7 @@ export async function getTotalRankings(
 }
 
 // 좋아요 랭킹
-export async function getLikesCountRankings(
+export async function getLikeCountRankings(
   req: Request,
   res: Response,
   next: NextFunction
@@ -61,7 +61,7 @@ export async function getLikesCountRankings(
 }
 
 // 답변 랭킹
-export async function getAnswersCountRankings(
+export async function getAnswerCountRankings(
   req: Request,
   res: Response,
   next: NextFunction
