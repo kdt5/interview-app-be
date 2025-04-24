@@ -1,8 +1,8 @@
 import { Router } from "express";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import {
-  getLikesCountRankings,
-  getAnswersCountRankings,
+  getLikeCountRankings,
+  getAnswerCountRankings,
   getMyRankings,
   getTotalRankings,
 } from "../controllers/rankingController.js";
@@ -26,7 +26,7 @@ router.get(
   "/likes",
   authMiddleware.authenticate,
   validateRankingLimit,
-  getLikesCountRankings
+  getLikeCountRankings
 );
 
 // 답변 순위 조회
@@ -34,7 +34,7 @@ router.get(
   "/answers",
   authMiddleware.authenticate,
   validateRankingLimit,
-  getAnswersCountRankings
+  getAnswerCountRankings
 );
 
 export default router;

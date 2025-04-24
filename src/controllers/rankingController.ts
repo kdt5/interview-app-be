@@ -51,7 +51,7 @@ export async function getLikeCountRankings(
 ): Promise<void> {
   try {
     const request = req as RankingsRequest;
-    const rankings = await rankingService.getLikesCountRankings(
+    const rankings = await rankingService.getLikeCountRankings(
       request.validatedLimit
     );
     res.status(StatusCodes.OK).json(rankings);
