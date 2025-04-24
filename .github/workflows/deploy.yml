@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install ESLint
+        run: npm install eslint @eslint/js
+
       - name: Run ESLint
         run: npx eslint .
 
