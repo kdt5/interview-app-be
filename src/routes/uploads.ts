@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import express from "express";
 import multer from "multer";
 import multerS3, { AUTO_CONTENT_TYPE } from "multer-s3";
