@@ -1,5 +1,5 @@
 import { PrismaClient, Favorite } from "@prisma/client";
-import favoriteService from "../services/favoriteService";
+import favoriteService from "../services/favoriteService.js";
 
 const prisma = new PrismaClient().$extends({
   name: "favoriteExtension",

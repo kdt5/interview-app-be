@@ -5,8 +5,8 @@ import multer from "multer";
 import multerS3, { AUTO_CONTENT_TYPE } from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
 import path from "path";
-import authMiddleware from "../middlewares/authMiddleware";
-import { uploadProfile } from "../controllers/uploadController";
+import authMiddleware from "../middlewares/authMiddleware.js";
+import { uploadProfile } from "../controllers/uploadController.js";
 import { v4 as uuidv4 } from "uuid";
 
 const router = express.Router();

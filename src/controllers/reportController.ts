@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import reportService from "../services/reportService";
+import reportService from "../services/reportService.js";
 import { ReportStatus, ReportTargetType } from "@prisma/client";
-import { UserInfo } from "../services/authService";
+import { UserInfo } from "../services/authService.js";
 
 export interface GetReportRequest {
   query: {
