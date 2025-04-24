@@ -14,7 +14,7 @@ interface RankingsRequest extends AuthRequest {
 // TODO: 통합 랭킹
 
 // 좋아요 랭킹
-export async function getLikesCountRankings(
+export async function getLikeCountRankings(
   req: Request,
   res: Response<RankingUser[]>,
   next: NextFunction
@@ -23,7 +23,7 @@ export async function getLikesCountRankings(
     const request = req as RankingsRequest;
     const { limit } = request.query;
     const limitValue = limit ? Number(limit) : 100;
-    const rankings = await rankingService.getLikesCountRankings(limitValue);
+    const rankings = await rankingService.getLikeCountRankings(limitValue);
     res.status(StatusCodes.OK).json(rankings);
   } catch (error) {
     next(error);
@@ -31,7 +31,7 @@ export async function getLikesCountRankings(
 }
 
 // 답변 랭킹
-export async function getAnswersCountRankings(
+export async function getAnswerCountRankings(
   req: Request,
   res: Response<RankingUser[]>,
   next: NextFunction
