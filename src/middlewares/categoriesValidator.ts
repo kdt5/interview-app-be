@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { CategoryQueryRequest } from "../controllers/categoriesController.js";
 
-export function validateGetCategories(
+export function validateGetCategoriesRequest(
   req: Request,
   res: Response,
   next: NextFunction
