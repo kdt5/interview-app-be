@@ -15,8 +15,11 @@ export function getWeekStartDate(startDate?: Date | string) {
     .toDate();
 }
 
-export function getWeeklyFormattedDate(date: Date) {
-  return `M-${dayjs(date).tz("Asia/Seoul").format("MM")}-W-${dayjs(date)
-    .tz("Asia/Seoul")
-    .week()}`;
+export function getWeeklyLabel(date: Date) {
+  const convertedDate = dayjs(date).tz("Asia/Seoul");
+  const month = convertedDate.month() + 1;
+  const weekOfMonth =
+    convertedDate.week() - convertedDate.startOf("month").week() + 1;
+
+  return `M-${month}-W-${weekOfMonth}`;
 }
