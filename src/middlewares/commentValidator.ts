@@ -1,6 +1,6 @@
 import { body, param, query } from "express-validator";
-import { validationErrorMiddleware } from "./validationErrorMiddleware";
-import { CommentCategory } from "../services/commentService";
+import { validationErrorMiddleware } from "./validationErrorMiddleware.js";
+import { CommentCategory } from "../services/commentService.js";
 
 const validateCommentId = param("commentId")
   .notEmpty()

@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { StatusCodes } from "http-status-codes";
 import { Request, Response, NextFunction } from "express";
-import { UserInfo } from "../services/authService";
-import communityService from "../services/postService";
-import postMiddleware from "../middlewares/postMiddleware";
-import userService from "../services/userService";
-import { POST_COMMUNITY_POST_POINTS } from "../constants/levelUpPoints";
+import { UserInfo } from "../services/authService.js";
+import communityService from "../services/postService.js";
+import postMiddleware from "../middlewares/postMiddleware.js";
+import userService from "../services/userService.js";
+import { POST_COMMUNITY_POST_POINTS } from "../constants/levelUpPoints.js";
 
 export interface CreatePostRequest extends Request {
   body: {

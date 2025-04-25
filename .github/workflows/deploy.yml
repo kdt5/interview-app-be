@@ -1,0 +1,49 @@
+name: Deploy Node.js Backend with PM2
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            # 디렉토리 존재 확인
+            [ -d /home/ubuntu/interviewit/backend ] && cd /home/ubuntu/interviewit/backend || exit 1
+
+            # 최신 코드로 강제 동기화
+            git fetch origin
+            git reset --hard origin/develop
+            git clean -fd
+
+            # 의존성 설치 및 Prisma 클라이언트 생성
+            npm ci
+            npx prisma generate
+
+            # 애플리케이션 빌드
+            npm run build
+
+            # 환경 변수 설정
+            export NODE_ENV=production
+
+            # 현재 실행 중인 프로세스 백업
+            pm2 save
+
+            # PM2 프로세스 상태 확인 및 재시작 (없으면 새로 시작)
+            pm2 describe interviewit-backend > /dev/null || pm2 start ecosystem.config.cjs --env production
+
+            # 무중단 재시작 (실패 시 롤백)
+            pm2 reload ecosystem.config.cjs --env production || {
+              echo "배포 실패: 이전 버전으로 롤백합니다."
+              pm2 restore
+              exit 1
+            }

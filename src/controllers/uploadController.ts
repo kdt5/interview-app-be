@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { Request, Response, NextFunction } from "express";
-import { UserInfo } from "../services/authService";
-import uploadService from "../services/uploadService";
+import { UserInfo } from "../services/authService.js";
+import uploadService from "../services/uploadService.js";
 
 export async function uploadProfile(
   req: Request,

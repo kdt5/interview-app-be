@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import commentService from "../services/commentService";
-import { AuthRequest } from "../middlewares/authMiddleware";
-import userService from "../services/userService";
-import { POST_COMMENT_POINTS } from "../constants/levelUpPoints";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
+import commentService from "../services/commentService.js";
+import userService from "../services/userService.js";
+import { POST_COMMENT_POINTS } from "../constants/levelUpPoints.js";
 
 interface GetCommentsRequest extends Request {
   params: {

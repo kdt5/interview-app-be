@@ -184,5 +184,7 @@ function mapUser(user: UserInfo): UserInfo {
     nickname: user.nickname,
     positionId: user.positionId,
     profileImageUrl: user.profileImageUrl,
+    level: user.level,
+    point: user.point,
   };
 }
