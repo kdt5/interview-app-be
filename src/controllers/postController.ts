@@ -47,6 +47,27 @@ export async function createPost(
   }
 }
 
+export async function getPostCategories(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const categories = await communityService.getPostCategories();
+
+    res.status(StatusCodes.OK).json(categories);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export function passPostOwnershipCheck(
+  req: Request,
+  res: Response,
+) {
+  res.status(StatusCodes.OK).json(true);
+}
+
 interface GetPostDetailRequest extends Request {
   params: {
     postId: string;
