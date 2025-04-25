@@ -9,6 +9,7 @@ const communityService = {
   deletePost,
   updatePost,
   increasePostViewCount,
+  getPostCategories,
 };
 
 export default communityService;
@@ -28,6 +29,16 @@ async function createPost(
       createdAt: dbDayjs(),
       updatedAt: dbDayjs(),
     },
+  });
+}
+
+async function getPostCategories() {
+  return await prisma.communityPostCategory.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: { id: "asc" },
   });
 }
 
