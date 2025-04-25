@@ -18,6 +18,7 @@ export function getWeekStartDate(startDate?: Date | string) {
 export function getWeeklyLabel(date: Date) {
   const convertedDate = dayjs(date).tz("Asia/Seoul");
   const month = convertedDate.month() + 1;
+  // Calculate the week of the month (1-5) for the given date.
   const weekOfMonth =
     convertedDate.week() - convertedDate.startOf("month").week() + 1;
 
