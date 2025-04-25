@@ -31,6 +31,18 @@ const validOrderFields = {
 
 function buildDateRangeClause(startDate?: Date, endDate?: Date): Prisma.Sql {
   if (startDate && endDate) {
+    if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
+      throw new Error(
+        "Invalid date format: startDate and endDate must be valid Date objects"
+      );
+    }
+
+    if (startDate > endDate) {
+      throw new Error(
+        "Invalid date range: startDate must be before or equal to endDate"
+      );
+    }
+
     return Prisma.sql`WHERE created_at BETWEEN ${startDate.toISOString()} AND ${endDate.toISOString()}`;
   }
   return Prisma.sql``;
