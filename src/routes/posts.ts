@@ -19,7 +19,13 @@ import { validationErrorMiddleware } from "../middlewares/validationErrorMiddlew
 
 const router = Router();
 
-router.get("/", authMiddleware.authenticate, getPosts);
+router.get(
+  "/",
+  authMiddleware.authenticate,
+  validatePostQuery,
+  validationErrorMiddleware,
+  getPosts
+);
 router.post(
   "/",
   authMiddleware.authenticate,
@@ -46,12 +52,9 @@ router.patch(
   postMiddleware.checkPostOwnership,
   updatePost
 );
+router.get("/categories", authMiddleware.authenticate, getPostCategories);
 router.get(
-  "/categories",
-  authMiddleware.authenticate,
-  getPostCategories
-);
-router.get("/:postId/ownership",
+  "/:postId/ownership",
   authMiddleware.authenticate,
   validatePostId,
   validationErrorMiddleware,
