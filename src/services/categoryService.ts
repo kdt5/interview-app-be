@@ -1,6 +1,6 @@
 import prisma from "../lib/prisma.js";
 
-export async function getPositionCategories(positionId: number) {
+export async function getCategories(positionId?: number) {
   return await prisma.category.findMany({
     where: {
       positionId: positionId,
@@ -13,5 +13,5 @@ export async function getPositionCategories(positionId: number) {
 }
 
 export const categoryService = {
-  getPositionCategories,
+  getCategories,
 };
