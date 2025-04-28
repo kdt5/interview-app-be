@@ -118,6 +118,10 @@ interface GetAnswersRequest extends AuthRequest {
   params: {
     questionId: string;
   };
+  query: {
+    limit: string;
+    page: string;
+  };
 }
 
 export async function getAnswers(
@@ -127,9 +131,17 @@ export async function getAnswers(
 ): Promise<void> {
   try {
     const request = req as GetAnswersRequest;
-    const { questionId } = request.params;
+    const questionId = parseInt(request.params.questionId);
+    const limit =
+      request.query.limit === undefined
+        ? undefined
+        : parseInt(request.query.limit);
+    const page =
+      request.query.page === undefined
+        ? undefined
+        : parseInt(request.query.page);
 
-    const answers = await answerService.getAnswers(parseInt(questionId));
+    const answers = await answerService.getAnswers(questionId, limit, page);
     if (answers.length === 0) {
       res.status(StatusCodes.NOT_FOUND).json({
         message: "조건에 해당하는 질문 또는 답변이 존재하지 않습니다.",

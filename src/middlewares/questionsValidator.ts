@@ -26,6 +26,7 @@ export const validateGetQuestionDetail = [
 
 export const validateGetAnswers = [
   validateQuestionId,
+  ...validatePagination,
   validationErrorMiddleware,
 ];
 

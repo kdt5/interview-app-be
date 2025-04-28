@@ -67,7 +67,11 @@ async function getAnswer(answerId: number) {
   });
 }
 
-async function getAnswers(questionId: number) {
+async function getAnswers(
+  questionId: number,
+  limit: number = DEFAULT_PAGINATION_OPTIONS.ANSWER.LIMIT,
+  page: number = 1
+) {
   return await prisma.answer.findMany({
     where: { questionId },
     include: {
@@ -78,6 +82,8 @@ async function getAnswers(questionId: number) {
     orderBy: {
       id: "desc",
     },
+    skip: limit * (page - 1),
+    take: limit,
   });
 }
 
