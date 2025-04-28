@@ -51,13 +51,13 @@ function setTokenCookies(
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     maxAge: ACCESS_TOKEN_EXPIRY * 60 * 1000,
-    sameSite: "strict",
+    sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     maxAge: REFRESH_TOKEN_EXPIRY * 60 * 1000,
-    sameSite: "strict",
+    sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
   });
 }
 
@@ -65,12 +65,12 @@ function clearTokenCookies(res: Response): void {
   res.clearCookie("accessToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
   });
   res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
   });
 }
 
