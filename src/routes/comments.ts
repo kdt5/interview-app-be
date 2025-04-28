@@ -16,9 +16,10 @@ import {
 
 const router = Router();
 
+router.use(authMiddleware.authenticate);
+
 router
   .route("/:targetId")
-  .all(authMiddleware.authenticate)
   .post(validateAddComment, addComment)
   .get(validateGetComments, getComments)
   .patch(validateUpdateComment, checkCommentPermission, updateComment)

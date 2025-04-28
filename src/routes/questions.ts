@@ -8,50 +8,29 @@ import {
 } from "../controllers/questionsController.js";
 import {
   validateAddWeeklyQuestion,
-  validateGetAllQuestion,
-  validateQuestionId,
+  validateGetBasicQuestions,
+  validateGetAnswers,
+  validateGetQuestionDetail,
+  validateGetWeeklyQuestions,
 } from "../middlewares/questionsValidator.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
-import { validationErrorMiddleware } from "../middlewares/validationErrorMiddleware.js";
 import { getAnswers } from "../controllers/answerController.js";
 
 const router = Router();
 
-router.get(
-  "/",
-  authMiddleware.authenticate,
-  validateGetAllQuestion,
-  validationErrorMiddleware,
-  getBasicQuestions
-);
+router.use(authMiddleware.authenticate);
+
+router.get("/", validateGetBasicQuestions, getBasicQuestions);
 
 router
   .route("/weekly")
-  .get(authMiddleware.authenticate, getWeeklyQuestions)
-  .post(
-    authMiddleware.authenticate,
-    validateAddWeeklyQuestion,
-    validationErrorMiddleware,
-    addWeeklyQuestion
-  );
+  .get(validateGetWeeklyQuestions, getWeeklyQuestions)
+  .post(validateAddWeeklyQuestion, addWeeklyQuestion);
 
-router
-  .route("/weekly/current")
-  .get(authMiddleware.authenticate, getCurrentWeeklyQuestion);
+router.route("/weekly/current").get(getCurrentWeeklyQuestion);
 
-router.get(
-  "/:questionId",
-  authMiddleware.authenticate,
-  validateQuestionId,
-  validationErrorMiddleware,
-  getQuestionDetail
-);
+router.get("/:questionId", validateGetQuestionDetail, getQuestionDetail);
 
-router.get(
-  "/:questionId/answers",
-  authMiddleware.authenticate,
-  validateQuestionId,
-  validationErrorMiddleware,
-  getAnswers
-);
+router.get("/:questionId/answers", validateGetAnswers, getAnswers);
+
 export default router;

@@ -76,25 +76,42 @@ export async function getPostDetail(
   }
 }
 
+interface GetPostsRequest extends Request {
+  query: {
+    categoryId: string;
+    pageSize: string;
+    page: string;
+  };
+}
+
 export async function getPosts(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { categoryId } = req.query as { categoryId: string };
+    const request = req as GetPostsRequest;
+    const categoryId =
+      request.query.categoryId === undefined
+        ? undefined
+        : parseInt(request.query.categoryId);
+    const pageSize =
+      request.query.pageSize === undefined
+        ? undefined
+        : parseInt(request.query.pageSize);
+    const page =
+      request.query.page === undefined
+        ? undefined
+        : parseInt(request.query.page);
 
-    if (
-      categoryId &&
-      !(await postMiddleware.isValidPostCategory(parseInt(categoryId)))
-    ) {
+    if (categoryId && !(await postMiddleware.isValidPostCategory(categoryId))) {
       res
         .status(StatusCodes.BAD_REQUEST)
         .json({ message: "존재하지 않는 게시글 카테고리 입니다." });
       return;
     }
 
-    const posts = await communityService.getPosts(parseInt(categoryId));
+    const posts = await communityService.getPosts(categoryId, pageSize, page);
 
     res.status(StatusCodes.OK).json(posts);
   } catch (error) {

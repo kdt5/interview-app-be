@@ -1,3 +1,4 @@
+import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
 import { DELETED_USER_ID } from "../constants/user.js";
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
@@ -31,7 +32,12 @@ async function checkCommentPermission(
   return comment !== null;
 }
 
-async function getComments(targetId: number, categoryId: number) {
+async function getComments(
+  targetId: number,
+  categoryId: number,
+  pageSize: number = DEFAULT_PAGINATION_OPTIONS.COMMENT.PAGE_SIZE,
+  page: number = 1
+) {
   return await prisma.comment.findMany({
     where: { targetId, categoryId },
     orderBy: { createdAt: "desc" },
@@ -50,6 +56,8 @@ async function getComments(targetId: number, categoryId: number) {
       isDeleted: true,
       favoriteCount: true,
     },
+    skip: pageSize * (page - 1),
+    take: pageSize,
   });
 }
 

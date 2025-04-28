@@ -1,3 +1,4 @@
+import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
 import { QuestionSelect, QuestionsSelect } from "./questionService.js";
@@ -30,7 +31,11 @@ async function recordAnswer(
   });
 }
 
-async function getAnsweredQuestions(userId: number) {
+async function getAnsweredQuestions(
+  userId: number,
+  pageSize: number = DEFAULT_PAGINATION_OPTIONS.ANSWER.PAGE_SIZE,
+  page: number = 1
+) {
   const answeredQuestions = await prisma.answer.findMany({
     where: { userId: userId },
     include: {
@@ -41,6 +46,8 @@ async function getAnsweredQuestions(userId: number) {
     orderBy: {
       id: "desc",
     },
+    skip: pageSize * (page - 1),
+    take: pageSize,
   });
 
   return answeredQuestions;

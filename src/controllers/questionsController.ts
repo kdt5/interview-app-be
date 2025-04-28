@@ -85,6 +85,8 @@ export interface GetQuestionRequest extends AuthRequest {
   query: {
     positionId?: string;
     categoryId?: string;
+    pageSize?: string;
+    page?: string;
   };
 }
 
@@ -103,11 +105,21 @@ export async function getBasicQuestions(
       request.query.categoryId === undefined
         ? undefined
         : parseInt(request.query.categoryId);
+    const pageSize =
+      request.query.pageSize === undefined
+        ? undefined
+        : parseInt(request.query.pageSize);
+    const page =
+      request.query.page === undefined
+        ? undefined
+        : parseInt(request.query.page);
 
     const questions = await questionService.getBasicQuestions(
       request.user.userId,
       positionId,
-      categoryId
+      categoryId,
+      pageSize,
+      page
     );
     if (questions.length === 0) {
       res
@@ -122,15 +134,33 @@ export async function getBasicQuestions(
   }
 }
 
+interface GetWeeklyQuestionsRequest extends AuthRequest {
+  query: {
+    pageSize?: string;
+    page?: string;
+  };
+}
+
 export async function getWeeklyQuestions(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const request = req as AuthRequest;
+    const request = req as GetWeeklyQuestionsRequest;
+    const pageSize =
+      request.query.pageSize === undefined
+        ? undefined
+        : parseInt(request.query.pageSize);
+    const page =
+      request.query.page === undefined
+        ? undefined
+        : parseInt(request.query.page);
+
     const questions = await questionService.getWeeklyQuestions(
-      request.user.userId
+      request.user.userId,
+      pageSize,
+      page
     );
 
     if (questions.length === 0) {

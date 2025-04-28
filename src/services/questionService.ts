@@ -3,6 +3,7 @@ import prisma from "../lib/prisma.js";
 import answerService from "./answerService.js";
 import { favoriteService } from "./favoriteService.js";
 import { getWeeklyLabel, getWeekStartDate } from "../utils/date.js";
+import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
 
 export const questionService = {
   checkQuestionExists,
@@ -78,7 +79,9 @@ export const QuestionsSelect: Prisma.QuestionSelect = {
 
 async function getQuestions(
   userId: number,
-  whereClause: Prisma.QuestionWhereInput
+  whereClause: Prisma.QuestionWhereInput,
+  pageSize: number,
+  page: number
 ) {
   const questions = await prisma.question.findMany({
     where: whereClause,
@@ -86,6 +89,8 @@ async function getQuestions(
     orderBy: {
       id: "desc",
     },
+    skip: pageSize * (page - 1),
+    take: pageSize,
   });
 
   const questionAnswerStatuses: boolean[] =
@@ -155,7 +160,11 @@ async function getWeeklyQuestion(weekStart: Date) {
   return formattedWeeklyQuestion;
 }
 
-async function getWeeklyQuestions(userId: number) {
+async function getWeeklyQuestions(
+  userId: number,
+  pageSize: number = DEFAULT_PAGINATION_OPTIONS.QUESTION.PAGE_SIZE,
+  page: number = 1
+) {
   const weeklyQuestions = await prisma.weeklyQuestion.findMany({
     include: {
       question: {
@@ -165,6 +174,8 @@ async function getWeeklyQuestions(userId: number) {
     orderBy: {
       startDate: "desc",
     },
+    skip: pageSize * (page - 1),
+    take: pageSize,
   });
 
   if (weeklyQuestions === null) {
@@ -225,7 +236,9 @@ async function increaseQuestionViewCount(questionId: number) {
 async function getBasicQuestions(
   userId: number,
   positionId?: number,
-  categoryId?: number
+  categoryId?: number,
+  pageSize: number = DEFAULT_PAGINATION_OPTIONS.QUESTION.PAGE_SIZE,
+  page: number = 1
 ) {
   const whereInput: Prisma.QuestionWhereInput = {
     categories: {
@@ -240,7 +253,7 @@ async function getBasicQuestions(
     },
   };
 
-  return await getQuestions(userId, whereInput);
+  return await getQuestions(userId, whereInput, pageSize, page);
 }
 
 async function getCurrentWeeklyQuestion() {

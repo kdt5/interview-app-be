@@ -48,16 +48,35 @@ export async function recordAnswer(
   }
 }
 
+interface GetAnsweredQuestionsRequest extends AuthRequest {
+  query: {
+    pageSize: string;
+    page: string;
+  };
+}
+
 export async function getAnsweredQuestions(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const request = req as AuthRequest;
+    const request = req as GetAnsweredQuestionsRequest;
     const userId = request.user.userId;
+    const pageSize =
+      request.query.pageSize === undefined
+        ? undefined
+        : parseInt(request.query.pageSize);
+    const page =
+      request.query.page === undefined
+        ? undefined
+        : parseInt(request.query.page);
 
-    const answeredQuestions = await answerService.getAnsweredQuestions(userId);
+    const answeredQuestions = await answerService.getAnsweredQuestions(
+      userId,
+      pageSize,
+      page
+    );
 
     if (!answeredQuestions) {
       res.status(StatusCodes.NOT_FOUND);

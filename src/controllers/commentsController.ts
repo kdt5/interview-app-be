@@ -11,6 +11,8 @@ interface GetCommentsRequest extends Request {
   };
   query: {
     categoryName: string;
+    pageSize: string;
+    page: string;
   };
 }
 
@@ -23,12 +25,22 @@ export async function getComments(
     const request = req as GetCommentsRequest;
     const { targetId } = request.params;
     const { categoryName } = request.query;
+    const pageSize =
+      request.query.pageSize === undefined
+        ? undefined
+        : parseInt(request.query.pageSize);
+    const page =
+      request.query.page === undefined
+        ? undefined
+        : parseInt(request.query.page);
 
     const categoryId = await commentService.getCategoryId(categoryName);
 
     const comments = await commentService.getComments(
       parseInt(targetId),
-      categoryId
+      categoryId,
+      pageSize,
+      page
     );
 
     if (!comments) {
