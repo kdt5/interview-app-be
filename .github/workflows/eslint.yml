@@ -66,16 +66,7 @@ jobs:
           cache: "npm"
 
       - name: Run ESLint
-        env:
-          SARIF_ESLINT_IGNORE_SUPPRESSED: "true"
-        run: npx eslint . --config eslint.config.js --ext .js,.ts --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif
-        continue-on-error: true
-
-      - name: Upload analysis results to GitHub
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: eslint-results.sarif
-          wait-for-processing: true
+        run: npx eslint . --config eslint.config.js --ext .js,.ts
 
   build:
     name: Build Test
