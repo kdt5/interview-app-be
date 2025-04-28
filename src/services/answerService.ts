@@ -33,7 +33,7 @@ async function recordAnswer(
 
 async function getAnsweredQuestions(
   userId: number,
-  pageSize: number = DEFAULT_PAGINATION_OPTIONS.ANSWER.PAGE_SIZE,
+  limit: number = DEFAULT_PAGINATION_OPTIONS.ANSWER.LIMIT,
   page: number = 1
 ) {
   const answeredQuestions = await prisma.answer.findMany({
@@ -46,8 +46,8 @@ async function getAnsweredQuestions(
     orderBy: {
       id: "desc",
     },
-    skip: pageSize * (page - 1),
-    take: pageSize,
+    skip: limit * (page - 1),
+    take: limit,
   });
 
   return answeredQuestions;

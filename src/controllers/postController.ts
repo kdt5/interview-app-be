@@ -79,7 +79,7 @@ export async function getPostDetail(
 interface GetPostsRequest extends Request {
   query: {
     categoryId: string;
-    pageSize: string;
+    limit: string;
     page: string;
   };
 }
@@ -95,10 +95,10 @@ export async function getPosts(
       request.query.categoryId === undefined
         ? undefined
         : parseInt(request.query.categoryId);
-    const pageSize =
-      request.query.pageSize === undefined
+    const limit =
+      request.query.limit === undefined
         ? undefined
-        : parseInt(request.query.pageSize);
+        : parseInt(request.query.limit);
     const page =
       request.query.page === undefined
         ? undefined
@@ -111,7 +111,7 @@ export async function getPosts(
       return;
     }
 
-    const posts = await communityService.getPosts(categoryId, pageSize, page);
+    const posts = await communityService.getPosts(categoryId, limit, page);
 
     res.status(StatusCodes.OK).json(posts);
   } catch (error) {

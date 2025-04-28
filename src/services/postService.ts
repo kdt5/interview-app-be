@@ -57,15 +57,15 @@ async function getPostDetail(postId: number) {
 
 async function getPosts(
   postCategoryId?: number,
-  pageSize: number = DEFAULT_PAGINATION_OPTIONS.POST.PAGE_SIZE,
+  limit: number = DEFAULT_PAGINATION_OPTIONS.POST.LIMIT,
   page: number = 1
 ) {
   return await prisma.communityPost.findMany({
     where: postCategoryId ? { postCategoryId } : undefined,
     select: PostSelect,
     orderBy: { createdAt: "desc" },
-    skip: pageSize * (page - 1),
-    take: pageSize,
+    skip: limit * (page - 1),
+    take: limit,
   });
 }
 

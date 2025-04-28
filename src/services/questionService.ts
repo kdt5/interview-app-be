@@ -80,7 +80,7 @@ export const QuestionsSelect: Prisma.QuestionSelect = {
 async function getQuestions(
   userId: number,
   whereClause: Prisma.QuestionWhereInput,
-  pageSize: number,
+  limit: number,
   page: number
 ) {
   const questions = await prisma.question.findMany({
@@ -89,8 +89,8 @@ async function getQuestions(
     orderBy: {
       id: "desc",
     },
-    skip: pageSize * (page - 1),
-    take: pageSize,
+    skip: limit * (page - 1),
+    take: limit,
   });
 
   const questionAnswerStatuses: boolean[] =
@@ -162,7 +162,7 @@ async function getWeeklyQuestion(weekStart: Date) {
 
 async function getWeeklyQuestions(
   userId: number,
-  pageSize: number = DEFAULT_PAGINATION_OPTIONS.QUESTION.PAGE_SIZE,
+  limit: number = DEFAULT_PAGINATION_OPTIONS.QUESTION.LIMIT,
   page: number = 1
 ) {
   const weeklyQuestions = await prisma.weeklyQuestion.findMany({
@@ -174,8 +174,8 @@ async function getWeeklyQuestions(
     orderBy: {
       startDate: "desc",
     },
-    skip: pageSize * (page - 1),
-    take: pageSize,
+    skip: limit * (page - 1),
+    take: limit,
   });
 
   if (weeklyQuestions === null) {
@@ -237,7 +237,7 @@ async function getBasicQuestions(
   userId: number,
   positionId?: number,
   categoryId?: number,
-  pageSize: number = DEFAULT_PAGINATION_OPTIONS.QUESTION.PAGE_SIZE,
+  limit: number = DEFAULT_PAGINATION_OPTIONS.QUESTION.LIMIT,
   page: number = 1
 ) {
   const whereInput: Prisma.QuestionWhereInput = {
@@ -253,7 +253,7 @@ async function getBasicQuestions(
     },
   };
 
-  return await getQuestions(userId, whereInput, pageSize, page);
+  return await getQuestions(userId, whereInput, limit, page);
 }
 
 async function getCurrentWeeklyQuestion() {

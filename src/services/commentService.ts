@@ -35,7 +35,7 @@ async function checkCommentPermission(
 async function getComments(
   targetId: number,
   categoryId: number,
-  pageSize: number = DEFAULT_PAGINATION_OPTIONS.COMMENT.PAGE_SIZE,
+  limit: number = DEFAULT_PAGINATION_OPTIONS.COMMENT.LIMIT,
   page: number = 1
 ) {
   return await prisma.comment.findMany({
@@ -56,8 +56,8 @@ async function getComments(
       isDeleted: true,
       favoriteCount: true,
     },
-    skip: pageSize * (page - 1),
-    take: pageSize,
+    skip: limit * (page - 1),
+    take: limit,
   });
 }
 

@@ -50,7 +50,7 @@ export async function recordAnswer(
 
 interface GetAnsweredQuestionsRequest extends AuthRequest {
   query: {
-    pageSize: string;
+    limit: string;
     page: string;
   };
 }
@@ -63,10 +63,10 @@ export async function getAnsweredQuestions(
   try {
     const request = req as GetAnsweredQuestionsRequest;
     const userId = request.user.userId;
-    const pageSize =
-      request.query.pageSize === undefined
+    const limit =
+      request.query.limit === undefined
         ? undefined
-        : parseInt(request.query.pageSize);
+        : parseInt(request.query.limit);
     const page =
       request.query.page === undefined
         ? undefined
@@ -74,7 +74,7 @@ export async function getAnsweredQuestions(
 
     const answeredQuestions = await answerService.getAnsweredQuestions(
       userId,
-      pageSize,
+      limit,
       page
     );
 
