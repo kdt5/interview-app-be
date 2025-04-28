@@ -1,7 +1,8 @@
 import { Prisma } from "@prisma/client";
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
-import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
+import { PaginationOptions } from "../types/pagination.js";
+import { getPagination } from "../utils/pagination.js";
 
 const communityService = {
   createPost,
@@ -56,16 +57,21 @@ async function getPostDetail(postId: number) {
 }
 
 async function getPosts(
-  postCategoryId?: number,
-  limit: number = DEFAULT_PAGINATION_OPTIONS.POST.LIMIT,
-  page: number = 1
+  pagination: PaginationOptions,
+  options?: {
+    postCategoryId?: number;
+  }
 ) {
+  const { limit, page } = pagination;
+  const { skip, take } = getPagination({ limit, page });
+  const { postCategoryId } = options ?? {};
+
   return await prisma.communityPost.findMany({
     where: postCategoryId ? { postCategoryId } : undefined,
     select: PostSelect,
     orderBy: { createdAt: "desc" },
-    skip: limit * (page - 1),
-    take: limit,
+    skip,
+    take,
   });
 }
 

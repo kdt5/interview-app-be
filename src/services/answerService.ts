@@ -1,6 +1,7 @@
-import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
+import { PaginationOptions } from "../types/pagination.js";
+import { getPagination } from "../utils/pagination.js";
 import { QuestionSelect, QuestionsSelect } from "./questionService.js";
 import { UserBasicInfoSelect } from "./userService.js";
 
@@ -33,9 +34,11 @@ async function recordAnswer(
 
 async function getAnsweredQuestions(
   userId: number,
-  limit: number = DEFAULT_PAGINATION_OPTIONS.ANSWER.LIMIT,
-  page: number = 1
+  pagination: PaginationOptions
 ) {
+  const { limit, page } = pagination;
+  const { skip, take } = getPagination({ limit, page });
+
   const answeredQuestions = await prisma.answer.findMany({
     where: { userId: userId },
     include: {
@@ -46,8 +49,8 @@ async function getAnsweredQuestions(
     orderBy: {
       id: "desc",
     },
-    skip: limit * (page - 1),
-    take: limit,
+    skip,
+    take,
   });
 
   return answeredQuestions;
@@ -67,11 +70,10 @@ async function getAnswer(answerId: number) {
   });
 }
 
-async function getAnswers(
-  questionId: number,
-  limit: number = DEFAULT_PAGINATION_OPTIONS.ANSWER.LIMIT,
-  page: number = 1
-) {
+async function getAnswers(questionId: number, pagination: PaginationOptions) {
+  const { limit, page } = pagination;
+  const { skip, take } = getPagination({ limit, page });
+
   return await prisma.answer.findMany({
     where: { questionId },
     include: {
@@ -82,8 +84,8 @@ async function getAnswers(
     orderBy: {
       id: "desc",
     },
-    skip: limit * (page - 1),
-    take: limit,
+    skip,
+    take,
   });
 }
 

@@ -2,8 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { questionService } from "../services/questionService.js";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
+import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
 
-export interface GetQuestionDetailRequest extends Request {
+export interface GetQuestionDetailRequest extends AuthRequest {
   params: {
     questionId: string;
   };
@@ -17,7 +18,10 @@ export async function getQuestionDetail(
   try {
     const request = req as GetQuestionDetailRequest;
     const questionId = parseInt(request.params.questionId);
-    const question = await questionService.getQuestionById(questionId);
+    const question = await questionService.getQuestionById(
+      request.user.userId,
+      questionId
+    );
 
     await questionService.increaseQuestionViewCount(questionId);
 
@@ -40,7 +44,10 @@ export async function getCurrentWeeklyQuestion(
   next: NextFunction
 ): Promise<void> {
   try {
-    const question = await questionService.getCurrentWeeklyQuestion();
+    const request = req as AuthRequest;
+    const question = await questionService.getCurrentWeeklyQuestion(
+      request.user.userId
+    );
 
     if (!question) {
       res
@@ -107,19 +114,18 @@ export async function getBasicQuestions(
         : parseInt(request.query.categoryId);
     const limit =
       request.query.limit === undefined
-        ? undefined
+        ? DEFAULT_PAGINATION_OPTIONS.QUESTION.LIMIT
         : parseInt(request.query.limit);
     const page =
-      request.query.page === undefined
-        ? undefined
-        : parseInt(request.query.page);
+      request.query.page === undefined ? 1 : parseInt(request.query.page);
 
-    const questions = await questionService.getBasicQuestions(
+    const questions = await questionService.getQuestions(
       request.user.userId,
-      positionId,
-      categoryId,
-      limit,
-      page
+      { limit, page },
+      {
+        positionId,
+        categoryId,
+      }
     );
     if (questions.length === 0) {
       res
@@ -150,17 +156,14 @@ export async function getWeeklyQuestions(
     const request = req as GetWeeklyQuestionsRequest;
     const limit =
       request.query.limit === undefined
-        ? undefined
+        ? DEFAULT_PAGINATION_OPTIONS.QUESTION.LIMIT
         : parseInt(request.query.limit);
     const page =
-      request.query.page === undefined
-        ? undefined
-        : parseInt(request.query.page);
+      request.query.page === undefined ? 1 : parseInt(request.query.page);
 
     const questions = await questionService.getWeeklyQuestions(
       request.user.userId,
-      limit,
-      page
+      { limit, page }
     );
 
     if (questions.length === 0) {

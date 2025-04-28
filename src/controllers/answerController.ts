@@ -6,6 +6,7 @@ import { questionService } from "../services/questionService.js";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
 import userService from "../services/userService.js";
 import { POST_ANSWER_POINTS } from "../constants/levelUpPoints.js";
+import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
 
 export interface RecordAnswerRequest extends AuthRequest {
   params: {
@@ -65,18 +66,15 @@ export async function getAnsweredQuestions(
     const userId = request.user.userId;
     const limit =
       request.query.limit === undefined
-        ? undefined
+        ? DEFAULT_PAGINATION_OPTIONS.ANSWERED_QUESTION.LIMIT
         : parseInt(request.query.limit);
     const page =
-      request.query.page === undefined
-        ? undefined
-        : parseInt(request.query.page);
+      request.query.page === undefined ? 1 : parseInt(request.query.page);
 
-    const answeredQuestions = await answerService.getAnsweredQuestions(
-      userId,
+    const answeredQuestions = await answerService.getAnsweredQuestions(userId, {
       limit,
-      page
-    );
+      page,
+    });
 
     if (!answeredQuestions) {
       res.status(StatusCodes.NOT_FOUND);
@@ -134,14 +132,12 @@ export async function getAnswers(
     const questionId = parseInt(request.params.questionId);
     const limit =
       request.query.limit === undefined
-        ? undefined
+        ? DEFAULT_PAGINATION_OPTIONS.ANSWER.LIMIT
         : parseInt(request.query.limit);
     const page =
-      request.query.page === undefined
-        ? undefined
-        : parseInt(request.query.page);
+      request.query.page === undefined ? 1 : parseInt(request.query.page);
 
-    const answers = await answerService.getAnswers(questionId, limit, page);
+    const answers = await answerService.getAnswers(questionId, { limit, page });
     if (answers.length === 0) {
       res.status(StatusCodes.NOT_FOUND).json({
         message: "조건에 해당하는 질문 또는 답변이 존재하지 않습니다.",

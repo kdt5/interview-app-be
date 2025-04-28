@@ -5,6 +5,7 @@ import communityService from "../services/postService.js";
 import postMiddleware from "../middlewares/postMiddleware.js";
 import userService from "../services/userService.js";
 import { POST_COMMUNITY_POST_POINTS } from "../constants/levelUpPoints.js";
+import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
 
 export interface CreatePostRequest extends Request {
   body: {
@@ -97,12 +98,10 @@ export async function getPosts(
         : parseInt(request.query.categoryId);
     const limit =
       request.query.limit === undefined
-        ? undefined
+        ? DEFAULT_PAGINATION_OPTIONS.POST.LIMIT
         : parseInt(request.query.limit);
     const page =
-      request.query.page === undefined
-        ? undefined
-        : parseInt(request.query.page);
+      request.query.page === undefined ? 1 : parseInt(request.query.page);
 
     if (categoryId && !(await postMiddleware.isValidPostCategory(categoryId))) {
       res
@@ -111,7 +110,10 @@ export async function getPosts(
       return;
     }
 
-    const posts = await communityService.getPosts(categoryId, limit, page);
+    const posts = await communityService.getPosts(
+      { limit, page },
+      { postCategoryId: categoryId }
+    );
 
     res.status(StatusCodes.OK).json(posts);
   } catch (error) {
