@@ -32,9 +32,6 @@ jobs:
             # 애플리케이션 빌드
             npm run build
 
-            # 환경 변수 설정
-            export NODE_ENV=production
-
             # 현재 실행 중인 프로세스 백업
             pm2 save
 
