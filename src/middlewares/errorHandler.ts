@@ -5,7 +5,7 @@ import {
   DuplicateError,
 } from "../constants/errors/authError.js";
 import { CommonError } from "../constants/errors/commonError.js";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library.js";
 import { StatusCodes } from "http-status-codes";
 
 export function errorHandler(
