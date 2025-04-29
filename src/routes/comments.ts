@@ -16,28 +16,26 @@ import {
 
 const router = Router();
 
+router.use(authMiddleware.authenticate);
+
 router.post(
   "/:targetId",
-  authMiddleware.authenticate,
   validateAddComment,
   addComment
 );
 router.get(
   "/:targetId",
-  authMiddleware.authenticate,
   validateGetComments,
   getComments
 );
 router.patch(
   "/:commentId",
-  authMiddleware.authenticate,
   validateUpdateComment,
   checkCommentPermission,
   updateComment
 );
 router.delete(
   "/:commentId",
-  authMiddleware.authenticate,
   validateDeleteComment,
   checkCommentPermission,
   deleteComment
