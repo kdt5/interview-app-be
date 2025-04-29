@@ -21,6 +21,8 @@ export const UserBasicInfoSelect: Prisma.UserSelect = {
       answers: true,
     },
   },
+  level: true,
+  profileImageUrl: true,
 };
 
 // 유저가 받은 답변 좋아요 수
