@@ -3,7 +3,7 @@
     "target": "es2016",
     "module": "ESNext",
     "rootDir": "./",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
