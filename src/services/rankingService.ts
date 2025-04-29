@@ -8,15 +8,17 @@ const rankingService = {
   getUserRanking,
 };
 
-export interface RankingUser {
+export interface RankingListItem {
   nickname: string;
   rank: number;
+  level: number;
+  profileImageUrl: string | null;
   totalFavoriteCount: number;
   totalAnswerCount: number;
   totalScore: number;
 }
 
-export interface UserRanking {
+export interface UserRankingDetail {
   rank: number;
   totalFavoriteCount: number;
   totalAnswerCount: number;
@@ -102,6 +104,8 @@ function getRankingBaseCte(startDate?: Date, endDate?: Date): Prisma.Sql {
             SELECT
                 u.id,
                 u.nickname,
+                u.level,
+                u.profile_image_url,
                 COALESCE(af.answer_favorite_sum, 0) +
                 COALESCE(pf.post_favorite_sum, 0) +
                 COALESCE(cf.comment_favorite_sum, 0) as total_favorite_count,
@@ -124,17 +128,19 @@ async function getRankings(
   limit: number = 100,
   startDate?: Date,
   endDate?: Date
-): Promise<RankingUser[]> {
+): Promise<RankingListItem[]> {
   const orderField = validOrderFields[orderBy];
   if (!orderField) {
     throw new Error(`Invalid orderBy: ${orderBy}`);
   }
 
-  const rankings = await prisma.$queryRaw<RankingUser[]>`
+  const rankings = await prisma.$queryRaw<RankingListItem[]>`
         ${getRankingBaseCte(startDate, endDate)},
         ranked_users AS (
             SELECT
                 nickname,
+                level,
+                profile_image_url as profileImageUrl,
                 total_favorite_count as totalFavoriteCount,
                 total_answer_count as totalAnswerCount,
                 total_score as totalScore,
@@ -150,6 +156,8 @@ async function getRankings(
   return rankings.map((ranking) => ({
     nickname: ranking.nickname,
     rank: Number(ranking.rank),
+    level: Number(ranking.level),
+    profileImageUrl: ranking.profileImageUrl,
     totalFavoriteCount: Number(ranking.totalFavoriteCount),
     totalAnswerCount: Number(ranking.totalAnswerCount),
     totalScore: Number(ranking.totalScore),
@@ -158,13 +166,13 @@ async function getRankings(
 
 async function getLikeCountRankings(
   limit: number = 100
-): Promise<RankingUser[]> {
+): Promise<RankingListItem[]> {
   return getRankings("total_favorite_count", limit);
 }
 
 async function getAnswerCountRankings(
   limit: number = 100
-): Promise<RankingUser[]> {
+): Promise<RankingListItem[]> {
   return getRankings("total_answer_count", limit);
 }
 
@@ -172,7 +180,7 @@ async function getTotalRankings(
   limit: number = 100,
   startDate?: Date,
   endDate?: Date
-): Promise<RankingUser[]> {
+): Promise<RankingListItem[]> {
   return getRankings("total_score", limit, startDate, endDate);
 }
 
@@ -180,7 +188,7 @@ async function getUserRanking(
   userId: number,
   startDate?: Date,
   endDate?: Date
-): Promise<UserRanking | null> {
+): Promise<UserRankingDetail | null> {
   const userRanking = await prisma.$queryRaw<
     {
       rank: string;

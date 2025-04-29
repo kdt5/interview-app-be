@@ -1,7 +1,7 @@
 import { body, param, query } from "express-validator";
 import dayjs from "dayjs";
-import { validationErrorMiddleware } from "./validationErrorMiddleware";
-import { validatePagination } from "./paginationValidator";
+import { validationErrorMiddleware } from "./validationErrorMiddleware.js";
+import { validatePagination } from "./paginationValidator.js";
 
 const validateQuestionId = param("questionId")
   .exists()
