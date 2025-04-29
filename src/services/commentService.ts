@@ -41,7 +41,7 @@ async function getComments(
   const { limit, page } = pagination;
   const { skip, take } = getPagination({ limit, page });
 
-  return await prisma.comment.findMany({
+  const comments = await prisma.comment.findMany({
     where: { targetId, categoryId },
     orderBy: { createdAt: "desc" },
     select: {
@@ -53,6 +53,13 @@ async function getComments(
         select: {
           id: true,
           nickname: true,
+          profileImageUrl: true,
+          level: true,
+          _count: {
+            select: {
+              answers: true,
+            }
+          }
         },
       },
       parentId: true,
@@ -62,6 +69,17 @@ async function getComments(
     skip,
     take,
   });
+
+  return comments.map((comment) => ({
+    ...comment,
+    user: {
+      id: comment.user.id,
+      nickname: comment.user.nickname,
+      profileImageUrl: comment.user.profileImageUrl,
+      level: comment.user.level,
+      answerCount: comment.user._count.answers,
+    },
+  }));
 }
 
 async function addComment(
@@ -118,6 +136,9 @@ interface ResponseCommentType {
   user: {
     id: number;
     nickname: string;
+    profileImageUrl: string | null;
+    level: number;
+    answerCount: number;
   };
   parentId: number | null;
   isDeleted: boolean;
@@ -127,12 +148,15 @@ interface ResponseCommentType {
 function sanitizeDeletedComments(
   comments: ResponseCommentType[]
 ): ResponseCommentType[] {
-  return { ...comments }.map((comment) => {
+  return comments.map((comment) => {
     if (comment.isDeleted) {
       comment.content = "";
       comment.user = {
         id: DELETED_USER_ID,
         nickname: "",
+        profileImageUrl: null,
+        level: 0,
+        answerCount: 0,
       };
       comment.favoriteCount = 0;
     }

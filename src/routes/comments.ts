@@ -18,11 +18,27 @@ const router = Router();
 
 router.use(authMiddleware.authenticate);
 
-router
-  .route("/:targetId")
-  .post(validateAddComment, addComment)
-  .get(validateGetComments, getComments)
-  .patch(validateUpdateComment, checkCommentPermission, updateComment)
-  .delete(validateDeleteComment, checkCommentPermission, deleteComment);
+router.post(
+  "/:targetId",
+  validateAddComment,
+  addComment
+);
+router.get(
+  "/:targetId",
+  validateGetComments,
+  getComments
+);
+router.patch(
+  "/:commentId",
+  validateUpdateComment,
+  checkCommentPermission,
+  updateComment
+);
+router.delete(
+  "/:commentId",
+  validateDeleteComment,
+  checkCommentPermission,
+  deleteComment
+);
 
 export default router;

@@ -39,7 +39,7 @@ const validateParentId = query("parentId")
   .withMessage("부모 댓글 ID는 1 이상의 정수만 가능합니다.");
 
 export const validateGetComments = [
-  validateCommentId,
+  validateTargetId,
   validateCategoryName,
   validationErrorMiddleware,
 ];

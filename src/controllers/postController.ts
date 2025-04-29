@@ -47,6 +47,27 @@ export async function createPost(
   }
 }
 
+export async function getPostCategories(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const categories = await communityService.getPostCategories();
+
+    res.status(StatusCodes.OK).json(categories);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export function passPostOwnershipCheck(
+  req: Request,
+  res: Response,
+) {
+  res.status(StatusCodes.OK).json(true);
+}
+
 interface GetPostDetailRequest extends Request {
   params: {
     postId: string;
@@ -65,13 +86,21 @@ export async function getPostDetail(
     const postDetail = await communityService.getPostDetail(postId);
 
     if (!postDetail) {
-      res.status(StatusCodes.NOT_FOUND).json({ message: "Post not found" });
+      res.status(StatusCodes.NOT_FOUND).json({ message: "존재하지 않는 게시글 입니다." });
       return;
     }
 
     await communityService.increasePostViewCount(postId);
 
-    res.status(StatusCodes.OK).json(postDetail);
+    const { _count: count, ...userWithoutCount } = postDetail.user as { _count?: { answers?: number } };
+
+    res.status(StatusCodes.OK).json({
+      ...postDetail,
+      user: {
+        ...userWithoutCount,
+        answerCount: count && typeof count.answers === "number" ? count.answers : 0,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -115,7 +144,17 @@ export async function getPosts(
       { postCategoryId: categoryId }
     );
 
-    res.status(StatusCodes.OK).json(posts);
+    res.status(StatusCodes.OK).json(posts.map(post => {
+      const { _count: count, ...userWithoutCount } = post.user as { _count?: { answers?: number } };
+
+      return {
+        ...post,
+        user: {
+          ...userWithoutCount,
+          answerCount: count && typeof count.answers === "number" ? count.answers : 0,
+        },
+      }
+    }));
   } catch (error) {
     next(error);
   }

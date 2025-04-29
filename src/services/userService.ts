@@ -197,8 +197,10 @@ async function addPointsToUser(userId: number, points: number): Promise<void> {
     throw new Error("존재하지 않는 사용자 입니다.");
   }
 
-  let currentLevel = user.level;
-  const newTotalPoints = (user.point + points);
+  const { level, point } = user as {level: number, point: number};
+
+  let currentLevel = level;
+  const newTotalPoints = point + points;
   let totalRequiredPoints = calculateTotalRequiredLevelUpPoints(
     currentLevel + 1
   );

@@ -11,6 +11,7 @@ const communityService = {
   deletePost,
   updatePost,
   increasePostViewCount,
+  getPostCategories,
 };
 
 export default communityService;
@@ -33,14 +34,32 @@ async function createPost(
   });
 }
 
+async function getPostCategories() {
+  return await prisma.communityPostCategory.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: { id: "asc" },
+  });
+}
+
 const PostSelect: Prisma.CommunityPostSelect = {
   id: true,
   title: true,
   content: true,
+  postCategoryId: true,
   user: {
     select: {
       id: true,
       nickname: true,
+      profileImageUrl: true,
+      level: true,
+      _count: {
+        select: {
+          answers: true,
+        }
+      }
     },
   },
   createdAt: true,

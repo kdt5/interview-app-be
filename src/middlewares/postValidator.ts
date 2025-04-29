@@ -63,3 +63,8 @@ export const validateGetPostDetail = [
   ...validatePostParams,
   validationErrorMiddleware,
 ];
+
+export const validatePostOwnership = [
+  ...validatePostParams,
+  validationErrorMiddleware,
+];

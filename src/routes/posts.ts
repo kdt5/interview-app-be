@@ -3,8 +3,10 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 import {
   createPost,
   deletePost,
+  getPostCategories,
   getPostDetail,
   getPosts,
+  passPostOwnershipCheck,
   updatePost,
 } from "../controllers/postController.js";
 import postMiddleware from "../middlewares/postMiddleware.js";
@@ -13,6 +15,7 @@ import {
   validateDeletePost,
   validateGetPostDetail,
   validateGetPosts,
+  validatePostOwnership,
   validateUpdatePost,
 } from "../middlewares/postValidator.js";
 
@@ -33,6 +36,13 @@ router.patch(
   validateUpdatePost,
   postMiddleware.checkPostOwnership,
   updatePost
+);
+router.get("/categories", getPostCategories);
+router.get(
+  "/:postId/ownership",
+  validatePostOwnership,
+  postMiddleware.checkPostOwnership,
+  passPostOwnershipCheck
 );
 router.get("/:postId", validateGetPostDetail, getPostDetail);
 
