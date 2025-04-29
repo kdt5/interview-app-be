@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "../lib/prisma.js";
 import answerService from "./answerService.js";
 import { favoriteService } from "./favoriteService.js";
-import { getWeeklyFormattedDate, getWeekStartDate } from "../utils/date.js";
+import { getWeeklyLabel, getWeekStartDate } from "../utils/date.js";
 
 export const questionService = {
   checkQuestionExists,
@@ -148,7 +148,7 @@ async function getWeeklyQuestion(weekStart: Date) {
       answerCount: weeklyQuestion.question._count.answers,
       isAnswered: questionAnswerStatuses[0],
       isFavorite: questionFavoriteStatuses[0],
-      formattedStartDate: getWeeklyFormattedDate(weeklyQuestion.startDate),
+      weekLabel: getWeeklyLabel(weeklyQuestion.startDate),
     },
   };
 
@@ -192,7 +192,7 @@ async function getWeeklyQuestions(userId: number) {
         answerCount: weeklyQuestion.question._count.answers,
         isAnswered: questionAnswerStatuses[index],
         isFavorite: questionFavoriteStatuses[index],
-        formattedStartDate: getWeeklyFormattedDate(weeklyQuestion.startDate),
+        weekLabel: getWeeklyLabel(weeklyQuestion.startDate),
       };
     }
   );
