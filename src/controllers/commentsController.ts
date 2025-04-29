@@ -123,6 +123,7 @@ export async function checkCommentPermission(
         .json({ message: "댓글 수정 권한이 없습니다." });
       return;
     }
+    next();
   } catch (error) {
     next(error);
     return;
@@ -131,7 +132,7 @@ export async function checkCommentPermission(
 
 export interface UpdateCommentRequest extends AuthRequest {
   params: {
-    targetId: string;
+    commentId: string;
   };
   body: {
     content: string;
@@ -145,10 +146,11 @@ export async function updateComment(
 ): Promise<void> {
   try {
     const request = req as UpdateCommentRequest;
-    const { targetId } = request.params;
+    const { commentId } = request.params;
     const { content } = request.body;
 
-    await commentService.updateComment(parseInt(targetId), content);
+    await commentService.updateComment(parseInt(commentId), content);
+    res.status(StatusCodes.OK).json({ message: "댓글이 수정되었습니다." });
   } catch (error) {
     next(error);
   }
@@ -156,7 +158,7 @@ export async function updateComment(
 
 interface DeleteCommentRequest extends AuthRequest {
   params: {
-    targetId: string;
+    commentId: string;
   };
 }
 
@@ -167,8 +169,9 @@ export async function deleteComment(
 ): Promise<void> {
   try {
     const request = req as DeleteCommentRequest;
-    const { targetId } = request.params;
-    await commentService.deleteComment(parseInt(targetId));
+    const { commentId } = request.params;
+    await commentService.deleteComment(parseInt(commentId));
+    res.status(StatusCodes.NO_CONTENT).json({ message: "댓글이 삭제되었습니다." });
   } catch (error) {
     next(error);
   }
