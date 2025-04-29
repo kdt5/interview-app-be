@@ -5,6 +5,7 @@ import communityService from "../services/postService.js";
 import postMiddleware from "../middlewares/postMiddleware.js";
 import userService from "../services/userService.js";
 import { POST_COMMUNITY_POST_POINTS } from "../constants/levelUpPoints.js";
+import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
 
 export interface CreatePostRequest extends Request {
   body: {
@@ -105,25 +106,43 @@ export async function getPostDetail(
   }
 }
 
+interface GetPostsRequest extends Request {
+  query: {
+    categoryId: string;
+    limit: string;
+    page: string;
+  };
+}
+
 export async function getPosts(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { categoryId } = req.query as { categoryId: string };
+    const request = req as GetPostsRequest;
+    const categoryId =
+      request.query.categoryId === undefined
+        ? undefined
+        : parseInt(request.query.categoryId);
+    const limit =
+      request.query.limit === undefined
+        ? DEFAULT_PAGINATION_OPTIONS.POST.LIMIT
+        : parseInt(request.query.limit);
+    const page =
+      request.query.page === undefined ? 1 : parseInt(request.query.page);
 
-    if (
-      categoryId &&
-      !(await postMiddleware.isValidPostCategory(parseInt(categoryId)))
-    ) {
+    if (categoryId && !(await postMiddleware.isValidPostCategory(categoryId))) {
       res
         .status(StatusCodes.BAD_REQUEST)
         .json({ message: "존재하지 않는 게시글 카테고리 입니다." });
       return;
     }
 
-    const posts = await communityService.getPosts(parseInt(categoryId));
+    const posts = await communityService.getPosts(
+      { limit, page },
+      { postCategoryId: categoryId }
+    );
 
     res.status(StatusCodes.OK).json(posts.map(post => {
       const { _count: count, ...userWithoutCount } = post.user as { _count?: { answers?: number } };

@@ -1,6 +1,8 @@
 import { DELETED_USER_ID } from "../constants/user.js";
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
+import { PaginationOptions } from "../types/pagination.js";
+import { getPagination } from "../utils/pagination.js";
 
 const commentService = {
   checkCommentPermission,
@@ -31,7 +33,14 @@ async function checkCommentPermission(
   return comment !== null;
 }
 
-async function getComments(targetId: number, categoryId: number) {
+async function getComments(
+  targetId: number,
+  categoryId: number,
+  pagination: PaginationOptions
+) {
+  const { limit, page } = pagination;
+  const { skip, take } = getPagination({ limit, page });
+
   const comments = await prisma.comment.findMany({
     where: { targetId, categoryId },
     orderBy: { createdAt: "desc" },
@@ -57,6 +66,8 @@ async function getComments(targetId: number, categoryId: number) {
       isDeleted: true,
       favoriteCount: true,
     },
+    skip,
+    take,
   });
 
   return comments.map((comment) => ({

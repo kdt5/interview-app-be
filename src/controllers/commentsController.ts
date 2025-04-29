@@ -4,6 +4,7 @@ import { AuthRequest } from "../middlewares/authMiddleware.js";
 import commentService from "../services/commentService.js";
 import userService from "../services/userService.js";
 import { POST_COMMENT_POINTS } from "../constants/levelUpPoints.js";
+import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
 
 interface GetCommentsRequest extends Request {
   params: {
@@ -11,6 +12,8 @@ interface GetCommentsRequest extends Request {
   };
   query: {
     categoryName: string;
+    limit: string;
+    page: string;
   };
 }
 
@@ -23,12 +26,19 @@ export async function getComments(
     const request = req as GetCommentsRequest;
     const { targetId } = request.params;
     const { categoryName } = request.query;
+    const limit =
+      request.query.limit === undefined
+        ? DEFAULT_PAGINATION_OPTIONS.COMMENT.LIMIT
+        : parseInt(request.query.limit);
+    const page =
+      request.query.page === undefined ? 1 : parseInt(request.query.page);
 
     const categoryId = await commentService.getCategoryId(categoryName);
 
     const comments = await commentService.getComments(
       parseInt(targetId),
-      categoryId
+      categoryId,
+      { limit, page }
     );
 
     if (!comments) {

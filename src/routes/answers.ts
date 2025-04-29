@@ -9,6 +9,7 @@ import {
 import {
   validateAnswerId,
   validateEditAnswer,
+  validateGetAnsweredQuestions,
   validateRecordAnswer,
 } from "../middlewares/answerValidator.js";
 import { recordAnswer } from "../controllers/answerController.js";
@@ -16,11 +17,12 @@ import answersMiddleware from "../middlewares/answerMiddleware.js";
 
 const router = Router();
 
-router.get("/mine", authMiddleware.authenticate, getAnsweredQuestions);
+router.use(authMiddleware.authenticate);
+
+router.get("/mine", validateGetAnsweredQuestions, getAnsweredQuestions);
 
 router.get(
   "/:answerId",
-  authMiddleware.authenticate,
   validateAnswerId,
   answersMiddleware.checkAnswerOwnership,
   getAnswer
@@ -28,7 +30,6 @@ router.get(
 
 router.patch(
   "/:answerId",
-  authMiddleware.authenticate,
   validateEditAnswer,
   answersMiddleware.checkAnswerOwnership,
   editAnswer
@@ -36,17 +37,11 @@ router.patch(
 
 router.delete(
   "/:answerId",
-  authMiddleware.authenticate,
   validateAnswerId,
   answersMiddleware.checkAnswerOwnership,
   deleteAnswer
 );
 
-router.post(
-  "/:questionId",
-  authMiddleware.authenticate,
-  validateRecordAnswer,
-  recordAnswer
-);
+router.post("/:questionId", validateRecordAnswer, recordAnswer);
 
 export default router;

@@ -1,5 +1,7 @@
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
+import { PaginationOptions } from "../types/pagination.js";
+import { getPagination } from "../utils/pagination.js";
 import { QuestionSelect, QuestionsSelect } from "./questionService.js";
 import { UserBasicInfoSelect } from "./userService.js";
 
@@ -30,7 +32,13 @@ async function recordAnswer(
   });
 }
 
-async function getAnsweredQuestions(userId: number) {
+async function getAnsweredQuestions(
+  userId: number,
+  pagination: PaginationOptions
+) {
+  const { limit, page } = pagination;
+  const { skip, take } = getPagination({ limit, page });
+
   const answeredQuestions = await prisma.answer.findMany({
     where: { userId: userId },
     include: {
@@ -41,6 +49,8 @@ async function getAnsweredQuestions(userId: number) {
     orderBy: {
       id: "desc",
     },
+    skip,
+    take,
   });
 
   return answeredQuestions;
@@ -60,7 +70,10 @@ async function getAnswer(answerId: number) {
   });
 }
 
-async function getAnswers(questionId: number) {
+async function getAnswers(questionId: number, pagination: PaginationOptions) {
+  const { limit, page } = pagination;
+  const { skip, take } = getPagination({ limit, page });
+
   return await prisma.answer.findMany({
     where: { questionId },
     include: {
@@ -71,6 +84,8 @@ async function getAnswers(questionId: number) {
     orderBy: {
       id: "desc",
     },
+    skip,
+    take,
   });
 }
 

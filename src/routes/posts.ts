@@ -11,62 +11,39 @@ import {
 } from "../controllers/postController.js";
 import postMiddleware from "../middlewares/postMiddleware.js";
 import {
-  validatePostBody,
-  validatePostId,
-  validatePostQuery,
+  validateCreatePost,
+  validateDeletePost,
+  validateGetPostDetail,
+  validateGetPosts,
+  validatePostOwnership,
+  validateUpdatePost,
 } from "../middlewares/postValidator.js";
-import { validationErrorMiddleware } from "../middlewares/validationErrorMiddleware.js";
 
 const router = Router();
 
-router.get(
-  "/",
-  authMiddleware.authenticate,
-  validatePostQuery,
-  validationErrorMiddleware,
-  getPosts
-);
-router.post(
-  "/",
-  authMiddleware.authenticate,
-  validatePostBody,
-  validatePostQuery,
-  validationErrorMiddleware,
-  createPost
-);
+router.use(authMiddleware.authenticate);
+
+router.get("/", validateGetPosts, getPosts);
+router.post("/", validateCreatePost, createPost);
 router.delete(
   "/:postId",
-  authMiddleware.authenticate,
-  validatePostId,
-  validationErrorMiddleware,
+  validateDeletePost,
   postMiddleware.checkPostOwnership,
   deletePost
 );
 router.patch(
   "/:postId",
-  authMiddleware.authenticate,
-  validatePostId,
-  validatePostBody,
-  validatePostQuery,
-  validationErrorMiddleware,
+  validateUpdatePost,
   postMiddleware.checkPostOwnership,
   updatePost
 );
-router.get("/categories", authMiddleware.authenticate, getPostCategories);
+router.get("/categories", getPostCategories);
 router.get(
   "/:postId/ownership",
-  authMiddleware.authenticate,
-  validatePostId,
-  validationErrorMiddleware,
+  validatePostOwnership,
   postMiddleware.checkPostOwnership,
   passPostOwnershipCheck
 );
-router.get(
-  "/:postId",
-  authMiddleware.authenticate,
-  validatePostId,
-  validationErrorMiddleware,
-  getPostDetail
-);
+router.get("/:postId", validateGetPostDetail, getPostDetail);
 
 export default router;
