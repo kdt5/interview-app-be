@@ -127,12 +127,6 @@ export async function getBasicQuestions(
         categoryId,
       }
     );
-    if (questions.length === 0) {
-      res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ message: "조건에 해당하는 질문이 존재하지 않습니다." });
-      return;
-    }
 
     res.status(StatusCodes.OK).json(questions);
   } catch (error) {
