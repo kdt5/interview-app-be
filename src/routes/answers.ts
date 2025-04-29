@@ -22,6 +22,15 @@ router.use(authMiddleware.authenticate);
 router.get("/mine", validateGetAnsweredQuestions, getAnsweredQuestions);
 
 router.get(
+  "/:answerId/ownership",
+  validateAnswerId,
+  answersMiddleware.checkAnswerOwnership,
+  (req, res) => {
+    res.status(200).json(true);
+  }
+);
+
+router.get(
   "/:answerId",
   validateAnswerId,
   answersMiddleware.checkAnswerOwnership,
