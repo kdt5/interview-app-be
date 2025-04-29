@@ -58,7 +58,9 @@ async function getQuestionById(userId: number, questionId: number) {
     return null;
   }
 
-  const formattedQuestions = formatQuestionsWithUserData(userId, [question]);
+  const formattedQuestions = (
+    await formatQuestionsWithUserData(userId, [question])
+  )[0];
 
   return formattedQuestions;
 }
@@ -97,7 +99,18 @@ async function getQuestions(
   const { skip, take } = getPagination({ limit, page });
   const { categoryId, positionId } = options ?? {};
 
+  const weeklyQuestionIds = await prisma.weeklyQuestion
+    .findMany({
+      select: {
+        questionId: true,
+      },
+    })
+    .then((results) => results.map((item) => item.questionId));
+
   const whereClause: Prisma.QuestionWhereInput = {
+    id: {
+      notIn: weeklyQuestionIds,
+    },
     categories: {
       some: {
         category: {
@@ -120,7 +133,10 @@ async function getQuestions(
     take,
   });
 
-  const formattedQuestions = formatQuestionsWithUserData(userId, questions);
+  const formattedQuestions = await formatQuestionsWithUserData(
+    userId,
+    questions
+  );
 
   return formattedQuestions;
 }
@@ -141,9 +157,9 @@ async function getWeeklyQuestion(userId: number, weekStart: Date) {
     return null;
   }
 
-  const formattedQuestion = await formatQuestionsWithUserData(userId, [
-    weeklyQuestion.question,
-  ]);
+  const formattedQuestion = (
+    await formatQuestionsWithUserData(userId, [weeklyQuestion.question])
+  )[0];
 
   const formattedWeeklyQuestion = {
     ...weeklyQuestion,
