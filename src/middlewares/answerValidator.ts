@@ -4,6 +4,7 @@ import {
   EditAnswerRequest,
   RecordAnswerRequest,
 } from "../controllers/answerController.js";
+import { validatePagination } from "./paginationValidator.js";
 
 export function validateRecordAnswer(
   req: Request,
@@ -91,3 +92,5 @@ export function validateAnswerId(
 
   next();
 }
+
+export const validateGetAnsweredQuestions = [...validatePagination];

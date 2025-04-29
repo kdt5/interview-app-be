@@ -3,13 +3,14 @@ import prisma from "../lib/prisma.js";
 import answerService from "./answerService.js";
 import { favoriteService } from "./favoriteService.js";
 import { getWeeklyLabel, getWeekStartDate } from "../utils/date.js";
+import { getPagination } from "../utils/pagination.js";
+import { PaginationOptions } from "../types/pagination.js";
 
 export const questionService = {
   checkQuestionExists,
   getQuestionById,
   addWeeklyQuestion,
   getQuestions,
-  getBasicQuestions,
   getWeeklyQuestions,
   increaseQuestionViewCount,
   getCurrentWeeklyQuestion,
@@ -47,11 +48,19 @@ export const QuestionSelect: Prisma.QuestionSelect = {
   },
 };
 
-async function getQuestionById(questionId: number) {
-  return await prisma.question.findUnique({
+async function getQuestionById(userId: number, questionId: number) {
+  const question = await prisma.question.findUnique({
     select: QuestionSelect,
     where: { id: questionId },
   });
+
+  if (question === null) {
+    return null;
+  }
+
+  const formattedQuestions = formatQuestionsWithUserData(userId, [question]);
+
+  return formattedQuestions;
 }
 
 export const QuestionsSelect: Prisma.QuestionSelect = {
@@ -78,41 +87,45 @@ export const QuestionsSelect: Prisma.QuestionSelect = {
 
 async function getQuestions(
   userId: number,
-  whereClause: Prisma.QuestionWhereInput
+  pagination: PaginationOptions,
+  options?: {
+    categoryId?: number;
+    positionId?: number;
+  }
 ) {
+  const { limit, page } = pagination;
+  const { skip, take } = getPagination({ limit, page });
+  const { categoryId, positionId } = options ?? {};
+
+  const whereClause: Prisma.QuestionWhereInput = {
+    categories: {
+      some: {
+        category: {
+          id: categoryId,
+          position: {
+            id: positionId,
+          },
+        },
+      },
+    },
+  };
+
   const questions = await prisma.question.findMany({
     where: whereClause,
     select: QuestionsSelect,
     orderBy: {
       id: "desc",
     },
+    skip,
+    take,
   });
 
-  const questionAnswerStatuses: boolean[] =
-    await answerService.getAnsweredStatuses(
-      userId,
-      questions.map((question) => question.id)
-    );
+  const formattedQuestions = formatQuestionsWithUserData(userId, questions);
 
-  const questionFavoriteStatuses: boolean[] =
-    await favoriteService.getFavoriteStatuses(
-      userId,
-      "QUESTION",
-      questions.map((question) => question.id)
-    );
-
-  questions.map((question, index) => {
-    return {
-      ...question,
-      isAnswered: questionAnswerStatuses[index],
-      isFavorite: questionFavoriteStatuses[index],
-    };
-  });
-
-  return questions;
+  return formattedQuestions;
 }
 
-async function getWeeklyQuestion(weekStart: Date) {
+async function getWeeklyQuestion(userId: number, weekStart: Date) {
   const weeklyQuestion = await prisma.weeklyQuestion.findUnique({
     where: {
       startDate: weekStart,
@@ -125,29 +138,17 @@ async function getWeeklyQuestion(weekStart: Date) {
   });
 
   if (weeklyQuestion === null) {
-    throw new Error("Weekly question not found");
+    return null;
   }
 
-  const questionAnswerStatuses: boolean[] =
-    await answerService.getAnsweredStatuses(weeklyQuestion.question.id, [
-      weeklyQuestion.question.id,
-    ]);
-
-  const questionFavoriteStatuses: boolean[] =
-    await favoriteService.getFavoriteStatuses(
-      weeklyQuestion.question.id,
-      "QUESTION",
-      [weeklyQuestion.question.id]
-    );
+  const formattedQuestion = await formatQuestionsWithUserData(userId, [
+    weeklyQuestion.question,
+  ]);
 
   const formattedWeeklyQuestion = {
     ...weeklyQuestion,
     question: {
-      ...weeklyQuestion.question,
-      _count: undefined,
-      answerCount: weeklyQuestion.question._count.answers,
-      isAnswered: questionAnswerStatuses[0],
-      isFavorite: questionFavoriteStatuses[0],
+      ...formattedQuestion,
       weekLabel: getWeeklyLabel(weeklyQuestion.startDate),
     },
   };
@@ -155,7 +156,13 @@ async function getWeeklyQuestion(weekStart: Date) {
   return formattedWeeklyQuestion;
 }
 
-async function getWeeklyQuestions(userId: number) {
+async function getWeeklyQuestions(
+  userId: number,
+  pagination: PaginationOptions
+) {
+  const { limit, page } = pagination;
+  const { skip, take } = getPagination({ limit, page });
+
   const weeklyQuestions = await prisma.weeklyQuestion.findMany({
     include: {
       question: {
@@ -165,33 +172,19 @@ async function getWeeklyQuestions(userId: number) {
     orderBy: {
       startDate: "desc",
     },
+    skip,
+    take,
   });
 
-  if (weeklyQuestions === null) {
-    throw new Error("Weekly question not found");
-  }
-
-  const questionAnswerStatuses: boolean[] =
-    await answerService.getAnsweredStatuses(
-      userId,
-      weeklyQuestions.map((weeklyQuestion) => weeklyQuestion.question.id)
-    );
-
-  const questionFavoriteStatuses: boolean[] =
-    await favoriteService.getFavoriteStatuses(
-      userId,
-      "QUESTION",
-      weeklyQuestions.map((weeklyQuestion) => weeklyQuestion.question.id)
-    );
+  const formattedQuestions = await formatQuestionsWithUserData(
+    userId,
+    weeklyQuestions.map((weeklyQuestion) => weeklyQuestion.question)
+  );
 
   const formattedWeeklyQuestions = weeklyQuestions.map(
     (weeklyQuestion, index) => {
       return {
-        ...weeklyQuestion,
-        _count: undefined,
-        answerCount: weeklyQuestion.question._count.answers,
-        isAnswered: questionAnswerStatuses[index],
-        isFavorite: questionFavoriteStatuses[index],
+        ...formattedQuestions[index],
         weekLabel: getWeeklyLabel(weeklyQuestion.startDate),
       };
     }
@@ -222,29 +215,38 @@ async function increaseQuestionViewCount(questionId: number) {
   });
 }
 
-async function getBasicQuestions(
-  userId: number,
-  positionId?: number,
-  categoryId?: number
-) {
-  const whereInput: Prisma.QuestionWhereInput = {
-    categories: {
-      some: {
-        category: {
-          id: categoryId,
-          position: {
-            id: positionId,
-          },
-        },
-      },
-    },
-  };
-
-  return await getQuestions(userId, whereInput);
-}
-
-async function getCurrentWeeklyQuestion() {
+async function getCurrentWeeklyQuestion(userId: number) {
   const weekStart = getWeekStartDate();
 
-  return await getWeeklyQuestion(weekStart);
+  return await getWeeklyQuestion(userId, weekStart);
+}
+
+async function formatQuestionsWithUserData(
+  userId: number,
+  questions: Array<
+    Prisma.QuestionGetPayload<{ select: typeof QuestionsSelect }>
+  >
+) {
+  const questionAnswerStatuses: boolean[] =
+    await answerService.getAnsweredStatuses(
+      userId,
+      questions.map((question) => question.id)
+    );
+
+  const questionFavoriteStatuses: boolean[] =
+    await favoriteService.getFavoriteStatuses(
+      userId,
+      "QUESTION",
+      questions.map((question) => question.id)
+    );
+
+  return questions.map((question, index) => {
+    const { _count: count, ...rest } = question;
+    return {
+      ...rest,
+      answerCount: count.answers,
+      isAnswered: questionAnswerStatuses[index],
+      isFavorite: questionFavoriteStatuses[index],
+    };
+  });
 }
