@@ -1,6 +1,6 @@
 import { body, param, query } from "express-validator";
-import { validatePagination } from "./paginationValidator";
-import { validationErrorMiddleware } from "./validationErrorMiddleware";
+import { validatePagination } from "./paginationValidator.js";
+import { validationErrorMiddleware } from "./validationErrorMiddleware.js";
 
 const validatePostParams = [
   param("postId")

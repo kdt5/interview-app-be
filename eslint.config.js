@@ -1,10 +1,14 @@
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
+import importPlugin from "eslint-plugin-import";
 
 export default tseslint.config(
   { ignores: ["dist"] },
   {
     files: ["**/*.ts"],
+    plugins: {
+      import: importPlugin
+    },
     extends: [
       eslint.configs.recommended,
       tseslint.configs.recommendedTypeChecked,
@@ -46,6 +50,7 @@ export default tseslint.config(
           format: ["strictCamelCase"],
         },
       ],
+      "import/extensions": ["error", "always", { "js": "always", "ts": "never" }]
     },
   }
 );

@@ -36,10 +36,10 @@ jobs:
             pm2 save
 
             # PM2 프로세스 상태 확인 및 재시작 (없으면 새로 시작)
-            pm2 describe interviewit-backend > /dev/null || pm2 start ecosystem.config.cjs --env production
+            pm2 describe interviewit-backend > /dev/null || pm2 start ecosystem.config.cjs --env development
 
             # 무중단 재시작 (실패 시 롤백)
-            pm2 reload ecosystem.config.cjs --env production || {
+            pm2 reload ecosystem.config.cjs --env development || {
               echo "배포 실패: 이전 버전으로 롤백합니다."
               pm2 restore
               exit 1
