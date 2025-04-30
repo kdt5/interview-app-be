@@ -97,17 +97,9 @@ async function getQuestions(
   const { skip, take } = getPagination({ limit, page });
   const { categoryId, positionId } = options ?? {};
 
-  const weeklyQuestionIds = await prisma.weeklyQuestion
-    .findMany({
-      select: {
-        questionId: true,
-      },
-    })
-    .then((results) => results.map((item) => item.questionId));
-
   const whereClause: Prisma.QuestionWhereInput = {
-    id: {
-      notIn: weeklyQuestionIds,
+    weeklyQuestion: {
+      is: null
     },
     categories: {
       some: {
