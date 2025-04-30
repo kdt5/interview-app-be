@@ -22,10 +22,9 @@ const allowedOrigins = [];
 
 if (process.env.NODE_ENV === "development") {
   allowedOrigins.push("http://localhost:5173");
-} else if (process.env.NODE_ENV === "production") {
-  if (process.env.FRONTEND_URL) {
-    allowedOrigins.push(process.env.FRONTEND_URL);
-  }
+}
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
 const app = express();
