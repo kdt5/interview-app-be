@@ -9,10 +9,12 @@ const rankingService = {
 };
 
 export interface RankingListItem {
-  nickname: string;
+  user: {
+    nickname: string;
+    level: number;
+    profileImageUrl: string | null;
+  };
   rank: number;
-  level: number;
-  profileImageUrl: string | null;
   totalFavoriteCount: number;
   totalAnswerCount: number;
   totalScore: number;
@@ -134,7 +136,17 @@ async function getRankings(
     throw new Error(`Invalid orderBy: ${orderBy}`);
   }
 
-  const rankings = await prisma.$queryRaw<RankingListItem[]>`
+  const rankings = await prisma.$queryRaw<
+    {
+      nickname: string;
+      level: number;
+      profileImageUrl: string | null;
+      rank: number;
+      totalFavoriteCount: number;
+      totalAnswerCount: number;
+      totalScore: number;
+    }[]
+  >`
         ${getRankingBaseCte(startDate, endDate)},
         ranked_users AS (
             SELECT
@@ -154,10 +166,12 @@ async function getRankings(
     `;
 
   return rankings.map((ranking) => ({
-    nickname: ranking.nickname,
+    user: {
+      nickname: ranking.nickname,
+      level: Number(ranking.level),
+      profileImageUrl: ranking.profileImageUrl,
+    },
     rank: Number(ranking.rank),
-    level: Number(ranking.level),
-    profileImageUrl: ranking.profileImageUrl,
     totalFavoriteCount: Number(ranking.totalFavoriteCount),
     totalAnswerCount: Number(ranking.totalAnswerCount),
     totalScore: Number(ranking.totalScore),

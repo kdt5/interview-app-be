@@ -36,14 +36,15 @@ async function checkCommentPermission(
 async function getComments(
   targetId: number,
   categoryId: number,
-  pagination: PaginationOptions
+  pagination: PaginationOptions,
+  orderBy: "createdAt" | "favoriteCount"
 ) {
   const { limit, page } = pagination;
   const { skip, take } = getPagination({ limit, page });
 
   const comments = await prisma.comment.findMany({
     where: { targetId, categoryId },
-    orderBy: { createdAt: "desc" },
+    orderBy: { [orderBy]: "desc" },
     select: {
       id: true,
       content: true,
@@ -58,8 +59,8 @@ async function getComments(
           _count: {
             select: {
               answers: true,
-            }
-          }
+            },
+          },
         },
       },
       parentId: true,

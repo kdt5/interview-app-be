@@ -12,6 +12,7 @@ interface GetCommentsRequest extends Request {
   };
   query: {
     categoryName: string;
+    orderBy?: string;
     limit: string;
     page: string;
   };
@@ -26,6 +27,8 @@ export async function getComments(
     const request = req as GetCommentsRequest;
     const { targetId } = request.params;
     const { categoryName } = request.query;
+    const orderBy =
+      request.query.orderBy === "createdAt" ? "createdAt" : "favoriteCount";
     const limit =
       request.query.limit === undefined
         ? DEFAULT_PAGINATION_OPTIONS.COMMENT.LIMIT
@@ -38,7 +41,8 @@ export async function getComments(
     const comments = await commentService.getComments(
       parseInt(targetId),
       categoryId,
-      { limit, page }
+      { limit, page },
+      orderBy
     );
 
     if (!comments) {
