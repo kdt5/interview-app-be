@@ -98,7 +98,7 @@ export function validateAnswerId(
 const validateAnswersFilterQuery = [
   query("filter")
     .optional()
-    .isIn(["basic", "weekly"])
+    .isIn(['basic', 'weekly'])
     .withMessage("정렬 기준은 basic 또는 weekly만 가능합니다."),
 ];
 

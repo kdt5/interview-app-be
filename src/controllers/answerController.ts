@@ -77,7 +77,7 @@ export async function getAnsweredQuestions(
         : parseInt(request.query.limit);
     const page =
       request.query.page === undefined ? 1 : parseInt(request.query.page);
-    const filter = request.query.filter as "basic" | "weekly" | undefined;
+    const filter = request.query.filter as 'basic' | 'weekly' | undefined;
 
     const answeredQuestions = await answerService.getAnsweredQuestions(userId, {
       limit,
