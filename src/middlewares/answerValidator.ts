@@ -5,6 +5,8 @@ import {
   RecordAnswerRequest,
 } from "../controllers/answerController.js";
 import { validatePagination } from "./paginationValidator.js";
+import { query } from "express-validator";
+import { validationErrorMiddleware } from "./validationErrorMiddleware.js";
 
 export function validateRecordAnswer(
   req: Request,
@@ -93,4 +95,11 @@ export function validateAnswerId(
   next();
 }
 
-export const validateGetAnsweredQuestions = [...validatePagination];
+const validateAnswersFilterQuery = [
+  query("filter")
+    .optional()
+    .isIn(["basic", "weekly"])
+    .withMessage("정렬 기준은 basic 또는 weekly만 가능합니다."),
+];
+
+export const validateGetAnsweredQuestions = [...validatePagination, ...validateAnswersFilterQuery, validationErrorMiddleware];

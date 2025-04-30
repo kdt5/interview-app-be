@@ -34,20 +34,31 @@ async function recordAnswer(
 
 async function getAnsweredQuestions(
   userId: number,
-  pagination: PaginationOptions
+  pagination: PaginationOptions,
+  filter?: "basic" | "weekly"
 ) {
   const { limit, page } = pagination;
   const { skip, take } = getPagination({ limit, page });
 
+  const whereClause: any = {
+    userId,
+  };
+
+  if (filter === "basic") {
+    whereClause.question = { isWeekly: false };
+  } else if (filter === "weekly") {
+    whereClause.question = { isWeekly: true };
+  }
+
   const answeredQuestions = await prisma.answer.findMany({
-    where: { userId: userId },
+    where: whereClause,
     include: {
       question: {
         select: QuestionsSelect,
       },
     },
     orderBy: {
-      id: "desc",
+      createdAt: "desc",
     },
     skip,
     take,
