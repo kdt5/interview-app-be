@@ -37,9 +37,14 @@ async function extractTokenFromCookie(req: Request): Promise<string> {
   if (accessToken) return accessToken;
   if (!refreshToken) throw new AuthError("UNAUTHORIZED");
 
-  const { accessToken: newAccessToken } = await tokenService.refreshTokens(
-    refreshToken
-  );
+  const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+    await tokenService.refreshTokens(refreshToken);
+
+  setTokenCookies(req.res!, {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  });
+
   return newAccessToken;
 }
 
