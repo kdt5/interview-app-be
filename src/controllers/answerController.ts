@@ -84,11 +84,6 @@ export async function getAnsweredQuestions(
       page,
     }, filter);
 
-    if (!answeredQuestions) {
-      res.status(StatusCodes.NOT_FOUND);
-      return;
-    }
-
     res.status(StatusCodes.OK).json(answeredQuestions);
   } catch (error) {
     next(error);

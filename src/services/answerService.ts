@@ -43,19 +43,33 @@ async function getAnsweredQuestions(
 
   const whereClause: Prisma.AnswerWhereInput = {
     userId,
+    question: {},
   };
 
   if (filter === 'basic') {
-    whereClause.question = { isWeekly: false };
+    whereClause.question = { 
+      weeklyQuestion: null,
+     };
   } else if (filter === 'weekly') {
-    whereClause.question = { isWeekly: true };
+    whereClause.question = { 
+      weeklyQuestion: {
+        isNot: null,
+      }
+     };
   }
 
   const answeredQuestions = await prisma.answer.findMany({
     where: whereClause,
     include: {
       question: {
-        select: QuestionsSelect,
+        select: {
+          ...QuestionsSelect,
+          weeklyQuestion: {
+            select: {
+              startDate: true,
+            }
+          }
+        },
       },
     },
     orderBy: {
