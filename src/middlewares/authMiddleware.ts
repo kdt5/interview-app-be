@@ -24,7 +24,10 @@ const authMiddleware = {
 async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {
     const request = req as AuthRequest;
-    const accessToken = await authMiddleware.extractTokenFromCookie(request);
+    const accessToken = await authMiddleware.extractTokenFromCookie(
+      request,
+      res
+    );
     request.user = await tokenService.getUserFromToken(accessToken);
     next();
   } catch (error) {
@@ -32,7 +35,10 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-async function extractTokenFromCookie(req: Request): Promise<string> {
+async function extractTokenFromCookie(
+  req: Request,
+  res: Response
+): Promise<string> {
   const { accessToken, refreshToken } = req.cookies as TokenPair;
   if (accessToken) return accessToken;
   if (!refreshToken) throw new AuthError("UNAUTHORIZED");
@@ -40,7 +46,7 @@ async function extractTokenFromCookie(req: Request): Promise<string> {
   const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
     await tokenService.refreshTokens(refreshToken);
 
-  setTokenCookies(req.res!, {
+  setTokenCookies(res, {
     accessToken: newAccessToken,
     refreshToken: newRefreshToken,
   });
