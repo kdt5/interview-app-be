@@ -64,7 +64,20 @@ async function getAnsweredQuestions(
     take,
   });
 
-  return answeredQuestions;
+  const transformed = answeredQuestions.map((answer) => {
+    const { question } = answer;
+    const { _count, ...restQuestion } = question;
+
+    return {
+      ...answer,
+      question: {
+        ...restQuestion,
+        answerCount: _count.answers,
+      },
+    };
+  });
+
+  return transformed;
 }
 
 async function getAnswer(answerId: number) {
