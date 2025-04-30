@@ -151,7 +151,7 @@ function sanitizeDeletedComments(
 ): ResponseCommentType[] {
   return comments.map((comment) => {
     if (comment.isDeleted) {
-      comment.content = "";
+      comment.content = "삭제된 댓글입니다.";
       comment.user = {
         id: DELETED_USER_ID,
         nickname: "",

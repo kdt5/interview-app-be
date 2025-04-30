@@ -18,16 +18,11 @@ const router = Router();
 
 router.use(authMiddleware.authenticate);
 
-router.post(
-  "/:targetId",
-  validateAddComment,
-  addComment
-);
-router.get(
-  "/:targetId",
-  validateGetComments,
-  getComments
-);
+router.get("/:commentId/ownership", checkCommentPermission, (req, res) => {
+  res.status(200).json(true);
+});
+router.post("/:targetId", validateAddComment, addComment);
+router.get("/:targetId", validateGetComments, getComments);
 router.patch(
   "/:commentId",
   validateUpdateComment,

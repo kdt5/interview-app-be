@@ -58,11 +58,9 @@ async function getQuestionById(userId: number, questionId: number) {
     return null;
   }
 
-  const formattedQuestions = (
-    await formatQuestionsWithUserData(userId, [question])
-  )[0];
+  const formattedQuestions = await formatQuestionsWithUserData(userId, [question]);
 
-  return formattedQuestions;
+  return formattedQuestions[0];
 }
 
 export const QuestionsSelect: Prisma.QuestionSelect = {
@@ -133,10 +131,7 @@ async function getQuestions(
     take,
   });
 
-  const formattedQuestions = await formatQuestionsWithUserData(
-    userId,
-    questions
-  );
+  const formattedQuestions = await formatQuestionsWithUserData(userId, questions);
 
   return formattedQuestions;
 }
