@@ -39,11 +39,17 @@ export async function recordAnswer(
       return;
     }
 
-    await answerService.recordAnswer(userId, parseInt(questionId), content);
+    const answer = await answerService.recordAnswer(
+      userId,
+      parseInt(questionId),
+      content
+    );
 
     await userService.addPointsToUser(userId, POST_ANSWER_POINTS);
 
-    res.status(StatusCodes.CREATED).end();
+    res.status(StatusCodes.CREATED).json({
+      answerId: answer.id,
+    });
   } catch (error) {
     next(error);
   }
