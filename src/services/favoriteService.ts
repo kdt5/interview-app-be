@@ -44,11 +44,6 @@ async function getFavorites(userId: number, targetType: FavoriteTargetType) {
         title: true,
         content: true,
         favoriteCount: true,
-        weeklyQuestion: {
-          select: {
-            questionId: true,
-          },
-        },
       },
     });
   }
