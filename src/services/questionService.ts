@@ -238,11 +238,10 @@ async function formatQuestionsWithUserData(
     Prisma.QuestionGetPayload<{ select: typeof QuestionsSelect }>
   >
 ) {
-  const questionAnswerStatuses: boolean[] =
-    await answerService.getAnsweredStatuses(
-      userId,
-      questions.map((question) => question.id)
-    );
+  const questionAnswerStatuses = await answerService.getAnsweredStatuses(
+    userId,
+    questions.map((question) => question.id)
+  );
 
   const questionFavoriteStatuses: boolean[] =
     await favoriteService.getFavoriteStatuses(
@@ -256,8 +255,9 @@ async function formatQuestionsWithUserData(
     return {
       ...rest,
       answerCount: count.answers,
-      isAnswered: questionAnswerStatuses[index],
+      isAnswered: questionAnswerStatuses[index] !== undefined,
       isFavorite: questionFavoriteStatuses[index],
+      answerId: questionAnswerStatuses[index]?.answerId,
     };
   });
 }
