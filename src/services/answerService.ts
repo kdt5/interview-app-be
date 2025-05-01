@@ -183,13 +183,13 @@ async function getAnsweredStatuses(userId: number, questionIds: number[]) {
     },
   });
 
-  return questionIds.map((questionId) => {
-    const answeredQuestion = answeredQuestions.find(
-      (answeredQuestion) => answeredQuestion.id === questionId
-    );
+  const answeredQuestionMap = new Map(
+    answeredQuestions.map((question) => [question.questionId, question])
+  );
 
+  return questionIds.map((questionId) => {
     return {
-      answerId: answeredQuestion?.id,
+      answerId: answeredQuestionMap.get(questionId)?.id,
     };
   });
 }
