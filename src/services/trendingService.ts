@@ -6,6 +6,7 @@ import {
   Prisma,
   Question,
 } from "@prisma/client";
+import { format } from "path";
 
 const trendingService = {
   getTrendingPosts,
@@ -75,12 +76,46 @@ function getRecentAnswersCte(
   `;
 }
 
+export interface UserCommunityPost {
+  id: number;
+  title: string;
+  content: string;
+  postCategoryId: number;
+  userId: number;
+  nickname: string;
+  profileImageUrl: string;
+  level: number;
+  answerCount: number;
+  createdAt: string;
+  updatedAt: string;
+  viewCount: number;
+  favoriteCount: number;
+}
+
+export interface UserFormattedCommunityPost {
+  id: number;
+  title: string;
+  content: string;
+  postCategoryId: number;
+  user: {
+    id: number;
+    nickname: string;
+    profileImageUrl?: string;
+    level: number;
+    answerCount: number;
+  }
+  createdAt: string;
+  updatedAt: string;
+  viewCount: number;
+  favoriteCount: number;
+}
+
 async function getTrendingPosts(
   categoryId?: number,
   limit: number = 10
-): Promise<CommunityPost[]> {
+): Promise<UserFormattedCommunityPost[]> {
   // 최근 활동 점수 계산
-  const trendingPosts = await prisma.$queryRaw<CommunityPost[]>`
+  const trendingPosts = await prisma.$queryRaw<UserCommunityPost[]>`
     WITH recent_favorites AS (${getRecentFavoritesCte(
       FavoriteTargetType.POST,
       FAVORITE_WEIGHT,
@@ -93,8 +128,25 @@ async function getTrendingPosts(
       endDate
     )})
     SELECT 
-      p.*
+      p.id,
+      p.title,
+      p.content,
+      p.created_at as createdAt,
+      p.updated_at as updatedAt,
+      p.view_count as viewCount,
+      p.favorite_count as favoriteCount,
+      p.post_category_id as postCategoryId,
+      u.id as userId,
+      u.nickname,
+      u.profile_image_url as profileImageUrl,
+      u.level,
+      (
+        SELECT COUNT(*)
+        FROM Answer a
+        WHERE a.user_id = u.id
+      ) as answerCount
     FROM CommunityPost p
+    JOIN User u ON p.user_id = u.id
     LEFT JOIN recent_favorites f ON p.id = f.postId
     LEFT JOIN recent_comments c ON p.id = c.postId
     WHERE ${
@@ -108,6 +160,24 @@ async function getTrendingPosts(
     LIMIT ${limit}
   `;
 
+  const formattedPosts: UserFormattedCommunityPost[] = trendingPosts.map((row) => ({
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    postCategoryId: row.postCategoryId,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    viewCount: row.viewCount,
+    favoriteCount: row.favoriteCount,
+    user: {
+      id: row.userId,
+      nickname: row.nickname,
+      profileImageUrl: row.profileImageUrl,
+      level: row.level,
+      answerCount: Number(row.answerCount),
+    },
+  }));
+
   // limit보다 적으면 조회수 순으로 추가 게시글 조회
   if (trendingPosts.length < limit) {
     const additionalPosts = await prisma.communityPost.findMany({
@@ -117,16 +187,57 @@ async function getTrendingPosts(
         },
         postCategoryId: categoryId ? categoryId : undefined,
       },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        postCategoryId: true,
+        createdAt: true,
+        updatedAt: true,
+        viewCount: true,
+        favoriteCount: true,
+        user: {
+          select: {
+            id: true,
+            nickname: true,
+            profileImageUrl: true,
+            level: true,
+            _count: {
+              select: {
+                answers: true,
+              },
+            }
+          }
+        }
+      },
       orderBy: {
         viewCount: "desc",
       },
       take: limit - trendingPosts.length,
     });
 
-    trendingPosts.push(...additionalPosts);
+    const additionalFormattedPosts: UserFormattedCommunityPost[] = additionalPosts.map((post) => ({
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      postCategoryId: post.postCategoryId,
+      createdAt: post.createdAt.toISOString(),
+      updatedAt: post.updatedAt.toISOString(),
+      viewCount: post.viewCount,
+      favoriteCount: post.favoriteCount,
+      user: {
+        id: post.user.id,
+        nickname: post.user.nickname,
+        profileImageUrl: post.user.profileImageUrl ?? undefined,
+        level: post.user.level,
+        answerCount: Number(post.user._count.answers),
+      }
+    }));
+
+    formattedPosts.push(...additionalFormattedPosts);
   }
 
-  return trendingPosts;
+  return formattedPosts;
 }
 
 async function getTrendingQuestions(

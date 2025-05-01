@@ -57,7 +57,7 @@ export async function getFavoriteStatus(
       error instanceof PrismaClientKnownRequestError &&
       error.code === "P2025"
     ) {
-      res.status(StatusCodes.NOT_FOUND).json(false);
+      res.status(StatusCodes.OK).json(false);
       return;
     }
     next(error);
