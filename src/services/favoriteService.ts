@@ -79,6 +79,7 @@ async function getFavorites(userId: number, targetType: FavoriteTargetType) {
         title: true,
         content: true,
         favoriteCount: true,
+        viewCount: true,
         user: {
           select: {
             id: true,
