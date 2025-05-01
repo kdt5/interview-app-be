@@ -12,6 +12,7 @@ const communityService = {
   updatePost,
   increasePostViewCount,
   getPostCategories,
+  getMyPosts,
 };
 
 export default communityService;
@@ -58,8 +59,8 @@ const PostSelect: Prisma.CommunityPostSelect = {
       _count: {
         select: {
           answers: true,
-        }
-      }
+        },
+      },
     },
   },
   createdAt: true,
@@ -87,6 +88,29 @@ async function getPosts(
 
   return await prisma.communityPost.findMany({
     where: postCategoryId ? { postCategoryId } : undefined,
+    select: PostSelect,
+    orderBy: { createdAt: "desc" },
+    skip,
+    take,
+  });
+}
+
+async function getMyPosts(
+  userId: number,
+  pagination: PaginationOptions,
+  options?: {
+    postCategoryId?: number;
+  }
+) {
+  const { limit, page } = pagination;
+  const { skip, take } = getPagination({ limit, page });
+  const { postCategoryId } = options ?? {};
+
+  return await prisma.communityPost.findMany({
+    where: {
+      userId,
+      postCategoryId,
+    },
     select: PostSelect,
     orderBy: { createdAt: "desc" },
     skip,

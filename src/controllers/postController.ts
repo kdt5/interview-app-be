@@ -6,6 +6,7 @@ import postMiddleware from "../middlewares/postMiddleware.js";
 import userService from "../services/userService.js";
 import { POST_COMMUNITY_POST_POINTS } from "../constants/levelUpPoints.js";
 import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
 
 export interface CreatePostRequest extends Request {
   body: {
@@ -61,10 +62,7 @@ export async function getPostCategories(
   }
 }
 
-export function passPostOwnershipCheck(
-  req: Request,
-  res: Response,
-) {
+export function passPostOwnershipCheck(req: Request, res: Response) {
   res.status(StatusCodes.OK).json(true);
 }
 
@@ -86,19 +84,24 @@ export async function getPostDetail(
     const postDetail = await communityService.getPostDetail(postId);
 
     if (!postDetail) {
-      res.status(StatusCodes.NOT_FOUND).json({ message: "존재하지 않는 게시글 입니다." });
+      res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "존재하지 않는 게시글 입니다." });
       return;
     }
 
     await communityService.increasePostViewCount(postId);
 
-    const { _count: count, ...userWithoutCount } = postDetail.user as { _count?: { answers?: number } };
+    const { _count: count, ...userWithoutCount } = postDetail.user as {
+      _count?: { answers?: number };
+    };
 
     res.status(StatusCodes.OK).json({
       ...postDetail,
       user: {
         ...userWithoutCount,
-        answerCount: count && typeof count.answers === "number" ? count.answers : 0,
+        answerCount:
+          count && typeof count.answers === "number" ? count.answers : 0,
       },
     });
   } catch (error) {
@@ -112,6 +115,67 @@ interface GetPostsRequest extends Request {
     limit: string;
     page: string;
   };
+}
+
+interface GetMyPostsRequest extends AuthRequest {
+  query: {
+    categoryId: string;
+    limit: string;
+    page: string;
+  };
+}
+
+export async function getMyPosts(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const request = req as GetMyPostsRequest;
+    const userId = request.user.userId;
+    const categoryId =
+      request.query.categoryId === undefined
+        ? undefined
+        : parseInt(request.query.categoryId);
+    const limit =
+      request.query.limit === undefined
+        ? DEFAULT_PAGINATION_OPTIONS.POST.LIMIT
+        : parseInt(request.query.limit);
+    const page =
+      request.query.page === undefined ? 1 : parseInt(request.query.page);
+
+    if (categoryId && !(await postMiddleware.isValidPostCategory(categoryId))) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: "존재하지 않는 게시글 카테고리 입니다." });
+      return;
+    }
+
+    const posts = await communityService.getMyPosts(
+      userId,
+      { limit, page },
+      { postCategoryId: categoryId }
+    );
+
+    res.status(StatusCodes.OK).json(
+      posts.map((post) => {
+        const { _count: count, ...userWithoutCount } = post.user as {
+          _count?: { answers?: number };
+        };
+
+        return {
+          ...post,
+          user: {
+            ...userWithoutCount,
+            answerCount:
+              count && typeof count.answers === "number" ? count.answers : 0,
+          },
+        };
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function getPosts(
@@ -144,17 +208,22 @@ export async function getPosts(
       { postCategoryId: categoryId }
     );
 
-    res.status(StatusCodes.OK).json(posts.map(post => {
-      const { _count: count, ...userWithoutCount } = post.user as { _count?: { answers?: number } };
+    res.status(StatusCodes.OK).json(
+      posts.map((post) => {
+        const { _count: count, ...userWithoutCount } = post.user as {
+          _count?: { answers?: number };
+        };
 
-      return {
-        ...post,
-        user: {
-          ...userWithoutCount,
-          answerCount: count && typeof count.answers === "number" ? count.answers : 0,
-        },
-      }
-    }));
+        return {
+          ...post,
+          user: {
+            ...userWithoutCount,
+            answerCount:
+              count && typeof count.answers === "number" ? count.answers : 0,
+          },
+        };
+      })
+    );
   } catch (error) {
     next(error);
   }
