@@ -1,12 +1,6 @@
 import prisma from "../lib/prisma.js";
 import dbDayjs from "../lib/dayjs.js";
-import {
-  CommunityPost,
-  FavoriteTargetType,
-  Prisma,
-  Question,
-} from "@prisma/client";
-import { format } from "path";
+import { FavoriteTargetType, Prisma, Question } from "@prisma/client";
 
 const trendingService = {
   getTrendingPosts,
@@ -103,7 +97,7 @@ export interface UserFormattedCommunityPost {
     profileImageUrl?: string;
     level: number;
     answerCount: number;
-  }
+  };
   createdAt: string;
   updatedAt: string;
   viewCount: number;
@@ -160,23 +154,25 @@ async function getTrendingPosts(
     LIMIT ${limit}
   `;
 
-  const formattedPosts: UserFormattedCommunityPost[] = trendingPosts.map((row) => ({
-    id: row.id,
-    title: row.title,
-    content: row.content,
-    postCategoryId: row.postCategoryId,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-    viewCount: row.viewCount,
-    favoriteCount: row.favoriteCount,
-    user: {
-      id: row.userId,
-      nickname: row.nickname,
-      profileImageUrl: row.profileImageUrl,
-      level: row.level,
-      answerCount: Number(row.answerCount),
-    },
-  }));
+  const formattedPosts: UserFormattedCommunityPost[] = trendingPosts.map(
+    (row) => ({
+      id: row.id,
+      title: row.title,
+      content: row.content,
+      postCategoryId: row.postCategoryId,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      viewCount: row.viewCount,
+      favoriteCount: row.favoriteCount,
+      user: {
+        id: row.userId,
+        nickname: row.nickname,
+        profileImageUrl: row.profileImageUrl,
+        level: row.level,
+        answerCount: Number(row.answerCount),
+      },
+    })
+  );
 
   // limit보다 적으면 조회수 순으로 추가 게시글 조회
   if (trendingPosts.length < limit) {
@@ -206,9 +202,9 @@ async function getTrendingPosts(
               select: {
                 answers: true,
               },
-            }
-          }
-        }
+            },
+          },
+        },
       },
       orderBy: {
         viewCount: "desc",
@@ -216,23 +212,24 @@ async function getTrendingPosts(
       take: limit - trendingPosts.length,
     });
 
-    const additionalFormattedPosts: UserFormattedCommunityPost[] = additionalPosts.map((post) => ({
-      id: post.id,
-      title: post.title,
-      content: post.content,
-      postCategoryId: post.postCategoryId,
-      createdAt: post.createdAt.toISOString(),
-      updatedAt: post.updatedAt.toISOString(),
-      viewCount: post.viewCount,
-      favoriteCount: post.favoriteCount,
-      user: {
-        id: post.user.id,
-        nickname: post.user.nickname,
-        profileImageUrl: post.user.profileImageUrl ?? undefined,
-        level: post.user.level,
-        answerCount: Number(post.user._count.answers),
-      }
-    }));
+    const additionalFormattedPosts: UserFormattedCommunityPost[] =
+      additionalPosts.map((post) => ({
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        postCategoryId: post.postCategoryId,
+        createdAt: post.createdAt.toISOString(),
+        updatedAt: post.updatedAt.toISOString(),
+        viewCount: post.viewCount,
+        favoriteCount: post.favoriteCount,
+        user: {
+          id: post.user.id,
+          nickname: post.user.nickname,
+          profileImageUrl: post.user.profileImageUrl ?? undefined,
+          level: post.user.level,
+          answerCount: Number(post.user._count.answers),
+        },
+      }));
 
     formattedPosts.push(...additionalFormattedPosts);
   }
