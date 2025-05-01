@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import {
   deleteAnswer,
@@ -14,6 +14,7 @@ import {
 } from "../middlewares/answerValidator.js";
 import { recordAnswer } from "../controllers/answerController.js";
 import answersMiddleware from "../middlewares/answerMiddleware.js";
+import { validationErrorMiddleware } from "../middlewares/validationErrorMiddleware.js";
 
 const router = Router();
 
@@ -24,8 +25,9 @@ router.get("/mine", validateGetAnsweredQuestions, getAnsweredQuestions);
 router.get(
   "/:answerId/ownership",
   validateAnswerId,
+  validationErrorMiddleware,
   answersMiddleware.checkAnswerOwnership,
-  (req, res) => {
+  (req: Request, res: Response) => {
     res.status(200).json(true);
   }
 );
@@ -33,6 +35,7 @@ router.get(
 router.get(
   "/:answerId",
   validateAnswerId,
+  validationErrorMiddleware,
   answersMiddleware.checkAnswerOwnership,
   getAnswer
 );
