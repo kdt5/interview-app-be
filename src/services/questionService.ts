@@ -58,7 +58,9 @@ async function getQuestionById(userId: number, questionId: number) {
     return null;
   }
 
-  const formattedQuestions = await formatQuestionsWithUserData(userId, [question]);
+  const formattedQuestions = await formatQuestionsWithUserData(userId, [
+    question,
+  ]);
 
   return formattedQuestions[0];
 }
@@ -131,7 +133,10 @@ async function getQuestions(
     take,
   });
 
-  const formattedQuestions = await formatQuestionsWithUserData(userId, questions);
+  const formattedQuestions = await formatQuestionsWithUserData(
+    userId,
+    questions
+  );
 
   return formattedQuestions;
 }
@@ -195,8 +200,11 @@ async function getWeeklyQuestions(
   const formattedWeeklyQuestions = weeklyQuestions.map(
     (weeklyQuestion, index) => {
       return {
-        ...formattedQuestions[index],
-        weekLabel: getWeeklyLabel(weeklyQuestion.startDate),
+        ...weeklyQuestion,
+        question: {
+          ...formattedQuestions[index],
+          weekLabel: getWeeklyLabel(weeklyQuestion.startDate),
+        },
       };
     }
   );
