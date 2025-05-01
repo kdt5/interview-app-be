@@ -101,7 +101,7 @@ async function getQuestions(
 
   const whereClause: Prisma.QuestionWhereInput = {
     weeklyQuestion: {
-      is: null
+      is: null,
     },
     categories: {
       some: {
@@ -255,7 +255,7 @@ async function formatQuestionsWithUserData(
     return {
       ...rest,
       answerCount: count.answers,
-      isAnswered: questionAnswerStatuses[index] !== undefined,
+      isAnswered: questionAnswerStatuses[index].answerId !== undefined,
       isFavorite: questionFavoriteStatuses[index],
       answerId: questionAnswerStatuses[index]?.answerId,
     };
