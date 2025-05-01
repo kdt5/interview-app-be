@@ -36,7 +36,7 @@ async function recordAnswer(
 async function getAnsweredQuestions(
   userId: number,
   pagination: PaginationOptions,
-  filter?: 'basic' | 'weekly'
+  filter?: "basic" | "weekly"
 ) {
   const { limit, page } = pagination;
   const { skip, take } = getPagination({ limit, page });
@@ -46,16 +46,16 @@ async function getAnsweredQuestions(
     question: {},
   };
 
-  if (filter === 'basic') {
-    whereClause.question = { 
+  if (filter === "basic") {
+    whereClause.question = {
       weeklyQuestion: null,
-     };
-  } else if (filter === 'weekly') {
-    whereClause.question = { 
+    };
+  } else if (filter === "weekly") {
+    whereClause.question = {
       weeklyQuestion: {
         isNot: null,
-      }
-     };
+      },
+    };
   }
 
   const answeredQuestions = await prisma.answer.findMany({
@@ -67,8 +67,8 @@ async function getAnsweredQuestions(
           weeklyQuestion: {
             select: {
               startDate: true,
-            }
-          }
+            },
+          },
         },
       },
     },
@@ -127,18 +127,17 @@ async function getAnswers(questionId: number, pagination: PaginationOptions) {
     take,
   });
 
-  return answers.map((answer) => (
-    {
-      ...answer,
-      user: {
-        id: answer.user.id,
-        nickname: answer.user.nickname,
-        profileImageUrl: (answer.user.profileImageUrl as string | undefined) ?? null,
-        level: (answer.user.level as number | undefined) ?? 0,
-        answerCount: answer.user._count.answers,
-      }
-    }
-  ));
+  return answers.map((answer) => ({
+    ...answer,
+    user: {
+      id: answer.user.id,
+      nickname: answer.user.nickname,
+      profileImageUrl:
+        (answer.user.profileImageUrl as string | undefined) ?? null,
+      level: (answer.user.level as number | undefined) ?? 0,
+      answerCount: answer.user._count.answers,
+    },
+  }));
 }
 
 async function updateAnswer(answerId: number, editAnswer: string) {
@@ -184,11 +183,13 @@ async function getAnsweredStatuses(userId: number, questionIds: number[]) {
     },
   });
 
-  const answeredQuestionIds = new Set(
-    answeredQuestions.map((answeredQuestion) => answeredQuestion.questionId)
-  );
-
   return questionIds.map((questionId) => {
-    return answeredQuestionIds.has(questionId);
+    const answeredQuestion = answeredQuestions.find(
+      (answeredQuestion) => answeredQuestion.id === questionId
+    );
+
+    return {
+      answerId: answeredQuestion?.id,
+    };
   });
 }
