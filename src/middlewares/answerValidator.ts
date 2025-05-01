@@ -1,9 +1,3 @@
-import { Request, Response, NextFunction } from "express";
-import { StatusCodes } from "http-status-codes";
-import {
-  EditAnswerRequest,
-  RecordAnswerRequest,
-} from "../controllers/answerController.js";
 import { validatePagination } from "./paginationValidator.js";
 import { body, param, query } from "express-validator";
 import { validationErrorMiddleware } from "./validationErrorMiddleware.js";
