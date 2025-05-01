@@ -57,7 +57,9 @@ jobs:
           path: |
             node_modules
             ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json', 'prisma/schema.prisma') }} # prisma/schema.prisma 추가
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -82,7 +84,9 @@ jobs:
           path: |
             node_modules
             ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json', 'prisma/schema.prisma') }} # prisma/schema.prisma 추가
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
