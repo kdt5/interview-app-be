@@ -18,13 +18,22 @@ import commentsRouter from "./src/routes/comments.js";
 import trendingRouter from "./src/routes/trending.js";
 import { StatusCodes } from "http-status-codes";
 
+const allowedOrigins = [];
+
+if (process.env.NODE_ENV === "development") {
+  allowedOrigins.push("http://localhost:5173");
+}
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 const app = express();
 app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: allowedOrigins,
     credentials: true,
   })
 );
