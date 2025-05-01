@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import dbDayjs from "../lib/dayjs.js";
 import prisma from "../lib/prisma.js";
 import { PaginationOptions } from "../types/pagination.js";
@@ -34,26 +35,64 @@ async function recordAnswer(
 
 async function getAnsweredQuestions(
   userId: number,
-  pagination: PaginationOptions
+  pagination: PaginationOptions,
+  filter?: 'basic' | 'weekly'
 ) {
   const { limit, page } = pagination;
   const { skip, take } = getPagination({ limit, page });
 
+  const whereClause: Prisma.AnswerWhereInput = {
+    userId,
+    question: {},
+  };
+
+  if (filter === 'basic') {
+    whereClause.question = { 
+      weeklyQuestion: null,
+     };
+  } else if (filter === 'weekly') {
+    whereClause.question = { 
+      weeklyQuestion: {
+        isNot: null,
+      }
+     };
+  }
+
   const answeredQuestions = await prisma.answer.findMany({
-    where: { userId: userId },
+    where: whereClause,
     include: {
       question: {
-        select: QuestionsSelect,
+        select: {
+          ...QuestionsSelect,
+          weeklyQuestion: {
+            select: {
+              startDate: true,
+            }
+          }
+        },
       },
     },
     orderBy: {
-      id: "desc",
+      createdAt: "desc",
     },
     skip,
     take,
   });
 
-  return answeredQuestions;
+  const transformed = answeredQuestions.map((answer) => {
+    const { question } = answer;
+    const { _count: count, ...restQuestion } = question;
+
+    return {
+      ...answer,
+      question: {
+        ...restQuestion,
+        answerCount: count.answers,
+      },
+    };
+  });
+
+  return transformed;
 }
 
 async function getAnswer(answerId: number) {

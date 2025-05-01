@@ -37,7 +37,6 @@ model Question {
   id             Int                @id @default(autoincrement())
   title          String
   content        String             @db.Text
-  isWeekly       Boolean            @default(false) @map("is_weekly")
   createdAt      DateTime           @default(now()) @map("created_at")
   favoriteCount  Int                @default(0) @map("favorite_count")
   answers        Answer[]
