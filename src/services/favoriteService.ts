@@ -33,7 +33,7 @@ async function getFavorites(userId: number, targetType: FavoriteTargetType) {
   }
 
   if (targetType === "QUESTION") {
-    return await prisma.question.findMany({
+    const questions = await prisma.question.findMany({
       where: {
         id: {
           in: targetIds,
@@ -44,8 +44,27 @@ async function getFavorites(userId: number, targetType: FavoriteTargetType) {
         title: true,
         content: true,
         favoriteCount: true,
+        _count: {
+          select: {
+            answers: true,
+          }
+        },
+        weeklyQuestion: {
+          select: {
+            questionId: true,
+          }
+        }
       },
     });
+
+    return questions.map((q) => ({
+      id: q.id,
+      title: q.title,
+      content: q.content,
+      favoriteCount: q.favoriteCount,
+      answerCount: q._count.answers,
+      isWeekly: q.weeklyQuestion !== null,
+    }));
   }
 
   if (targetType === "POST") {

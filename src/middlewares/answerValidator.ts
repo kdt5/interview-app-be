@@ -1,99 +1,44 @@
-import { Request, Response, NextFunction } from "express";
-import { StatusCodes } from "http-status-codes";
-import {
-  EditAnswerRequest,
-  RecordAnswerRequest,
-} from "../controllers/answerController.js";
 import { validatePagination } from "./paginationValidator.js";
-import { query } from "express-validator";
+import { body, param, query } from "express-validator";
 import { validationErrorMiddleware } from "./validationErrorMiddleware.js";
 
-export function validateRecordAnswer(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  const request = req as RecordAnswerRequest;
-  const { questionId } = request.params;
-  const { content } = request.body;
+const validateAnswerContent = [
+  body("content")
+    .isString().withMessage("문자열만 가능합니다.")
+    .notEmpty().withMessage("빈 문자열은 불가합니다.")
+    .isLength({max: 1500}).withMessage("답변은 최대 1500자까지 가능합니다."),
+];
 
-  const validQuestionId = /^[0-9]+$/.test(questionId);
-  const validContent = /^.{1,500}$/.test(content);
-  const errors: { field: string; message: string }[] = [];
+const validateNewAnswerContent = [
+  body("newAnswer")
+    .isString().withMessage("문자열만 가능합니다.")
+    .notEmpty().withMessage("빈 문자열은 불가합니다.")
+    .isLength({max: 1500}).withMessage("답변은 최대 1500자까지 가능합니다."),
+];
 
-  if (!validQuestionId) {
-    errors.push({
-      field: "questionId",
-      message: "유효하지 않은 질문 아이디입니다.",
-    });
-  }
+const validateQuestionId = [
+  param("questionId")
+    .isInt({min: 1}).withMessage("1 이상의 정수만 가능합니다.")
+    .exists().withMessage("questionId는 필수입니다."),
+];
 
-  if (!validContent) {
-    errors.push({
-      field: "content",
-      message: "유효하지 않은 답변입니다.",
-    });
-  }
+export const validateAnswerId = [
+  param("answerId")
+    .isInt({min: 1}).withMessage("1 이상의 정수만 가능합니다.")
+    .exists().withMessage("answerId는 필수입니다."),
+];
 
-  if (errors.length !== 0) {
-    res.status(StatusCodes.BAD_REQUEST).json(errors).end();
-    return;
-  }
+export const validateRecordAnswer = [
+  ...validateQuestionId,
+  ...validateAnswerContent,
+  validationErrorMiddleware
+];
 
-  next();
-}
-
-export function validateEditAnswer(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  const request = req as EditAnswerRequest;
-  const { answerId } = request.params;
-  const { newAnswer } = request.body;
-
-  const answerIdRegex = /^[0-9]+$/;
-
-  if (!answerIdRegex.test(answerId)) {
-    res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "답변 아이디는 숫자만 가능합니다." });
-    return;
-  } else if (!newAnswer) {
-    res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "빈칸으로 답변 수정이 불가합니다." });
-    return;
-  }
-
-  next();
-}
-
-interface AnswerIdRequest extends Request {
-  params: {
-    answerId: string;
-  };
-}
-
-export function validateAnswerId(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  const request = req as AnswerIdRequest;
-  const { answerId } = request.params;
-
-  const answerIdRegex = /^[0-9]+$/;
-
-  if (!answerIdRegex.test(answerId)) {
-    res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "답변 아이디는 숫자만 가능합니다." });
-    return;
-  }
-
-  next();
-}
+export const validateEditAnswer = [
+  ...validateAnswerId,
+  ...validateNewAnswerContent,
+  validationErrorMiddleware
+];
 
 const validateAnswersFilterQuery = [
   query("filter")
