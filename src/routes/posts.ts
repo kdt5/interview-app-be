@@ -3,6 +3,7 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 import {
   createPost,
   deletePost,
+  getMyPosts,
   getPostCategories,
   getPostDetail,
   getPosts,
@@ -23,6 +24,7 @@ const router = Router();
 
 router.use(authMiddleware.authenticate);
 
+router.get("/mine", validateGetPosts, getMyPosts);
 router.get("/", validateGetPosts, getPosts);
 router.post("/", validateCreatePost, createPost);
 router.delete(
