@@ -67,7 +67,10 @@ model Answer {
   questionId    Int      @map("question_id")
   favoriteCount Int      @default(0) @map("favorite_count")
   viewCount     Int      @default(0) @map("view_count")
+  visibility    Boolean  @default(false)
 
+  @@unique([userId, questionId])
+  @@index([visibility])
   @@index([questionId])
   @@index([userId], map: "Answer_user_id_fkey")
   @@index([createdAt])
