@@ -36,6 +36,7 @@ router.get(
   "/:answerId",
   validateAnswerId,
   validationErrorMiddleware,
+  answersMiddleware.checkPublicAnswerOwnership,
   getAnswer
 );
 

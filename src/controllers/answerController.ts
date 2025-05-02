@@ -7,6 +7,7 @@ import { AuthRequest } from "../middlewares/authMiddleware.js";
 import userService from "../services/userService.js";
 import { POST_ANSWER_POINTS } from "../constants/levelUpPoints.js";
 import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export interface RecordAnswerRequest extends AuthRequest {
   params: {
@@ -14,6 +15,7 @@ export interface RecordAnswerRequest extends AuthRequest {
   };
   body: {
     content: string;
+    visibility: boolean;
   };
 }
 
@@ -24,7 +26,7 @@ export async function recordAnswer(
 ): Promise<void> {
   try {
     const request = req as RecordAnswerRequest;
-    const { content } = request.body;
+    const { content, visibility } = request.body;
     const { questionId } = request.params;
     const userId = request.user.userId;
 
@@ -42,15 +44,22 @@ export async function recordAnswer(
     const answer = await answerService.recordAnswer(
       userId,
       parseInt(questionId),
-      content
+      content,
+      visibility
     );
 
-    await userService.addPointsToUser(userId, POST_ANSWER_POINTS);
+    if(visibility) {
+      await userService.addPointsToUser(userId, POST_ANSWER_POINTS);
+    }
 
     res.status(StatusCodes.CREATED).json({
       answerId: answer.id,
     });
   } catch (error) {
+    if(error instanceof PrismaClientKnownRequestError && error.code === "P2002"){
+      res.status(StatusCodes.CONFLICT).json("같은 질문에 답변을 제출할 수 없습니다.");
+      return;
+    }
     next(error);
   }
 }
