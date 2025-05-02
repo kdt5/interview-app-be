@@ -16,6 +16,12 @@ const validateNewAnswerContent = [
     .isLength({max: 1500}).withMessage("답변은 최대 1500자까지 가능합니다."),
 ];
 
+const validateVisibility = [
+  body("visibility")
+    .isBoolean().withMessage("true 또는 false만 가능합니다.")
+    .exists().withMessage("공개 여부는 필수입니다."),
+];
+
 const validateQuestionId = [
   param("questionId")
     .isInt({min: 1}).withMessage("1 이상의 정수만 가능합니다.")
@@ -31,6 +37,7 @@ export const validateAnswerId = [
 export const validateRecordAnswer = [
   ...validateQuestionId,
   ...validateAnswerContent,
+  ...validateVisibility,
   validationErrorMiddleware
 ];
 

@@ -21,7 +21,8 @@ export default answerService;
 async function recordAnswer(
   userId: number,
   questionId: number,
-  content: string
+  content: string,
+  visibility: boolean,
 ) {
   return await prisma.answer.create({
     data: {
@@ -29,6 +30,7 @@ async function recordAnswer(
       questionId,
       content,
       createdAt: dbDayjs(),
+      visibility,
     },
   });
 }
@@ -114,7 +116,7 @@ async function getAnswers(questionId: number, pagination: PaginationOptions) {
   const { skip, take } = getPagination({ limit, page });
 
   const answers = await prisma.answer.findMany({
-    where: { questionId },
+    where: { questionId, visibility: true },
     include: {
       user: {
         select: UserBasicInfoSelect,
