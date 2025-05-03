@@ -60,6 +60,7 @@ app.use((req, res) => {
 
 app.use(errorHandler);
 
-app.listen(process.env.PORT);
-console.log(`서버가 ${process.env.PORT} 포트에서 실행 중입니다.`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT);
+console.log(`서버가 ${PORT} 포트에서 실행 중입니다.`);
 export default app;
