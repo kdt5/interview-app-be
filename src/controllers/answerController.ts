@@ -7,7 +7,7 @@ import { AuthRequest } from "../middlewares/authMiddleware.js";
 import userService from "../services/userService.js";
 import { POST_ANSWER_POINTS } from "../constants/levelUpPoints.js";
 import { DEFAULT_PAGINATION_OPTIONS } from "../constants/pagination.js";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library.js";
 
 export interface RecordAnswerRequest extends AuthRequest {
   params: {
